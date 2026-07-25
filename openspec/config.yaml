@@ -1,0 +1,126 @@
+schema: spec-driven
+
+context: |
+  Proyecto: FindYourPet / Mascotas Perdidas
+  Plataforma: Android nativo con Kotlin, Jetpack Compose, Room y Gradle Kotlin DSL.
+  Estado actual: prototipo/demo con datos locales, usuario hardcodeado, fotos preset y GPS simulado.
+  Objetivo: evolucionar a MVP inicial de produccion con autenticacion real, backend, privacidad verificable, datos compartidos, chat real y release Android seguro.
+
+  Prioridades:
+  1. Seguridad y privacidad de datos personales.
+  2. Autenticacion y autorizacion real.
+  3. Backend para publicaciones, avistamientos, chats y notificaciones.
+  4. Reemplazo de simulaciones por camara, galeria, GPS y push reales.
+  5. Calidad de build, tests, release y cumplimiento Google Play.
+
+  Estructura OpenSpec recomendada:
+  openspec/
+    specs/
+    changes/
+      nombre-del-cambio/
+        proposal.md
+        design.md
+        tasks.md
+        specs/
+    config.yaml
+
+  Cada cambio debe vivir dentro de openspec/changes/<nombre-del-cambio>/ y tocar una o varias capabilities.
+
+  Capabilities sugeridas:
+  - auth
+  - pet-posts
+  - sightings
+  - private-chat
+  - contact-privacy
+  - notifications
+  - local-storage
+  - media-upload
+  - location
+  - release-readiness
+
+  Orden recomendado para crear cambios:
+  1. stabilize-android-build
+  2. harden-local-privacy
+  3. add-user-authentication
+  4. introduce-production-backend
+  5. redesign-contact-sharing
+  6. add-real-photo-upload
+  7. add-location-capture
+  8. add-push-notifications
+  9. prepare-production-release
+
+  Goals generales:
+  - Convertir la app de demo local en un MVP usable por usuarios reales.
+  - Proteger datos personales antes de agregar mas superficie de producto.
+  - Reemplazar identidades hardcodeadas por autenticacion real.
+  - Centralizar datos compartidos en un backend con reglas de acceso.
+  - Mantener Room solo como almacenamiento local/cache cuando sea apropiado.
+  - Sustituir simulaciones por camara, galeria, ubicacion y push reales.
+  - Llegar a un release Android verificable, testeado y monitoreable.
+
+  Datos sensibles:
+  - Nombre del dueno
+  - Telefono
+  - Email
+  - Direccion
+  - Coordenadas GPS
+  - Fotos
+  - Mensajes privados
+  - Historial de avistamientos
+
+  Barreras / guardrails:
+  - No exponer telefono, email, direccion o coordenadas sin consentimiento explicito.
+  - No basar permisos de dueno en strings hardcodeados como user_1 u owner_1.
+  - No prometer cifrado, privacidad o tiempo real si el codigo no lo implementa.
+  - No pedir permisos Android que no tengan un flujo real y justificable.
+  - No enviar datos sensibles completos en notificaciones push.
+  - No permitir que Android backup copie bases de datos o archivos sensibles.
+  - No introducir backend sin reglas de lectura/escritura por usuario.
+  - No cerrar cambios de produccion sin build, tests o validacion manual documentada.
+
+  Arneses de validacion esperados:
+  - Build Android debug antes de cerrar cambios de codigo.
+  - Tests unitarios cuando se toque repositorio, ViewModel, validaciones o reglas de negocio.
+  - Validacion manual de flujos criticos cuando se toque UI o permisos runtime.
+  - Revision de manifest, backup rules y permisos cuando se toque privacidad.
+  - Prueba de reglas de autorizacion cuando se toque auth, backend, chat o contacto.
+
+  Checklist Antes De Crear Un Cambio
+  - El cambio tiene un nombre concreto y accionable.
+  - El alcance puede cerrarse en una revision razonable.
+  - La capability afectada esta identificada.
+  - Hay criterios de aceptacion observables.
+  - Las tareas incluyen pruebas o validacion manual.
+  - Si toca datos personales, permisos, ubicacion, contacto o mensajes, se documenta el impacto de privacidad.
+
+rules:
+  proposal:
+    - Explicar que problema de produccion resuelve.
+    - Indicar si el cambio afecta privacidad, seguridad, datos o permisos.
+    - Incluir impacto sobre usuarios existentes.
+    - Incluir estrategia de rollback cuando aplique.
+    - Vincular el cambio con uno o mas goals generales.
+    - Declarar que guardrails aplican.
+
+  design:
+    - Separar decisiones de cliente Android, backend y almacenamiento local.
+    - Describir reglas de autorizacion para acciones sensibles.
+    - Evitar prometer cifrado o privacidad si no esta implementado tecnicamente.
+    - Incluir manejo de errores, estados vacios y permisos runtime.
+    - Explicar como se protegen datos sensibles en reposo, transito y UI.
+    - Documentar migracion o compatibilidad cuando se cambie persistencia local.
+
+  specs:
+    - Usar lenguaje observable por el usuario o el sistema.
+    - Incluir escenarios Given/When/Then.
+    - Definir claramente quien puede leer, crear, modificar o borrar datos.
+    - Tratar ubicacion, contacto y mensajes como datos sensibles.
+    - Cubrir escenarios de denegacion, revocacion y errores, no solo el camino feliz.
+
+  tasks:
+    - Separar tareas de implementacion, pruebas y validacion manual.
+    - Incluir actualizacion o creacion de tests.
+    - Incluir verificacion de build antes de cerrar el cambio.
+    - Marcar limpieza de codigo demo cuando corresponda.
+    - Nombrar comandos de validacion cuando existan.
+    - Incluir checklist manual para permisos, privacidad y flujos de usuario afectados.
