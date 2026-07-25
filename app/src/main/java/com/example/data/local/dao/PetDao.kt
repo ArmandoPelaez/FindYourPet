@@ -1,0 +1,76 @@
+package com.example.data.local.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.example.data.local.entity.AppNotificationEntity
+import com.example.data.local.entity.ChatMessageEntity
+import com.example.data.local.entity.ChatSessionEntity
+import com.example.data.local.entity.PetPostEntity
+import com.example.data.local.entity.SightingAlertEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface PetDao {
+
+    // Posts
+    @Query("SELECT * FROM pet_posts ORDER BY dateLost DESC")
+    fun getAllPosts(): Flow<List<PetPostEntity>>
+
+    @Query("SELECT * FROM pet_posts WHERE id = :postId")
+    fun getPostById(postId: String): Flow<PetPostEntity?>
+
+    @Query("SELECT * FROM pet_posts WHERE ownerId = :ownerId ORDER BY dateLost DESC")
+    fun getPostsByOwner(ownerId: String): Flow<List<PetPostEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPost(post: PetPostEntity)
+
+    @Query("UPDATE pet_posts SET status = :status WHERE id = :postId")
+    suspend fun updatePostStatus(postId: String, status: String)
+
+    @Query("UPDATE pet_posts SET isContactRevealedToAll = :isRevealed WHERE id = :postId")
+    suspend fun updatePostContactRevealed(postId: String, isRevealed: Boolean)
+
+    // Sightings
+    @Query("SELECT * FROM sighting_alerts WHERE postId = :postId ORDER BY timestamp DESC")
+    fun getSightingsForPost(postId: String): Flow<List<SightingAlertEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSighting(sighting: SightingAlertEntity)
+
+    // Chat Messages
+    @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")
+    fun getMessagesForChat(chatId: String): Flow<List<ChatMessageEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessage(message: ChatMessageEntity)
+
+    // Chat Sessions
+    @Query("SELECT * FROM chat_sessions WHERE ownerId = :userId OR reporterId = :userId ORDER BY lastMessageTimestamp DESC")
+    fun getChatSessionsForUser(userId: String): Flow<List<ChatSessionEntity>>
+
+    @Query("SELECT * FROM chat_sessions WHERE id = :chatId")
+    fun getChatSessionById(chatId: String): Flow<ChatSessionEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChatSession(session: ChatSessionEntity)
+
+    @Query("UPDATE chat_sessions SET isContactSharedByOwner = :isShared WHERE id = :chatId")
+    suspend fun updateChatContactShared(chatId: String, isShared: Boolean)
+
+    @Query("UPDATE chat_sessions SET lastMessage = :lastMessage, lastMessageTimestamp = :timestamp WHERE id = :chatId")
+    suspend fun updateChatLastMessage(chatId: String, lastMessage: String, timestamp: Long)
+
+    // Notifications
+    @Query("SELECT * FROM app_notifications ORDER BY timestamp DESC")
+    fun getAllNotifications(): Flow<List<AppNotificationEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNotification(notification: AppNotificationEntity)
+
+    @Query("UPDATE app_notifications SET isRead = 1 WHERE id = :id")
+    suspend fun markNotificationAsRead(id: String)
+}

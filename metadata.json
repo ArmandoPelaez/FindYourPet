@@ -1,0 +1,6 @@
+{
+  "name": "Mascotas Perdidas",
+  "description": "Aplicación para publicar y localizar mascotas perdidas protegiendo la privacidad del dueño, con alertas de avistamiento en tiempo real, chat privado seguro y notificaciones.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
