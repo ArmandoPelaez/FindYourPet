@@ -8,14 +8,19 @@ import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.util.NotificationHelper
+import com.google.firebase.FirebaseApp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class PetRepository(context: Context) {
     private val database = AppDatabase.getDatabase(context)
     private val petDao = database.petDao()
     private val appContext = context.applicationContext
+    private val firestore = configuredFirestore(appContext)
 
     val allPosts: Flow<List<PetPostEntity>> = petDao.getAllPosts()
     val allNotifications: Flow<List<AppNotificationEntity>> = petDao.getAllNotifications()
@@ -33,14 +38,26 @@ class PetRepository(context: Context) {
     fun getChatSessionById(chatId: String): Flow<ChatSessionEntity?> = petDao.getChatSessionById(chatId)
 
     suspend fun insertPost(post: PetPostEntity) {
+        firestore?.collection(PET_POSTS_COLLECTION)
+            ?.document(post.id)
+            ?.set(post)
+            ?.await()
         petDao.insertPost(post)
     }
 
     suspend fun updatePostStatus(postId: String, status: String) {
+        firestore?.collection(PET_POSTS_COLLECTION)
+            ?.document(postId)
+            ?.update("status", status)
+            ?.await()
         petDao.updatePostStatus(postId, status)
     }
 
     suspend fun updatePostContactRevealed(postId: String, isRevealed: Boolean) {
+        firestore?.collection(PET_POSTS_COLLECTION)
+            ?.document(postId)
+            ?.update("isContactRevealedToAll", isRevealed)
+            ?.await()
         petDao.updatePostContactRevealed(postId, isRevealed)
     }
 
@@ -71,6 +88,24 @@ class PetRepository(context: Context) {
             notes = notes,
             timestamp = timestamp
         )
+        firestore?.collection(SIGHTINGS_COLLECTION)
+            ?.document(sightingId)
+            ?.set(
+                mapOf(
+                    "id" to sighting.id,
+                    "postId" to sighting.postId,
+                    "reporterId" to sighting.reporterId,
+                    "reporterName" to sighting.reporterName,
+                    "photoUri" to sighting.photoUri,
+                    "locationName" to sighting.locationName,
+                    "latitude" to sighting.latitude,
+                    "longitude" to sighting.longitude,
+                    "notes" to sighting.notes,
+                    "timestamp" to sighting.timestamp,
+                    "ownerId" to ownerId
+                )
+            )
+            ?.await()
         petDao.insertSighting(sighting)
 
         // Demo flow: create or update a local chat session.
@@ -89,6 +124,10 @@ class PetRepository(context: Context) {
             lastMessageTimestamp = timestamp,
             isContactSharedByOwner = existingSession?.isContactSharedByOwner ?: false
         )
+        firestore?.collection(CHAT_SESSIONS_COLLECTION)
+            ?.document(chatId)
+            ?.set(chatSession, SetOptions.merge())
+            ?.await()
         petDao.insertChatSession(chatSession)
 
         // Demo system message inside the local chat.
@@ -103,6 +142,12 @@ class PetRepository(context: Context) {
             timestamp = timestamp,
             isSystemMessage = true
         )
+        firestore?.collection(CHAT_SESSIONS_COLLECTION)
+            ?.document(chatId)
+            ?.collection(MESSAGES_COLLECTION)
+            ?.document(systemMsg.id)
+            ?.set(systemMsg)
+            ?.await()
         petDao.insertMessage(systemMsg)
 
         // Local demo notification.
@@ -144,6 +189,22 @@ class PetRepository(context: Context) {
             timestamp = timestamp,
             isSystemMessage = false
         )
+        firestore?.collection(CHAT_SESSIONS_COLLECTION)
+            ?.document(chatId)
+            ?.collection(MESSAGES_COLLECTION)
+            ?.document(msg.id)
+            ?.set(msg)
+            ?.await()
+        firestore?.collection(CHAT_SESSIONS_COLLECTION)
+            ?.document(chatId)
+            ?.set(
+                mapOf(
+                    "lastMessage" to "Nuevo mensaje en el chat local",
+                    "lastMessageTimestamp" to timestamp
+                ),
+                SetOptions.merge()
+            )
+            ?.await()
         petDao.insertMessage(msg)
         petDao.updateChatLastMessage(chatId, "Nuevo mensaje en el chat local", timestamp)
 
@@ -163,6 +224,10 @@ class PetRepository(context: Context) {
     }
 
     suspend fun toggleChatContactSharing(chatId: String, isShared: Boolean, ownerName: String, phone: String, email: String) {
+        firestore?.collection(CHAT_SESSIONS_COLLECTION)
+            ?.document(chatId)
+            ?.set(mapOf("isContactSharedByOwner" to isShared), SetOptions.merge())
+            ?.await()
         petDao.updateChatContactShared(chatId, isShared)
         val timestamp = System.currentTimeMillis()
 
@@ -185,6 +250,12 @@ class PetRepository(context: Context) {
                 timestamp = timestamp,
                 isSystemMessage = true
             )
+            firestore?.collection(CHAT_SESSIONS_COLLECTION)
+                ?.document(chatId)
+                ?.collection(MESSAGES_COLLECTION)
+                ?.document(systemMsg.id)
+                ?.set(systemMsg)
+                ?.await()
             petDao.insertMessage(systemMsg)
 
             if (isShared) {
@@ -386,5 +457,20 @@ class PetRepository(context: Context) {
             )
             petDao.insertNotification(notif)
         }
+    }
+
+    private fun configuredFirestore(context: Context): FirebaseFirestore? =
+        runCatching {
+            if (FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+            }
+            if (FirebaseApp.getApps(context).isEmpty()) null else FirebaseFirestore.getInstance()
+        }.getOrNull()
+
+    private companion object {
+        const val PET_POSTS_COLLECTION = "petPosts"
+        const val SIGHTINGS_COLLECTION = "sightings"
+        const val CHAT_SESSIONS_COLLECTION = "chatSessions"
+        const val MESSAGES_COLLECTION = "messages"
     }
 }

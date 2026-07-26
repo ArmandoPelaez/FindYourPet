@@ -8,12 +8,16 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.findyourpet.app.data.auth.AuthUiState
+import com.findyourpet.app.ui.screens.AuthScreen
 import com.findyourpet.app.ui.screens.ChatDetailScreen
 import com.findyourpet.app.ui.screens.ChatListScreen
 import com.findyourpet.app.ui.screens.CreatePetPostScreen
@@ -43,7 +47,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
+    val authState by viewModel.authState.collectAsState()
     val navController = rememberNavController()
+
+    if (authState !is AuthUiState.SignedIn) {
+        AuthScreen(viewModel = viewModel)
+        return
+    }
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {

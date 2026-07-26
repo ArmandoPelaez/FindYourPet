@@ -3,19 +3,30 @@
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.findyourpet.app.data.auth.AuthUiState
+import com.findyourpet.app.data.auth.FirebaseAuthRepository
+import com.findyourpet.app.data.auth.UnavailableAuthRepository
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.profile.FirestoreUserProfileRepository
+import com.findyourpet.app.data.profile.UnavailableUserProfileRepository
+import com.findyourpet.app.data.profile.UserProfileDocument
+import com.findyourpet.app.data.profile.UserProfileRepository
 import com.findyourpet.app.data.repository.PetRepository
+import com.findyourpet.app.domain.AuthSessionMapper
+import com.findyourpet.app.domain.OwnershipPolicy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -29,19 +40,25 @@ data class UserProfile(
 
 class PetViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = PetRepository(application)
+    private val authRepository = FirebaseAuthRepository.createOrNull(application) ?: UnavailableAuthRepository()
+    private val profileRepository: UserProfileRepository =
+        if (authRepository is FirebaseAuthRepository) FirestoreUserProfileRepository() else UnavailableUserProfileRepository()
+    private val activeProfile = MutableStateFlow<UserProfileDocument?>(null)
+    private val _authMessage = MutableStateFlow<String?>(null)
+
+    val authState: StateFlow<AuthUiState> = authRepository.authState
+    val authMessage: StateFlow<String?> = _authMessage
+    val isAuthenticated: StateFlow<Boolean> = authState
+        .map(AuthSessionMapper::isAuthenticated)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthSessionMapper.isAuthenticated(authState.value))
 
     // Current User Profile State
-    val currentUser = MutableStateFlow(
-        UserProfile(
-            id = "user_1",
-            name = "Carlos Ramírez",
-            phone = "+506 8888-9900",
-            email = "carlos.ramirez@email.com"
-        )
-    )
+    val currentUser: StateFlow<UserProfile> = combine(authState, activeProfile) { state, profile ->
+        AuthSessionMapper.activeUser(state, profile)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthSessionMapper.signedOutUser)
 
     fun switchUserRole(isOwnerRole: Boolean) {
-        // Retained for backward compatibility
+        _authMessage.value = "Owner role switching is disabled for authenticated flows."
     }
 
     // Search and Filters
@@ -100,7 +117,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userChatSessions: StateFlow<List<ChatSessionEntity>> = currentUser.flatMapLatest { user ->
-        repository.getChatSessionsForUser(user.id)
+        if (user.id.isBlank()) flowOf(emptyList()) else repository.getChatSessionsForUser(user.id)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val allNotifications: StateFlow<List<AppNotificationEntity>> = repository.allNotifications
@@ -110,6 +127,49 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.seedInitialDataIfNeeded()
         }
+        viewModelScope.launch {
+            authState.collectLatest { state ->
+                if (state is AuthUiState.SignedIn) {
+                    val profileResult = profileRepository.ensureProfile(state.user)
+                    activeProfile.value = profileResult.getOrNull()
+                    profileResult.exceptionOrNull()?.let { error ->
+                        _authMessage.value = error.message ?: "Profile could not be loaded."
+                    }
+                } else {
+                    activeProfile.value = null
+                }
+            }
+        }
+    }
+
+    fun signUpWithEmail(email: String, password: String, displayName: String) {
+        viewModelScope.launch {
+            _authMessage.value = null
+            authRepository.signUpWithEmail(email, password, displayName)
+                .onFailure { _authMessage.value = it.message ?: "Sign-up failed." }
+        }
+    }
+
+    fun signInWithEmail(email: String, password: String) {
+        viewModelScope.launch {
+            _authMessage.value = null
+            authRepository.signInWithEmail(email, password)
+                .onFailure { _authMessage.value = it.message ?: "Sign-in failed." }
+        }
+    }
+
+    fun signInWithGoogleIdToken(idToken: String) {
+        viewModelScope.launch {
+            _authMessage.value = null
+            authRepository.signInWithGoogleIdToken(idToken)
+                .onFailure { _authMessage.value = it.message ?: "Google sign-in failed." }
+        }
+    }
+
+    fun signOut() {
+        authRepository.signOut()
+        activeProfile.value = null
+        _authMessage.value = null
     }
 
     fun selectPost(postId: String) {
@@ -131,8 +191,8 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         ownerId: String,
         onComplete: (String) -> Unit
     ) {
+        val user = currentAuthenticatedUser() ?: return
         viewModelScope.launch {
-            val user = currentUser.value
             val chatId = repository.submitSightingAlert(
                 postId = postId,
                 petName = petName,
@@ -154,7 +214,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         val chatId = activeChatId.value ?: return
         val post = selectedPost.value
         val postId = post?.id ?: "post_1"
-        val user = currentUser.value
+        val user = currentAuthenticatedUser() ?: return
+        val session = activeChatSession.value
+        if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
+            _authMessage.value = "Only chat participants can send messages."
+            return
+        }
 
         viewModelScope.launch {
             repository.sendChatMessage(
@@ -170,7 +235,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleContactSharing(isShared: Boolean) {
         val chatId = activeChatId.value ?: return
-        val user = currentUser.value
+        val user = currentAuthenticatedUser() ?: return
+        val session = activeChatSession.value
+        if (session == null || !OwnershipPolicy.canManagePost(user.id, session.ownerId)) {
+            _authMessage.value = "Only the post owner can change contact sharing."
+            return
+        }
         viewModelScope.launch {
             repository.toggleChatContactSharing(
                 chatId = chatId,
@@ -196,7 +266,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         status: String = "PERDIDO",
         onComplete: () -> Unit
     ) {
-        val user = currentUser.value
+        val user = currentAuthenticatedUser() ?: return
         viewModelScope.launch {
             val newPost = PetPostEntity(
                 id = UUID.randomUUID().toString(),
@@ -226,6 +296,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun updatePetStatus(postId: String, newStatus: String) {
+        val user = currentAuthenticatedUser() ?: return
+        val post = selectedPost.value
+        if (post?.id == postId && !OwnershipPolicy.canManagePost(user.id, post.ownerId)) {
+            _authMessage.value = "Only the owner can update this post."
+            return
+        }
         viewModelScope.launch {
             repository.updatePostStatus(postId, newStatus)
         }
@@ -236,4 +312,14 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             repository.markNotificationAsRead(id)
         }
     }
+
+    private fun currentAuthenticatedUser(): UserProfile? {
+        val user = currentUser.value
+        if (user.id.isBlank()) {
+            _authMessage.value = "Sign in before continuing."
+            return null
+        }
+        return user
+    }
+
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.ProtectedContactCard
 import com.findyourpet.app.ui.theme.AlertRed
@@ -52,7 +53,7 @@ fun PetDetailScreen(
 
     val pet = post ?: return
 
-    val isOwner = currentUser.id == pet.ownerId || currentUser.id == "owner_1"
+    val isOwner = OwnershipPolicy.canManagePost(currentUser.id, pet.ownerId)
     val isContactRevealed = pet.isContactRevealedToAll
 
     Scaffold(

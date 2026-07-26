@@ -65,11 +65,10 @@ class StaticProjectGuardrailsTest {
     }
 
     val forbiddenPatterns = listOf(
-      Regex("""id\("com\.google\.gms\.google-services"\)"""),
       Regex("""id\("com\.google\.android\.libraries\.mapsplatform\.secrets-gradle-plugin"\)"""),
-      Regex("""libs\.plugins\.google[.-]?services"""),
       Regex("""libs\.plugins\.secrets"""),
-      Regex("""libs\.firebase"""),
+      Regex("""libs\.firebase\.ai"""),
+      Regex("""libs\.firebase\.appcheck"""),
       Regex("""libs\.retrofit"""),
       Regex("""libs\.converter[.-]?moshi"""),
       Regex("""libs\.moshi"""),
@@ -86,6 +85,63 @@ class StaticProjectGuardrailsTest {
     }
 
     assertTrue("Unexpected active future-feature Gradle entries: $matches", matches.isEmpty())
+  }
+
+  @Test
+  fun firebaseAuthAndFirestoreDependencies_haveRealImplementationFiles() {
+    val activeConfig = listOf(
+      "build.gradle.kts",
+      "app/build.gradle.kts",
+      "gradle/libs.versions.toml"
+    ).joinToString("\n") { relativePath ->
+      File(root, relativePath).readText()
+    }
+
+    val authDependenciesPresent = listOf(
+      "libs.plugins.google.services",
+      "libs.firebase.bom",
+      "libs.firebase.auth",
+      "libs.firebase.firestore",
+      "libs.androidx.credentials",
+      "libs.googleid"
+    ).all { it in activeConfig }
+
+    val implementationFilesPresent = listOf(
+      "app/src/main/java/com/findyourpet/app/data/auth/FirebaseAuthRepository.kt",
+      "app/src/main/java/com/findyourpet/app/data/profile/FirestoreUserProfileRepository.kt",
+      "app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt",
+      "firestore.rules"
+    ).all { relativePath -> File(root, relativePath).isFile }
+
+    assertTrue(
+      "Firebase Auth/Firestore dependencies require real auth, profile, UI, and rules implementation files.",
+      !authDependenciesPresent || implementationFilesPresent
+    )
+  }
+
+  @Test
+  fun mainSource_doesNotGrantOwnerPermissionsFromDemoIds() {
+    val checkedFiles = File(root, "app/src/main")
+      .walkTopDown()
+      .filter { it.isFile && it.extension == "kt" }
+      .toList()
+
+    val forbiddenOwnerGrantPatterns = listOf(
+      Regex("""currentUser\.id\s*==\s*"owner_1""""),
+      Regex("""currentUser\.id\s*==\s*"user_1""""),
+      Regex("""ownerId\s*==\s*"owner_1""""),
+      Regex("""ownerId\s*==\s*"user_1""""),
+      Regex("""\.id\.startsWith\("owner"\)""")
+    )
+
+    val failures = checkedFiles.flatMap { file ->
+      val text = file.readText()
+      forbiddenOwnerGrantPatterns.mapNotNull { pattern ->
+        pattern.find(text)?.value?.let { "${file.relativeTo(root).path}: $it" }
+      }
+    }
+
+    assertTrue("Unexpected demo-id owner grants: $failures", failures.isEmpty())
   }
 
   @Test

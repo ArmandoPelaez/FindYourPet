@@ -33,7 +33,7 @@ fun ProfileScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val allPosts by viewModel.allPosts.collectAsState()
 
-    val myPosts = allPosts.filter { it.ownerId == currentUser.id || it.ownerId == "owner_1" || it.ownerId == "user_1" }
+    val myPosts = allPosts.filter { it.ownerId == currentUser.id }
 
     Scaffold(
         topBar = {
@@ -42,6 +42,11 @@ fun ProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.signOut() }) {
+                        Icon(Icons.Filled.Logout, contentDescription = "Salir")
                     }
                 }
             )
