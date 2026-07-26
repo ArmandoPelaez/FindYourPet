@@ -85,7 +85,7 @@ class PetRepository(context: Context) {
             ownerId = ownerId,
             reporterId = reporterId,
             reporterName = reporterName,
-            lastMessage = "🚨 ALERTA: Nuevo avistamiento reportado en $locationName",
+            lastMessage = "Nuevo avistamiento reportado en el chat local",
             lastMessageTimestamp = timestamp,
             isContactSharedByOwner = existingSession?.isContactSharedByOwner ?: false
         )
@@ -107,7 +107,7 @@ class PetRepository(context: Context) {
 
         // Local demo notification.
         val notifTitle = "Alerta de avistamiento para $petName"
-        val notifMsg = "$reporterName cree haber visto a $petName cerca de $locationName. Revisa la foto y ubicación."
+        val notifMsg = "$reporterName reportó un posible avistamiento de $petName en la app."
 
         val notification = AppNotificationEntity(
             id = UUID.randomUUID().toString(),
@@ -145,20 +145,21 @@ class PetRepository(context: Context) {
             isSystemMessage = false
         )
         petDao.insertMessage(msg)
-        petDao.updateChatLastMessage(chatId, text, timestamp)
+        petDao.updateChatLastMessage(chatId, "Nuevo mensaje en el chat local", timestamp)
 
-        // Notify counterpart
+        // Local demo notification avoids exposing the message body outside the app.
         val notifTitle = "💬 Mensaje de $senderName"
+        val notifMsg = "Tienes un nuevo mensaje en el chat local."
         val notification = AppNotificationEntity(
             id = UUID.randomUUID().toString(),
             title = notifTitle,
-            message = text,
+            message = notifMsg,
             type = "CHAT",
             targetId = chatId,
             timestamp = timestamp
         )
         petDao.insertNotification(notification)
-        NotificationHelper.showNotification(appContext, (timestamp % 10000).toInt(), notifTitle, text)
+        NotificationHelper.showNotification(appContext, (timestamp % 10000).toInt(), notifTitle, notifMsg)
     }
 
     suspend fun toggleChatContactSharing(chatId: String, isShared: Boolean, ownerName: String, phone: String, email: String) {
@@ -166,7 +167,7 @@ class PetRepository(context: Context) {
         val timestamp = System.currentTimeMillis()
 
         val text = if (isShared) {
-            "$ownerName autorizó mostrar sus datos de contacto:\nTeléfono: $phone\nEmail: $email"
+            "$ownerName activó el contacto compartido dentro del chat local."
         } else {
             "$ownerName ocultó sus datos de contacto."
         }
@@ -188,7 +189,7 @@ class PetRepository(context: Context) {
 
             if (isShared) {
                 val notifTitle = "Contacto compartido"
-                val notifMsg = "$ownerName te ha compartido sus datos de contacto directos."
+                val notifMsg = "$ownerName habilitó el contacto dentro del chat local."
                 val notification = AppNotificationEntity(
                     id = UUID.randomUUID().toString(),
                     title = notifTitle,
@@ -328,7 +329,7 @@ class PetRepository(context: Context) {
                 ownerId = "owner_1",
                 reporterId = "finder_1",
                 reporterName = "Sofía Vargas (Vecina)",
-                lastMessage = "¡Hola Carlos! Acabo de enviar la foto de Max cerca de la cafetería.",
+                lastMessage = "Nuevo mensaje en el chat local",
                 lastMessageTimestamp = now - (10 * 3600000L),
                 isContactSharedByOwner = false
             )
@@ -377,7 +378,7 @@ class PetRepository(context: Context) {
             val notif = AppNotificationEntity(
                 id = "notif_1",
                 title = "Alerta de avistamiento para Max",
-                message = "Sofía Vargas cree haber visto a Max cerca de Frente a la Cafetería Central.",
+                message = "Sofía Vargas reportó un posible avistamiento de Max en la app.",
                 type = "ALERT",
                 targetId = chatId,
                 timestamp = now - (12 * 3600000L),
