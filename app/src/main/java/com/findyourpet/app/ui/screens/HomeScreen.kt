@@ -54,11 +54,10 @@ fun HomeScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedSpecies by viewModel.selectedSpecies.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
+    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val notifications by viewModel.allNotifications.collectAsState()
 
     val unreadNotificationsCount = notifications.count { !it.isRead }
-    val isOwnerMode = currentUser.id.startsWith("owner")
 
     Scaffold(
         topBar = {
@@ -133,13 +132,15 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNavigateToCreate,
-                containerColor = CoralPrimary,
-                contentColor = Color.White,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Publicar Mascota", fontWeight = FontWeight.Bold) }
-            )
+            if (isAuthenticated) {
+                ExtendedFloatingActionButton(
+                    onClick = onNavigateToCreate,
+                    containerColor = CoralPrimary,
+                    contentColor = Color.White,
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text("Publicar Mascota", fontWeight = FontWeight.Bold) }
+                )
+            }
         }
     ) { padding ->
         Column(

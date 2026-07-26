@@ -5,6 +5,10 @@ plugins {
   alias(libs.plugins.roborazzi)
 }
 
+if (file("google-services.json").isFile) {
+  pluginManager.apply("com.google.gms.google-services")
+}
+
 android {
   namespace = "com.findyourpet.app"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -60,6 +64,7 @@ android {
 
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
+  implementation(platform(libs.firebase.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material.icons.extended)
@@ -74,9 +79,15 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services)
   implementation(libs.coil.compose)
+  implementation(libs.firebase.auth)
+  implementation(libs.firebase.firestore)
+  implementation(libs.googleid)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.coroutines.play.services)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
+import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.ReunitedGreen
@@ -61,7 +62,7 @@ fun ChatDetailScreen(
     }
 
     val session = chatSession
-    val isOwner = currentUser.id == session?.ownerId || currentUser.id == "owner_1"
+    val isOwner = session?.let { OwnershipPolicy.canManagePost(currentUser.id, it.ownerId) } == true
     val isContactShared = session?.isContactSharedByOwner == true
 
     Scaffold(
