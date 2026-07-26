@@ -25,6 +25,7 @@ class ProtectedContactCardComposeTest {
     renderContactCard(isContactRevealed = false)
 
     composeTestRule.onNodeWithText("Contacto oculto en esta demo").assertIsDisplayed()
+    composeTestRule.onNodeWithText("La ficha pública no muestra teléfono ni email").assertIsDisplayed()
     composeTestRule.onNodeWithText("Car*** (Protegido)").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("+506 8888-9900").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("carlos.ramirez@email.com").assertCountEquals(0)
@@ -35,6 +36,7 @@ class ProtectedContactCardComposeTest {
     renderContactCard(isContactRevealed = true)
 
     composeTestRule.onNodeWithText("Datos de contacto visibles").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Compartido por el dueño en el flujo local").assertIsDisplayed()
     composeTestRule.onNodeWithText("Carlos Ramirez").assertIsDisplayed()
     composeTestRule.onNodeWithText("+506 8888-9900").assertIsDisplayed()
     composeTestRule.onNodeWithText("carlos.ramirez@email.com").assertIsDisplayed()

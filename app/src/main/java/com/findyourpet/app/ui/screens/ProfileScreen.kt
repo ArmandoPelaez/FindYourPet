@@ -147,7 +147,7 @@ fun ProfileScreen(
                 }
             }
 
-            // Privacy Security Assurance Banner
+            // Local demo contact notice.
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -167,14 +167,14 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Comunidad Colaborativa Protegida",
+                                text = "Comunidad colaborativa local",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = TealSecondary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Cualquier persona puede ser dueño o colaborador de búsqueda. Los datos de contacto están protegidos y solo se comparten con avistamientos verificados.",
+                                text = "En esta demo, los datos de contacto no se muestran en fichas públicas y el chat usa datos locales.",
                                 fontSize = 11.sp,
                                 lineHeight = 15.sp,
                                 color = MaterialTheme.colorScheme.onSurface

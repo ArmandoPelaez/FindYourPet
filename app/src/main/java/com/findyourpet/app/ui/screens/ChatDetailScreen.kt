@@ -148,7 +148,7 @@ fun ChatDetailScreen(
                                 )
                                 Text(
                                     text = if (isContactShared)
-                                        "Teléfono: +506 8888-9900 • Email: carlos.ramirez@email.com"
+                                        "El dueño habilitó el contacto dentro de este chat local."
                                     else
                                         "Tus datos de teléfono y correo no se muestran en la ficha pública.",
                                     fontSize = 10.sp,

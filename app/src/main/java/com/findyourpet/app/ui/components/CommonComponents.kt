@@ -104,7 +104,7 @@ fun ProtectedContactCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (isContactRevealed) "Contacto directo autorizado" else "La ficha pública no muestra teléfono ni email",
+                        text = if (isContactRevealed) "Compartido por el dueño en el flujo local" else "La ficha pública no muestra teléfono ni email",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

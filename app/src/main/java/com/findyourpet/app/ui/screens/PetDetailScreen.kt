@@ -302,7 +302,7 @@ fun PetDetailScreen(
                                         fontSize = 14.sp
                                     )
                                     Text(
-                                        text = "Coordenadas de demo: Lat ${pet.latitude}, Long ${pet.longitude}",
+                                        text = "Referencia local de demo; las coordenadas exactas no se muestran en la ficha pública.",
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -425,13 +425,13 @@ fun SightingItemCard(sighting: SightingAlertEntity, context: android.content.Con
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "📍 ${sighting.locationName}",
+                    text = "Referencia de avistamiento registrada",
                     fontSize = 12.sp,
                     color = CoralPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = sighting.notes,
+                    text = "Los detalles completos quedan dentro del chat local.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2

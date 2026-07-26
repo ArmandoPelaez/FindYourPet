@@ -12,12 +12,8 @@ class StaticProjectGuardrailsTest {
 
   @Test
   fun manifest_declaresOnlyInternetPermission() {
-    val manifest = File(root, "app/src/main/AndroidManifest.xml")
-    val document = DocumentBuilderFactory.newInstance().apply {
-      isNamespaceAware = true
-    }.newDocumentBuilder().parse(manifest)
     val androidNamespace = "http://schemas.android.com/apk/res/android"
-    val permissions = document.getElementsByTagName("uses-permission").let { nodes ->
+    val permissions = manifestDocument().getElementsByTagName("uses-permission").let { nodes ->
       (0 until nodes.length)
         .map { nodes.item(it) as Element }
         .map { it.getAttributeNS(androidNamespace, "name") }
@@ -25,6 +21,36 @@ class StaticProjectGuardrailsTest {
     }
 
     assertEquals(listOf("android.permission.INTERNET"), permissions)
+  }
+
+  @Test
+  fun manifest_disablesAndroidBackup() {
+    val androidNamespace = "http://schemas.android.com/apk/res/android"
+    val application = manifestDocument().getElementsByTagName("application").item(0) as Element
+
+    assertEquals("false", application.getAttributeNS(androidNamespace, "allowBackup"))
+    assertEquals("@xml/backup_rules", application.getAttributeNS(androidNamespace, "fullBackupContent"))
+    assertEquals("@xml/data_extraction_rules", application.getAttributeNS(androidNamespace, "dataExtractionRules"))
+  }
+
+  @Test
+  fun backupRules_excludeSensitiveLocalStorageDomains() {
+    val document = parseXml("app/src/main/res/xml/backup_rules.xml")
+    val rootElement = document.documentElement
+    val excludedDomains = rootElement.excludedDomains()
+
+    assertEquals("full-backup-content", rootElement.tagName)
+    assertEquals(sensitiveBackupDomains, excludedDomains)
+  }
+
+  @Test
+  fun dataExtractionRules_excludeSensitiveLocalStorageDomainsForCloudAndTransfer() {
+    val document = parseXml("app/src/main/res/xml/data_extraction_rules.xml")
+    val rootElement = document.documentElement
+
+    assertEquals("data-extraction-rules", rootElement.tagName)
+    assertEquals(sensitiveBackupDomains, rootElement.childElement("cloud-backup").excludedDomains())
+    assertEquals(sensitiveBackupDomains, rootElement.childElement("device-transfer").excludedDomains())
   }
 
   @Test
@@ -71,7 +97,18 @@ class StaticProjectGuardrailsTest {
       .toList()
 
     val mojibakeMarkers = listOf("Ã", "Â", "\uFFFD")
-    val unsupportedClaims = listOf("privacidad", "cifrado", "cifrada", "encript", "tiempo real", "realtime")
+    val unsupportedClaims = listOf(
+      "privacidad",
+      "cifrado",
+      "cifrada",
+      "encript",
+      "tiempo real",
+      "realtime",
+      "autorizacion",
+      "autorización",
+      "verificado",
+      "verificada"
+    )
     val failures = checkedFiles.flatMap { file ->
       val text = file.readText()
       val lowerText = text.lowercase()
@@ -81,6 +118,32 @@ class StaticProjectGuardrailsTest {
     }
 
     assertTrue("Unexpected text markers in main sources: $failures", failures.isEmpty())
+  }
+
+  private val sensitiveBackupDomains = setOf("root", "file", "database", "sharedpref", "external")
+
+  private fun manifestDocument() = parseXml("app/src/main/AndroidManifest.xml")
+
+  private fun parseXml(relativePath: String) =
+    DocumentBuilderFactory.newInstance().apply {
+      isNamespaceAware = true
+    }.newDocumentBuilder().parse(File(root, relativePath))
+
+  private fun Element.childElement(tagName: String): Element {
+    val nodes = getElementsByTagName(tagName)
+    require(nodes.length == 1) { "Expected exactly one <$tagName> element" }
+    return nodes.item(0) as Element
+  }
+
+  private fun Element.excludedDomains(): Set<String> {
+    val excludedDomains = getElementsByTagName("exclude").let { nodes ->
+      (0 until nodes.length)
+        .map { nodes.item(it) as Element }
+        .filter { it.getAttribute("path") == "." }
+        .map { it.getAttribute("domain") }
+        .toSet()
+    }
+    return excludedDomains
   }
 
   private fun repoRoot(): File {
