@@ -145,6 +145,23 @@ class StaticProjectGuardrailsTest {
   }
 
   @Test
+  fun contactSharing_isScopedToChatGrantAndNotPublicPetDetailToggle() {
+    val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
+    val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val petDetailText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/PetDetailScreen.kt").readText()
+
+    assertTrue(repositoryText.contains("collection(BackendCollections.CONTACT_GRANTS)"))
+    assertTrue(repositoryText.contains("document(BackendCollections.OWNER_CONTACT_GRANT)"))
+    assertTrue(repositoryText.contains("require(ownerId == session.ownerId)"))
+    assertTrue(repositoryText.contains("batch.delete(grantRef)"))
+    assertTrue(repositoryText.contains("petDao.clearContactGrantForChat(chatId)"))
+    assertTrue(viewModelText.contains("activeContactGrantState"))
+    assertTrue(viewModelText.contains("ownerId = user.id"))
+    assertTrue(petDetailText.contains("isContactRevealed = false"))
+    assertTrue(petDetailText.contains("onContactToggle = null"))
+  }
+
+  @Test
   fun mainSourceText_doesNotContainMojibakeOrUnsupportedPrivacyClaims() {
     val sourceRoot = File(root, "app/src/main")
     val checkedFiles = sourceRoot

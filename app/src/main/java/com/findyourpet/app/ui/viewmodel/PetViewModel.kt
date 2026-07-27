@@ -9,6 +9,7 @@ import com.findyourpet.app.data.auth.UnavailableAuthRepository
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.data.profile.FirestoreUserProfileRepository
@@ -173,6 +174,23 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    val activeContactGrantState: StateFlow<BackendSyncState<ContactGrantEntity?>> = activeChatId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data<ContactGrantEntity?>(null, isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getActiveContactGrantForChatState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading<ContactGrantEntity?>(null, repository.usesRemoteBackend)
+    )
+
+    val activeContactGrant: StateFlow<ContactGrantEntity?> = activeContactGrantState
+        .map { it.data?.takeIf { grant -> grant.isActive } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     val userChatSessionsState: StateFlow<BackendSyncState<List<ChatSessionEntity>>> = currentUser.flatMapLatest { user ->
         if (user.id.isBlank()) {
             flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
@@ -309,9 +327,9 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     fun sendChatMessage(text: String, photoUri: String? = null) {
         val chatId = activeChatId.value ?: return
         val post = selectedPost.value
-        val postId = post?.id ?: "post_1"
-        val user = currentAuthenticatedUser() ?: return
         val session = activeChatSession.value
+        val postId = post?.id ?: session?.postId ?: return
+        val user = currentAuthenticatedUser() ?: return
         if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
             _authMessage.value = "Only chat participants can send messages."
             return
@@ -346,6 +364,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 repository.toggleChatContactSharing(
                     chatId = chatId,
                     isShared = isShared,
+                    ownerId = user.id,
                     ownerName = user.name,
                     phone = user.phone,
                     email = user.email
@@ -391,8 +410,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 ownerName = user.name,
                 ownerPhone = user.phone,
                 ownerEmail = user.email,
-                ownerAddress = "Dirección configurada por " + user.name,
-                isContactRevealedToAll = false
+                ownerAddress = "Direccion configurada por " + user.name
             )
             runCatching {
                 repository.insertPost(newPost)

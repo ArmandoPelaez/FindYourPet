@@ -190,7 +190,7 @@ fun ChatSessionCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (session.isContactSharedByOwner) "Contacto visible" else "Contacto oculto",
+                        text = if (session.isContactSharedByOwner) "Contacto disponible en este chat" else "Contacto oculto",
                         fontSize = 10.sp,
                         color = if (session.isContactSharedByOwner) ReunitedGreen else MaterialTheme.colorScheme.outline,
                         fontWeight = FontWeight.Medium

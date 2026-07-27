@@ -5,12 +5,14 @@ import com.findyourpet.app.data.local.AppDatabase
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.data.remote.BackendCollections
 import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.data.remote.RemoteMappers.toChatMessageEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toChatSessionEntity
+import com.findyourpet.app.data.remote.RemoteMappers.toContactGrantEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toDocument
 import com.findyourpet.app.data.remote.RemoteMappers.toNotificationEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toPetPostEntity
@@ -170,6 +172,30 @@ class PetRepository(context: Context) {
             }
         } ?: petDao.getChatSessionById(chatId).toLocalState(null)
 
+    fun getActiveContactGrantForChat(chatId: String): Flow<ContactGrantEntity?> =
+        getActiveContactGrantForChatState(chatId).map { it.data }
+
+    fun getActiveContactGrantForChatState(chatId: String): Flow<BackendSyncState<ContactGrantEntity?>> =
+        firestore?.let { db ->
+            observeDocument(
+                document = contactGrantRef(db, chatId),
+                initialData = null
+            ) { snapshot ->
+                snapshot.data
+                    ?.toContactGrantEntity(snapshot.id)
+                    ?.takeIf { it.isActive }
+            }.onEach { state ->
+                if (!state.hasError) {
+                    val grant = state.data
+                    if (grant != null) {
+                        petDao.insertContactGrant(grant)
+                    } else {
+                        petDao.clearContactGrantForChat(chatId)
+                    }
+                }
+            }
+        } ?: petDao.getActiveContactGrantForChat(chatId).toLocalState(null)
+
     fun getNotificationsForUser(userId: String): Flow<BackendSyncState<List<AppNotificationEntity>>> =
         firestore?.let { db ->
             observeQuery(
@@ -212,23 +238,6 @@ class PetRepository(context: Context) {
             .update(
                 mapOf(
                     "status" to status,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-            )
-            .await()
-    }
-
-    suspend fun updatePostContactRevealed(postId: String, isRevealed: Boolean) {
-        val db = firestore
-        if (db == null) {
-            petDao.updatePostContactRevealed(postId, isRevealed)
-            return
-        }
-        db.collection(BackendCollections.PET_POSTS)
-            .document(postId)
-            .update(
-                mapOf(
-                    "isContactRevealedToAll" to isRevealed,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
             )
@@ -426,6 +435,7 @@ class PetRepository(context: Context) {
     suspend fun toggleChatContactSharing(
         chatId: String,
         isShared: Boolean,
+        ownerId: String,
         ownerName: String,
         phone: String,
         email: String
@@ -434,7 +444,67 @@ class PetRepository(context: Context) {
         val timestamp = System.currentTimeMillis()
 
         if (db == null) {
+            val session = requireNotNull(petDao.getChatSessionById(chatId).first()) {
+                "La conversacion no existe."
+            }
+            require(ownerId == session.ownerId) {
+                "Solo el dueno puede compartir o revocar contacto."
+            }
             petDao.updateChatContactShared(chatId, isShared)
+            if (isShared) {
+                petDao.insertContactGrant(
+                    ContactGrantEntity(
+                        id = BackendCollections.OWNER_CONTACT_GRANT,
+                        chatId = chatId,
+                        postId = session.postId,
+                        ownerId = session.ownerId,
+                        reporterId = session.reporterId,
+                        sharedBy = ownerId,
+                        sharedAt = timestamp,
+                        revokedAt = null,
+                        isActive = true,
+                        ownerName = ownerName,
+                        ownerPhone = phone,
+                        ownerEmail = email
+                    )
+                )
+            } else {
+                petDao.clearContactGrantForChat(chatId)
+            }
+            val localText = if (isShared) {
+                "$ownerName habilito el contacto dentro de esta conversacion."
+            } else {
+                "$ownerName oculto sus datos de contacto."
+            }
+            petDao.insertMessage(
+                ChatMessageEntity(
+                    id = UUID.randomUUID().toString(),
+                    chatId = chatId,
+                    postId = session.postId,
+                    senderId = session.ownerId,
+                    senderName = ownerName,
+                    text = localText,
+                    photoUri = null,
+                    timestamp = timestamp,
+                    isSystemMessage = true
+                )
+            )
+            petDao.updateChatLastMessage(chatId, "Contacto actualizado en este chat", timestamp)
+            petDao.insertNotification(
+                AppNotificationEntity(
+                    id = UUID.randomUUID().toString(),
+                    recipientId = session.reporterId,
+                    title = "Contacto actualizado",
+                    message = if (isShared) {
+                        "El dueno habilito contacto dentro de la conversacion."
+                    } else {
+                        "El dueno actualizo la disponibilidad de contacto."
+                    },
+                    type = "CONTACT_SHARED",
+                    targetId = chatId,
+                    timestamp = timestamp
+                )
+            )
             return
         }
 
@@ -442,6 +512,9 @@ class PetRepository(context: Context) {
         val session = requireNotNull(
             chatRef.get().await().data?.toChatSessionEntity(chatId)
         ) { "La conversacion no existe." }
+        require(ownerId == session.ownerId) {
+            "Solo el dueno puede compartir o revocar contacto."
+        }
 
         val text = if (isShared) {
             "$ownerName habilito el contacto dentro de esta conversacion."
@@ -472,15 +545,37 @@ class PetRepository(context: Context) {
             targetId = chatId,
             timestamp = timestamp
         )
+        val grant = ContactGrantEntity(
+            id = BackendCollections.OWNER_CONTACT_GRANT,
+            chatId = chatId,
+            postId = session.postId,
+            ownerId = session.ownerId,
+            reporterId = session.reporterId,
+            sharedBy = ownerId,
+            sharedAt = timestamp,
+            revokedAt = null,
+            isActive = true,
+            ownerName = ownerName,
+            ownerPhone = phone,
+            ownerEmail = email
+        )
+        val grantRef = contactGrantRef(db, chatId)
 
         db.runBatch { batch ->
             batch.update(
                 chatRef,
                 mapOf(
                     "isContactSharedByOwner" to isShared,
+                    "lastMessage" to "Contacto actualizado en este chat",
+                    "lastMessageTimestamp" to timestamp,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
             )
+            if (isShared) {
+                batch.set(grantRef, grant.toDocument(), com.google.firebase.firestore.SetOptions.merge())
+            } else {
+                batch.delete(grantRef)
+            }
             batch.set(
                 chatRef.collection(BackendCollections.MESSAGES).document(systemMsg.id),
                 systemMsg.toDocument()
@@ -493,6 +588,9 @@ class PetRepository(context: Context) {
                 notification.toDocument()
             )
         }.await()
+        if (!isShared) {
+            petDao.clearContactGrantForChat(chatId)
+        }
     }
 
     suspend fun markNotificationAsRead(userId: String, id: String) {
@@ -512,11 +610,13 @@ class PetRepository(context: Context) {
         petDao.clearSightings()
         petDao.clearMessages()
         petDao.clearChatSessions()
+        petDao.clearContactGrants()
         petDao.clearNotifications()
     }
 
     suspend fun retainPrivateCacheForUser(userId: String) {
         petDao.clearChatSessionsNotForUser(userId)
+        petDao.clearContactGrantsNotForUser(userId)
         petDao.clearNotificationsNotForUser(userId)
     }
 
@@ -547,8 +647,7 @@ class PetRepository(context: Context) {
                     ownerName = "Carlos Ramirez",
                     ownerPhone = "+506 8888-9900",
                     ownerEmail = "carlos.ramirez@email.com",
-                    ownerAddress = "Calle 5, San Jose",
-                    isContactRevealedToAll = false
+                    ownerAddress = "Calle 5, San Jose"
                 ),
                 PetPostEntity(
                     id = "post_2",
@@ -568,8 +667,7 @@ class PetRepository(context: Context) {
                     ownerName = "Maria Elena Gomez",
                     ownerPhone = "+506 7011-2233",
                     ownerEmail = "maria.gomez@email.com",
-                    ownerAddress = "Av 4, San Pedro",
-                    isContactRevealedToAll = false
+                    ownerAddress = "Av 4, San Pedro"
                 ),
                 PetPostEntity(
                     id = "post_3",
@@ -589,8 +687,7 @@ class PetRepository(context: Context) {
                     ownerName = "Andres Solis",
                     ownerPhone = "+506 8322-1100",
                     ownerEmail = "andres.solis@email.com",
-                    ownerAddress = "Barrio Pinto, Curridabat",
-                    isContactRevealedToAll = false
+                    ownerAddress = "Barrio Pinto, Curridabat"
                 )
             )
 
@@ -722,6 +819,12 @@ class PetRepository(context: Context) {
         map { BackendSyncState.data(it, isFromCache = true, hasPendingWrites = false, isRemoteBackend = false) }
             .onStart { emit(BackendSyncState.loading(initialData, isRemoteBackend = false)) }
             .catch { emit(BackendSyncState.error(initialData, it.message ?: "Local cache read failed.", isRemoteBackend = false)) }
+
+    private fun contactGrantRef(db: FirebaseFirestore, chatId: String) =
+        db.collection(BackendCollections.CHAT_SESSIONS)
+            .document(chatId)
+            .collection(BackendCollections.CONTACT_GRANTS)
+            .document(BackendCollections.OWNER_CONTACT_GRANT)
 
     private fun configuredFirestore(context: Context): FirebaseFirestore? =
         runCatching {

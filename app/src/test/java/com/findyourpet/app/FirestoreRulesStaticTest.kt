@@ -19,6 +19,11 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("request.resource.data.ownerId == uid()"))
     assertTrue(rulesText.contains("request.resource.data.ownerId == resource.data.ownerId"))
     assertTrue(rulesText.contains("allow delete: if isPostOwner()"))
+    assertTrue(rulesText.contains("hasNoPublicContactFields(request.resource.data)"))
+    assertTrue(rulesText.contains("'isContactRevealedToAll'"))
+    assertTrue(rulesText.contains("'ownerPhone'"))
+    assertTrue(rulesText.contains("'ownerEmail'"))
+    assertTrue(rulesText.contains("'ownerAddress'"))
   }
 
   @Test
@@ -43,11 +48,24 @@ class FirestoreRulesStaticTest {
   }
 
   @Test
+  fun contactGrantRulesAreChatScopedAndOwnerControlled() {
+    assertTrue(rulesText.contains("match /contactGrants/{grantId}"))
+    assertTrue(rulesText.contains("grantId == 'ownerContact'"))
+    assertTrue(rulesText.contains("allow get: if isChatParticipant"))
+    assertTrue(rulesText.contains("allow list: if false"))
+    assertTrue(rulesText.contains("get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid()"))
+    assertTrue(rulesText.contains("grantMatchesChat"))
+    assertTrue(rulesText.contains("request.resource.data.ownerPhone is string"))
+    assertTrue(rulesText.contains("request.resource.data.ownerEmail is string"))
+  }
+
+  @Test
   fun notificationsAreScopedToRecipient() {
     assertTrue(rulesText.contains("match /notifications/{notificationId}"))
     assertTrue(rulesText.contains("request.resource.data.recipientId == userId"))
     assertTrue(rulesText.contains("request.resource.data.recipientId == resource.data.recipientId"))
     assertTrue(rulesText.contains("affectedKeys().hasOnly(['isRead'])"))
+    assertTrue(rulesText.contains("hasNoSensitiveNotificationFields(request.resource.data)"))
   }
 
   private fun repoRoot(): File {

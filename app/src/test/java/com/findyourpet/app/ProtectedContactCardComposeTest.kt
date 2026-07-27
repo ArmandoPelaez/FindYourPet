@@ -35,11 +35,20 @@ class ProtectedContactCardComposeTest {
   fun protectedContactCard_visibleStateShowsOwnerContact() {
     renderContactCard(isContactRevealed = true)
 
-    composeTestRule.onNodeWithText("Datos de contacto visibles").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Compartido por el dueno en la conversacion").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Contacto disponible en este chat").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Compartido por el dueno en esta conversacion").assertIsDisplayed()
     composeTestRule.onNodeWithText("Carlos Ramirez").assertIsDisplayed()
     composeTestRule.onNodeWithText("+506 8888-9900").assertIsDisplayed()
     composeTestRule.onNodeWithText("carlos.ramirez@email.com").assertIsDisplayed()
+  }
+
+  @Test
+  fun protectedContactCard_revokedStateMasksPreviousContact() {
+    renderContactCard(isContactRevealed = false)
+
+    composeTestRule.onNodeWithText("Contacto oculto").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("+506 8888-9900").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("carlos.ramirez@email.com").assertCountEquals(0)
   }
 
   private fun renderContactCard(isContactRevealed: Boolean) {

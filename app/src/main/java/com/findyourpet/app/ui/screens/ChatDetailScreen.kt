@@ -48,6 +48,8 @@ fun ChatDetailScreen(
     val messagesState by viewModel.activeChatMessagesState.collectAsState()
     val chatSession by viewModel.activeChatSession.collectAsState()
     val chatSessionState by viewModel.activeChatSessionState.collectAsState()
+    val contactGrant by viewModel.activeContactGrant.collectAsState()
+    val contactGrantState by viewModel.activeContactGrantState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
@@ -66,7 +68,7 @@ fun ChatDetailScreen(
 
     val session = chatSession
     val isOwner = session?.let { OwnershipPolicy.canManagePost(currentUser.id, it.ownerId) } == true
-    val isContactShared = session?.isContactSharedByOwner == true
+    val isContactShared = contactGrant?.isActive == true
 
     Scaffold(
         topBar = {
@@ -120,6 +122,7 @@ fun ChatDetailScreen(
         ) {
             SyncStatusBanner(state = chatSessionState)
             SyncStatusBanner(state = messagesState)
+            SyncStatusBanner(state = contactGrantState)
 
             // Contact visibility control.
             Card(
@@ -157,7 +160,7 @@ fun ChatDetailScreen(
                                     text = if (isContactShared)
                                         "El dueno habilito el contacto dentro de esta conversacion."
                                     else
-                                        "Tus datos de telefono y correo no se muestran en la ficha publica.",
+                                        "El contacto directo solo aparece cuando el dueno lo autoriza para este chat.",
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -171,6 +174,27 @@ fun ChatDetailScreen(
                                 colors = SwitchDefaults.colors(checkedThumbColor = ReunitedGreen)
                             )
                         }
+                    }
+
+                    contactGrant?.takeIf { it.isActive }?.let { grant ->
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = grant.ownerName,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = grant.ownerPhone,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = grant.ownerEmail,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }

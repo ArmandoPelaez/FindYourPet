@@ -87,7 +87,6 @@ fun PetDetailScreen(
     }
 
     val isOwner = OwnershipPolicy.canManagePost(currentUser.id, pet.ownerId)
-    val isContactRevealed = pet.isContactRevealedToAll
 
     Scaffold(
         topBar = {
@@ -292,10 +291,8 @@ fun PetDetailScreen(
                         ownerName = pet.ownerName,
                         ownerPhone = pet.ownerPhone,
                         ownerEmail = pet.ownerEmail,
-                        isContactRevealed = isContactRevealed,
-                        onContactToggle = if (isOwner) {
-                            { viewModel.toggleContactSharing(!isContactRevealed) }
-                        } else null,
+                        isContactRevealed = false,
+                        onContactToggle = null,
                         onStartChat = {
                             val chatId = "${pet.id}_${currentUser.id}"
                             onStartChatClick(chatId)

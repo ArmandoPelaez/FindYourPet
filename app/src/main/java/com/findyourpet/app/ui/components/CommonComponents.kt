@@ -144,13 +144,13 @@ fun ProtectedContactCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isContactRevealed) "Datos de contacto visibles" else "Contacto oculto",
+                        text = if (isContactRevealed) "Contacto disponible en este chat" else "Contacto oculto",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (isContactRevealed) "Compartido por el dueno en la conversacion" else "La ficha publica no muestra telefono ni email",
+                        text = if (isContactRevealed) "Compartido por el dueno en esta conversacion" else "La ficha publica no muestra telefono ni email",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -161,7 +161,7 @@ fun ProtectedContactCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Contact fields shown according to owner visibility settings.
+            // Contact fields are shown only when a chat-scoped grant is active.
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(

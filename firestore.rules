@@ -44,12 +44,43 @@ service cloud.firestore {
 
     function contactFieldsChanged() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny([
-        'isContactSharedByOwner',
+        'isContactSharedByOwner'
+      ]);
+    }
+
+    function hasNoPublicContactFields(data) {
+      return !data.keys().hasAny([
         'isContactRevealedToAll',
         'ownerPhone',
         'ownerEmail',
-        'ownerAddress'
+        'ownerAddress',
+        'latitude',
+        'longitude'
       ]);
+    }
+
+    function hasNoSensitiveNotificationFields(data) {
+      return !data.keys().hasAny([
+        'ownerPhone',
+        'ownerEmail',
+        'ownerAddress',
+        'phone',
+        'email',
+        'address',
+        'latitude',
+        'longitude',
+        'coordinates',
+        'contactValue'
+      ]);
+    }
+
+    function grantMatchesChat(chatId, grantData, chatData) {
+      return grantData.id == 'ownerContact'
+        && grantData.chatId == chatId
+        && grantData.postId == chatData.postId
+        && grantData.ownerId == chatData.ownerId
+        && grantData.reporterId == chatData.reporterId
+        && grantData.sharedBy == chatData.ownerId;
     }
 
     function chatAfter(chatId) {
@@ -79,7 +110,8 @@ service cloud.firestore {
           && request.resource.data.message is string
           && request.resource.data.type in ['ALERT', 'CHAT', 'CONTACT_SHARED']
           && request.resource.data.targetId is string
-          && request.resource.data.isRead == false;
+          && request.resource.data.isRead == false
+          && hasNoSensitiveNotificationFields(request.resource.data);
         allow update: if isUser(userId)
           && request.resource.data.recipientId == resource.data.recipientId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
@@ -93,10 +125,12 @@ service cloud.firestore {
         && request.resource.data.ownerId == uid()
         && request.resource.data.id == postId
         && request.resource.data.petName is string
-        && request.resource.data.status in ['PERDIDO', 'AVISTADO', 'REUNIDO'];
+        && request.resource.data.status in ['PERDIDO', 'AVISTADO', 'REUNIDO']
+        && hasNoPublicContactFields(request.resource.data);
       allow update: if isPostOwner()
         && keepsOwnerId()
-        && request.resource.data.id == resource.data.id;
+        && request.resource.data.id == resource.data.id
+        && hasNoPublicContactFields(request.resource.data);
       allow delete: if isPostOwner();
     }
 
@@ -131,6 +165,25 @@ service cloud.firestore {
         allow read: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data);
         allow create: if validMessageCreate(chatId, messageId);
         allow update, delete: if false;
+      }
+
+      match /contactGrants/{grantId} {
+        allow get: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data)
+          && grantId == 'ownerContact';
+        allow list: if false;
+        allow create, update: if signedIn()
+          && get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid()
+          && grantId == 'ownerContact'
+          && request.resource.data.isActive == true
+          && request.resource.data.ownerPhone is string
+          && request.resource.data.ownerEmail is string
+          && grantMatchesChat(
+            chatId,
+            request.resource.data,
+            get(/databases/$(database)/documents/chatSessions/$(chatId)).data
+          );
+        allow delete: if signedIn()
+          && get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid();
       }
     }
 

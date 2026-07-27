@@ -11,15 +11,9 @@ data class PetPostDocument(
     val photoUri: String = "",
     val dateLost: Long = 0L,
     val lastSeenLocation: String = "",
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0,
     val rewardAmount: String = "",
     val ownerId: String = "",
     val ownerName: String = "",
-    val ownerPhone: String = "",
-    val ownerEmail: String = "",
-    val ownerAddress: String = "",
-    val isContactRevealedToAll: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 )
@@ -78,4 +72,21 @@ data class AppNotificationDocument(
     val timestamp: Long = 0L,
     val isRead: Boolean = false,
     val createdAt: Long = 0L
+)
+
+data class ContactGrantDocument(
+    val id: String = "",
+    val chatId: String = "",
+    val postId: String = "",
+    val ownerId: String = "",
+    val reporterId: String = "",
+    val sharedBy: String = "",
+    val sharedAt: Long = 0L,
+    val revokedAt: Long? = null,
+    val isActive: Boolean = false,
+    val ownerName: String = "",
+    val ownerPhone: String = "",
+    val ownerEmail: String = "",
+    val createdAt: Long = 0L,
+    val updatedAt: Long = 0L
 )

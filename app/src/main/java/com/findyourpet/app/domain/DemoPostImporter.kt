@@ -12,8 +12,7 @@ object DemoPostImporter {
             ownerName = user.name,
             ownerPhone = user.phone,
             ownerEmail = user.email,
-            ownerAddress = "Address configured by ${user.name}",
-            isContactRevealedToAll = false
+            ownerAddress = "Address configured by ${user.name}"
         )
     }
 }

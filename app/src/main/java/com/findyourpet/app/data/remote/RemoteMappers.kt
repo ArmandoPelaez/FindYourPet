@@ -3,6 +3,7 @@ package com.findyourpet.app.data.remote
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.google.firebase.Timestamp
@@ -22,15 +23,9 @@ object RemoteMappers {
             "photoUri" to photoUri,
             "dateLost" to dateLost,
             "lastSeenLocation" to lastSeenLocation,
-            "latitude" to latitude,
-            "longitude" to longitude,
             "rewardAmount" to rewardAmount,
             "ownerId" to ownerId,
             "ownerName" to ownerName,
-            "ownerPhone" to ownerPhone,
-            "ownerEmail" to ownerEmail,
-            "ownerAddress" to ownerAddress,
-            "isContactRevealedToAll" to isContactRevealedToAll,
             "createdAt" to createdAt,
             "updatedAt" to FieldValue.serverTimestamp()
         )
@@ -52,10 +47,9 @@ object RemoteMappers {
             rewardAmount = string("rewardAmount"),
             ownerId = string("ownerId"),
             ownerName = string("ownerName"),
-            ownerPhone = string("ownerPhone"),
-            ownerEmail = string("ownerEmail"),
-            ownerAddress = string("ownerAddress"),
-            isContactRevealedToAll = bool("isContactRevealedToAll")
+            ownerPhone = "",
+            ownerEmail = "",
+            ownerAddress = ""
         )
 
     fun DocumentSnapshot.toPetPostEntity(): PetPostEntity? =
@@ -175,6 +169,40 @@ object RemoteMappers {
             isRead = bool("isRead")
         )
 
+    fun ContactGrantEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
+        mapOf(
+            "id" to id,
+            "chatId" to chatId,
+            "postId" to postId,
+            "ownerId" to ownerId,
+            "reporterId" to reporterId,
+            "sharedBy" to sharedBy,
+            "sharedAt" to sharedAt,
+            "revokedAt" to revokedAt,
+            "isActive" to isActive,
+            "ownerName" to ownerName,
+            "ownerPhone" to ownerPhone,
+            "ownerEmail" to ownerEmail,
+            "createdAt" to createdAt,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+    fun Map<String, Any?>.toContactGrantEntity(documentId: String = string("id")): ContactGrantEntity =
+        ContactGrantEntity(
+            id = string("id").ifBlank { documentId },
+            chatId = string("chatId"),
+            postId = string("postId"),
+            ownerId = string("ownerId"),
+            reporterId = string("reporterId"),
+            sharedBy = string("sharedBy"),
+            sharedAt = long("sharedAt"),
+            revokedAt = nullableLong("revokedAt"),
+            isActive = bool("isActive"),
+            ownerName = string("ownerName"),
+            ownerPhone = string("ownerPhone"),
+            ownerEmail = string("ownerEmail")
+        )
+
     private fun Map<String, Any?>.string(key: String): String = this[key] as? String ?: ""
 
     private fun Map<String, Any?>.bool(key: String): Boolean = this[key] as? Boolean ?: false
@@ -186,6 +214,15 @@ object RemoteMappers {
             is Double -> value.toLong()
             is Timestamp -> value.toDate().time
             else -> 0L
+        }
+
+    private fun Map<String, Any?>.nullableLong(key: String): Long? =
+        when (val value = this[key]) {
+            is Long -> value
+            is Int -> value.toLong()
+            is Double -> value.toLong()
+            is Timestamp -> value.toDate().time
+            else -> null
         }
 
     private fun Map<String, Any?>.double(key: String): Double =
