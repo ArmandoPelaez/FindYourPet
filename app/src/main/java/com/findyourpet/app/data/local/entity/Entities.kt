@@ -30,6 +30,7 @@ data class PetPostEntity(
 data class SightingAlertEntity(
     @PrimaryKey val id: String,
     val postId: String,
+    val ownerId: String = "",
     val reporterId: String,
     val reporterName: String,
     val photoUri: String,
@@ -70,6 +71,7 @@ data class ChatSessionEntity(
 @Entity(tableName = "app_notifications")
 data class AppNotificationEntity(
     @PrimaryKey val id: String,
+    val recipientId: String = "",
     val title: String,
     val message: String,
     val type: String, // ALERT, CHAT, CONTACT_SHARED

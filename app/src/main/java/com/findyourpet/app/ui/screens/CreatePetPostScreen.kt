@@ -53,6 +53,7 @@ fun CreatePetPostScreen(
     )
     var photoUri by remember { mutableStateOf(presetPhotos.first()) }
     var isSubmitting by remember { mutableStateOf(false) }
+    val authMessage by viewModel.authMessage.collectAsState()
 
     Scaffold(
         topBar = {
@@ -74,7 +75,7 @@ fun CreatePetPostScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Demo contact visibility notice.
+            // Contact visibility notice.
             Card(
                 colors = CardDefaults.cardColors(containerColor = TealSecondary.copy(alpha = 0.12f)),
                 shape = RoundedCornerShape(16.dp)
@@ -92,13 +93,13 @@ fun CreatePetPostScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Contacto limitado en esta demo",
+                            text = "Contacto limitado",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
                             color = TealSecondary
                         )
                         Text(
-                            text = "La ficha pública oculta teléfono y email hasta que decidas mostrarlos dentro del flujo de chat local.",
+                            text = "La ficha publica oculta telefono y email hasta que decidas mostrarlos dentro del flujo de conversacion.",
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -231,6 +232,9 @@ fun CreatePetPostScreen(
                             onComplete = {
                                 isSubmitting = false
                                 onPostCreated()
+                            },
+                            onError = {
+                                isSubmitting = false
                             }
                         )
                     }
@@ -253,6 +257,13 @@ fun CreatePetPostScreen(
                         fontSize = 15.sp
                     )
                 }
+            }
+            authMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp
+                )
             }
         }
     }

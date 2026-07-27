@@ -28,6 +28,12 @@ interface PetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPost(post: PetPostEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPosts(posts: List<PetPostEntity>)
+
+    @Query("DELETE FROM pet_posts")
+    suspend fun clearPosts()
+
     @Query("UPDATE pet_posts SET status = :status WHERE id = :postId")
     suspend fun updatePostStatus(postId: String, status: String)
 
@@ -41,12 +47,24 @@ interface PetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSighting(sighting: SightingAlertEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSightings(sightings: List<SightingAlertEntity>)
+
+    @Query("DELETE FROM sighting_alerts WHERE postId = :postId")
+    suspend fun clearSightingsForPost(postId: String)
+
     // Chat Messages
     @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")
     fun getMessagesForChat(chatId: String): Flow<List<ChatMessageEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: ChatMessageEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessages(messages: List<ChatMessageEntity>)
+
+    @Query("DELETE FROM chat_messages WHERE chatId = :chatId")
+    suspend fun clearMessagesForChat(chatId: String)
 
     // Chat Sessions
     @Query("SELECT * FROM chat_sessions WHERE ownerId = :userId OR reporterId = :userId ORDER BY lastMessageTimestamp DESC")
@@ -57,6 +75,12 @@ interface PetDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChatSession(session: ChatSessionEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChatSessions(sessions: List<ChatSessionEntity>)
+
+    @Query("DELETE FROM chat_sessions")
+    suspend fun clearChatSessions()
 
     @Query("UPDATE chat_sessions SET isContactSharedByOwner = :isShared WHERE id = :chatId")
     suspend fun updateChatContactShared(chatId: String, isShared: Boolean)
@@ -71,6 +95,24 @@ interface PetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotification(notification: AppNotificationEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNotifications(notifications: List<AppNotificationEntity>)
+
+    @Query("DELETE FROM app_notifications")
+    suspend fun clearNotifications()
+
     @Query("UPDATE app_notifications SET isRead = 1 WHERE id = :id")
     suspend fun markNotificationAsRead(id: String)
+
+    @Query("DELETE FROM sighting_alerts")
+    suspend fun clearSightings()
+
+    @Query("DELETE FROM chat_messages")
+    suspend fun clearMessages()
+
+    @Query("DELETE FROM chat_sessions WHERE ownerId != :userId AND reporterId != :userId")
+    suspend fun clearChatSessionsNotForUser(userId: String)
+
+    @Query("DELETE FROM app_notifications WHERE recipientId != :userId")
+    suspend fun clearNotificationsNotForUser(userId: String)
 }

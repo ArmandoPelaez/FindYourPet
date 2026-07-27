@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.ReunitedGreen
 import com.findyourpet.app.ui.viewmodel.PetViewModel
@@ -39,12 +40,13 @@ fun ChatListScreen(
     onChatSelect: (String) -> Unit
 ) {
     val chatSessions by viewModel.userChatSessions.collectAsState()
+    val chatSessionsState by viewModel.userChatSessionsState.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chats de la demo", fontWeight = FontWeight.Bold) },
+                title = { Text("Conversaciones", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -58,6 +60,7 @@ fun ChatListScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            SyncStatusBanner(state = chatSessionsState)
             if (chatSessions.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -80,7 +83,7 @@ fun ChatListScreen(
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Cuando envíes o recibas una alerta de avistamiento, se abrirá un chat privado aquí.",
+                            text = if (chatSessionsState.isLoading) "Cargando conversaciones." else "Cuando envies o recibas una alerta de avistamiento, se abrira una conversacion aqui.",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

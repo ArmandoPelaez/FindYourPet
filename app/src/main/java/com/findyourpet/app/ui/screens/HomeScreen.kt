@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.ui.components.PetStatusChip
+import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.TealSecondary
@@ -51,6 +52,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit
 ) {
     val posts by viewModel.filteredPosts.collectAsState()
+    val feedState by viewModel.postFeedState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedSpecies by viewModel.selectedSpecies.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
@@ -148,6 +150,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            SyncStatusBanner(state = feedState)
             if (posts.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -174,13 +177,13 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No hay publicaciones de mascotas perdidas",
+                                text = if (feedState.isLoading) "Cargando publicaciones" else "No hay publicaciones de mascotas perdidas",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Publica una nueva ficha usando el botón '+'.",
+                                text = if (feedState.errorMessage != null) "Revisa tu conexion o vuelve a intentarlo." else "Publica una nueva ficha usando el boton '+'.",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

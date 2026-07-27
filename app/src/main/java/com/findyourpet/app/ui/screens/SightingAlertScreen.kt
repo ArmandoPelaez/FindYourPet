@@ -59,6 +59,7 @@ fun SightingAlertScreen(
     )
     var selectedPhotoUri by remember { mutableStateOf(presetPhotos.first()) }
     var isSubmitting by remember { mutableStateOf(false) }
+    val authMessage by viewModel.authMessage.collectAsState()
 
     Scaffold(
         topBar = {
@@ -290,6 +291,9 @@ fun SightingAlertScreen(
                         onComplete = { chatId ->
                             isSubmitting = false
                             onAlertSent(chatId)
+                        },
+                        onError = {
+                            isSubmitting = false
                         }
                     )
                 },
@@ -310,11 +314,19 @@ fun SightingAlertScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "🚨 ENVIAR ALERTA DE DEMO",
+                        text = "ENVIAR ALERTA",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 15.sp
                     )
                 }
+            }
+            authMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.AlertRedContainer
 import com.findyourpet.app.ui.theme.CoralPrimary
@@ -60,6 +61,51 @@ fun PetStatusChip(status: String, modifier: Modifier = Modifier) {
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
 @Composable
+fun <T> SyncStatusBanner(
+    state: BackendSyncState<T>,
+    modifier: Modifier = Modifier
+) {
+    val message = when {
+        state.errorMessage != null -> state.errorMessage
+        state.isLoading -> "Cargando datos compartidos"
+        state.hasPendingWrites -> "Guardando cambios"
+        state.isFromCache && state.isRemoteBackend -> "Mostrando datos en cache"
+        !state.isRemoteBackend -> "Modo local"
+        else -> null
+    } ?: return
+
+    val color = when {
+        state.errorMessage != null -> AlertRed
+        state.hasPendingWrites -> CoralPrimary
+        state.isLoading -> TealSecondary
+        else -> MaterialTheme.colorScheme.outline
+    }
+
+    Surface(
+        color = color.copy(alpha = 0.12f),
+        contentColor = color,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (state.errorMessage != null) Icons.Filled.Error else Icons.Filled.Sync,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = message,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
 fun ProtectedContactCard(
     ownerName: String,
     ownerPhone: String,
@@ -98,13 +144,13 @@ fun ProtectedContactCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isContactRevealed) "Datos de contacto visibles" else "Contacto oculto en esta demo",
+                        text = if (isContactRevealed) "Datos de contacto visibles" else "Contacto oculto",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (isContactRevealed) "Compartido por el dueño en el flujo local" else "La ficha pública no muestra teléfono ni email",
+                        text = if (isContactRevealed) "Compartido por el dueno en la conversacion" else "La ficha publica no muestra telefono ni email",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -115,7 +161,7 @@ fun ProtectedContactCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Contact fields shown with demo visibility rules.
+            // Contact fields shown according to owner visibility settings.
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -198,7 +244,7 @@ fun ProtectedContactCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Inicia un chat para comunicarte con el dueño. En esta demo, el dueño decide cuándo mostrar su teléfono.",
+                            text = "Inicia una conversacion para comunicarte con el dueno. El dueno decide cuando mostrar su telefono.",
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

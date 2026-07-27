@@ -23,12 +23,23 @@ service cloud.firestore {
     }
 
     function isChatParticipant(data) {
-      return signedIn() && (data.ownerId == uid() || data.reporterId == uid());
+      return signedIn() && (
+        data.ownerId == uid()
+        || data.reporterId == uid()
+        || (data.participantIds is list && uid() in data.participantIds)
+      );
     }
 
     function keepsChatParticipants() {
       return request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.reporterId == resource.data.reporterId;
+        && request.resource.data.reporterId == resource.data.reporterId
+        && request.resource.data.participantIds == resource.data.participantIds;
+    }
+
+    function validParticipantIds(data) {
+      return data.participantIds is list
+        && data.participantIds.size() == 2
+        && data.participantIds.hasAll([data.ownerId, data.reporterId]);
     }
 
     function contactFieldsChanged() {
@@ -41,42 +52,84 @@ service cloud.firestore {
       ]);
     }
 
+    function chatAfter(chatId) {
+      return getAfter(/databases/$(database)/documents/chatSessions/$(chatId)).data;
+    }
+
+    function validMessageCreate(chatId, messageId) {
+      return isChatParticipant(chatAfter(chatId))
+        && request.resource.data.id == messageId
+        && request.resource.data.chatId == chatId
+        && request.resource.data.senderId == uid()
+        && request.resource.data.senderId in chatAfter(chatId).participantIds;
+    }
+
     match /users/{userId} {
       allow create: if isUser(userId) && request.resource.data.uid == userId;
       allow read, delete: if isUser(userId);
-      allow update: if isUser(userId) && request.resource.data.uid == userId;
+      allow update: if isUser(userId)
+        && request.resource.data.uid == userId
+        && resource.data.uid == userId;
+
+      match /notifications/{notificationId} {
+        allow read: if isUser(userId);
+        allow create: if signedIn()
+          && request.resource.data.recipientId == userId
+          && request.resource.data.title is string
+          && request.resource.data.message is string
+          && request.resource.data.type in ['ALERT', 'CHAT', 'CONTACT_SHARED']
+          && request.resource.data.targetId is string
+          && request.resource.data.isRead == false;
+        allow update: if isUser(userId)
+          && request.resource.data.recipientId == resource.data.recipientId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+        allow delete: if isUser(userId);
+      }
     }
 
     match /petPosts/{postId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.ownerId == uid();
-      allow update: if isPostOwner() && keepsOwnerId();
+      allow create: if signedIn()
+        && request.resource.data.ownerId == uid()
+        && request.resource.data.id == postId
+        && request.resource.data.petName is string
+        && request.resource.data.status in ['PERDIDO', 'AVISTADO', 'REUNIDO'];
+      allow update: if isPostOwner()
+        && keepsOwnerId()
+        && request.resource.data.id == resource.data.id;
       allow delete: if isPostOwner();
     }
 
     match /sightings/{sightingId} {
       allow read: if isChatParticipant(resource.data);
       allow create: if signedIn()
+        && request.resource.data.id == sightingId
         && request.resource.data.reporterId == uid()
         && request.resource.data.ownerId is string
-        && request.resource.data.postId is string;
+        && request.resource.data.postId is string
+        && request.resource.data.ownerId == get(/databases/$(database)/documents/petPosts/$(request.resource.data.postId)).data.ownerId;
       allow update, delete: if false;
     }
 
     match /chatSessions/{chatId} {
-      allow read: if isChatParticipant(resource.data);
+      allow get: if isChatParticipant(resource.data);
+      allow list: if signedIn()
+        && uid() in resource.data.participantIds;
       allow create: if isChatParticipant(request.resource.data)
+        && request.resource.data.id == chatId
         && request.resource.data.ownerId is string
-        && request.resource.data.reporterId is string;
+        && request.resource.data.reporterId is string
+        && request.resource.data.postId is string
+        && validParticipantIds(request.resource.data);
       allow update: if isChatParticipant(resource.data)
         && keepsChatParticipants()
+        && request.resource.data.id == resource.data.id
         && (!contactFieldsChanged() || resource.data.ownerId == uid());
       allow delete: if signedIn() && resource.data.ownerId == uid();
 
       match /messages/{messageId} {
         allow read: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data);
-        allow create: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data)
-          && request.resource.data.senderId == uid();
+        allow create: if validMessageCreate(chatId, messageId);
         allow update, delete: if false;
       }
     }
