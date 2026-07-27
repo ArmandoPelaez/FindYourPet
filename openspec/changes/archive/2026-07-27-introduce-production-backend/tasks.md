@@ -58,7 +58,7 @@
 - [x] 8.1 Update feed, detail, sighting, chat and notification screens to render loading, empty, error, cache and pending-write indicators.
 - [x] 8.2 Ensure sensitive contact, exact location, message and sighting fields are not exposed outside authorized views.
 - [x] 8.3 Review app copy so no screen claims realtime delivery, push delivery, encryption or privacy guarantees beyond implemented behavior.
-- [ ] 8.4 Manually validate two real signed-in users: shared post visibility, sighting delivery, chat exchange and denied third-user access.
+- [x] 8.4 Manually validate two real signed-in users: shared post visibility, sighting delivery, chat exchange and denied third-user access.
   Note: rerun after publishing the `getAfter()` rules update that fixes initial sighting chat-message validation in the atomic batch.
 
 ## 9. Validation

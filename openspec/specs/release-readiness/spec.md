@@ -61,20 +61,25 @@ The Android namespace, application id, Kotlin package declarations, source paths
 - **THEN** Kotlin sources, source paths, imports, namespace, application id, and test expectations use `com.findyourpet.app`
 
 ### Requirement: Template And Dependency Noise Is Removed
-The project SHALL remove broken template tests, unused imports, and unused active dependencies that obscure what the current demo actually uses.
+The project SHALL remove broken template tests, unused imports, and unused active dependencies that obscure what the current app actually uses.
 
 #### Scenario: Template tests are removed or replaced
 - **GIVEN** the repository contains generated example tests
-- **WHEN** the stabilization change is implemented
+- **WHEN** stabilization and authentication changes are implemented
 - **THEN** tests that only verify template behavior are removed or replaced with app-specific smoke tests
 
 #### Scenario: Active dependencies match current code
 - **GIVEN** a dependency is active in Gradle configuration
 - **WHEN** the implementation reviews dependency usage
-- **THEN** dependencies not used by source, tests, generated code, or current tooling are removed or documented for a near-term change
+- **THEN** dependencies not used by source, tests, generated code, current tooling, or the active authentication/Firestore implementation are removed or documented for a near-term change
 
-#### Scenario: Future-feature plugins and dependencies stay inactive
-- **GIVEN** Firebase, Google Services, Secrets, Retrofit, Moshi, camera, and location integrations are future features
+#### Scenario: Firebase auth and Firestore dependencies are allowed for this change
+- **GIVEN** Firebase Authentication, Cloud Firestore, Google Services, Google Sign-In/Credential Manager, and coroutine Task interop are introduced by `add-user-authentication`
+- **WHEN** the debug unit test suite scans active Gradle configuration files
+- **THEN** those dependencies and plugins are allowed only when they are wired to real authentication, profile, Firestore, or rules-validation code
+
+#### Scenario: Future-feature dependencies stay inactive
+- **GIVEN** Firebase products beyond Auth/Firestore, Secrets, Retrofit, Moshi, camera, location, and unrelated future-feature integrations are not part of this change
 - **WHEN** the debug unit test suite scans active Gradle configuration files
 - **THEN** those plugins and dependencies are not applied or declared as active project dependencies
 
@@ -119,3 +124,41 @@ The change SHALL NOT introduce new read, create, modify, or delete capabilities 
 - **WHEN** a Robolectric debug unit test starts `MainActivity`
 - **THEN** the activity is created under `com.findyourpet.app` without requiring an emulator
 
+### Requirement: Privacy Gate Before Production Release
+The project SHALL pass a privacy gate before any production or store-facing build is considered release-ready.
+
+#### Scenario: Release checks backup configuration
+- **GIVEN** a release-readiness validation is run
+- **WHEN** Android backup and data extraction configuration are inspected
+- **THEN** sensitive local data is excluded from backup and transfer
+
+#### Scenario: Release checks permissions
+- **GIVEN** a release-readiness validation is run
+- **WHEN** manifest permissions are inspected
+- **THEN** no unused sensitive permission is declared
+
+#### Scenario: Release checks unsupported privacy claims
+- **GIVEN** a release-readiness validation is run
+- **WHEN** user-facing Kotlin and XML text is scanned
+- **THEN** the app does not claim encryption, production privacy, realtime delivery, or authorization that the implementation does not provide
+
+#### Scenario: Release includes privacy validation evidence
+- **GIVEN** a change touches personal data, local storage, permissions, location, contact sharing, or messages
+- **WHEN** the change is closed
+- **THEN** the implementation notes include debug test results or documented manual validation for the affected privacy surfaces
+
+### Requirement: Backend Changes Require Rules Validation
+Changes that introduce or modify production backend access SHALL validate Firestore rules before using real user data.
+
+#### Scenario: Backend rules are validated
+- **GIVEN** a change touches pet posts, sightings, chats, notifications or user-owned backend documents
+- **WHEN** the change is prepared for completion
+- **THEN** Firestore rules validation is run in the emulator or a documented non-production Firebase project
+
+### Requirement: Backend Changes Require Android Build And Tests
+Changes that introduce backend repositories or sync state SHALL keep the Android debug build and relevant unit tests passing.
+
+#### Scenario: Backend repository change is completed
+- **GIVEN** backend-backed repositories, ViewModels or rules-sensitive mappers were changed
+- **WHEN** the change is prepared for completion
+- **THEN** the debug build and relevant local tests are run and their result is documented
