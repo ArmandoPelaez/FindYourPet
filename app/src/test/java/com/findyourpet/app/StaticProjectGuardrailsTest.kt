@@ -11,7 +11,7 @@ class StaticProjectGuardrailsTest {
   private val root: File = repoRoot()
 
   @Test
-  fun manifest_declaresOnlyInternetPermission() {
+  fun manifest_declaresOnlyImplementedProductionPermissions() {
     val androidNamespace = "http://schemas.android.com/apk/res/android"
     val permissions = manifestDocument().getElementsByTagName("uses-permission").let { nodes ->
       (0 until nodes.length)
@@ -20,7 +20,15 @@ class StaticProjectGuardrailsTest {
         .sorted()
     }
 
-    assertEquals(listOf("android.permission.INTERNET"), permissions)
+    assertEquals(
+      listOf(
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.INTERNET"
+      ),
+      permissions
+    )
   }
 
   @Test
@@ -75,8 +83,9 @@ class StaticProjectGuardrailsTest {
       Regex("""libs\.okhttp"""),
       Regex("""libs\.logging[.-]?interceptor"""),
       Regex("""libs\.accompanist[.-]?permissions"""),
-      Regex("""libs\.play[.-]?services[.-]?location"""),
       Regex("""libs\.androidx[.-]?camera"""),
+      Regex("""libs\.firebase\.messaging"""),
+      Regex("""libs\.firebase\.storage"""),
       Regex("""googleServices\.missing\.passthrough""")
     )
 
@@ -142,6 +151,23 @@ class StaticProjectGuardrailsTest {
     }
 
     assertTrue("Unexpected demo-id owner grants: $failures", failures.isEmpty())
+  }
+
+  @Test
+  fun contactSharing_isScopedToChatGrantAndNotPublicPetDetailToggle() {
+    val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
+    val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val petDetailText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/PetDetailScreen.kt").readText()
+
+    assertTrue(repositoryText.contains("collection(BackendCollections.CONTACT_GRANTS)"))
+    assertTrue(repositoryText.contains("document(BackendCollections.OWNER_CONTACT_GRANT)"))
+    assertTrue(repositoryText.contains("require(ownerId == session.ownerId)"))
+    assertTrue(repositoryText.contains("batch.delete(grantRef)"))
+    assertTrue(repositoryText.contains("petDao.clearContactGrantForChat(chatId)"))
+    assertTrue(viewModelText.contains("activeContactGrantState"))
+    assertTrue(viewModelText.contains("ownerId = user.id"))
+    assertTrue(petDetailText.contains("isContactRevealed = false"))
+    assertTrue(petDetailText.contains("onContactToggle = null"))
   }
 
   @Test

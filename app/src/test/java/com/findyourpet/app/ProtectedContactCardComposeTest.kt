@@ -24,8 +24,8 @@ class ProtectedContactCardComposeTest {
   fun protectedContactCard_hiddenStateMasksPhoneAndEmail() {
     renderContactCard(isContactRevealed = false)
 
-    composeTestRule.onNodeWithText("Contacto oculto en esta demo").assertIsDisplayed()
-    composeTestRule.onNodeWithText("La ficha pública no muestra teléfono ni email").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Contacto oculto").assertIsDisplayed()
+    composeTestRule.onNodeWithText("La ficha publica no muestra telefono ni email").assertIsDisplayed()
     composeTestRule.onNodeWithText("Car*** (Protegido)").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("+506 8888-9900").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("carlos.ramirez@email.com").assertCountEquals(0)
@@ -35,11 +35,20 @@ class ProtectedContactCardComposeTest {
   fun protectedContactCard_visibleStateShowsOwnerContact() {
     renderContactCard(isContactRevealed = true)
 
-    composeTestRule.onNodeWithText("Datos de contacto visibles").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Compartido por el dueño en el flujo local").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Contacto disponible en este chat").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Compartido por el dueno en esta conversacion").assertIsDisplayed()
     composeTestRule.onNodeWithText("Carlos Ramirez").assertIsDisplayed()
     composeTestRule.onNodeWithText("+506 8888-9900").assertIsDisplayed()
     composeTestRule.onNodeWithText("carlos.ramirez@email.com").assertIsDisplayed()
+  }
+
+  @Test
+  fun protectedContactCard_revokedStateMasksPreviousContact() {
+    renderContactCard(isContactRevealed = false)
+
+    composeTestRule.onNodeWithText("Contacto oculto").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("+506 8888-9900").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("carlos.ramirez@email.com").assertCountEquals(0)
   }
 
   private fun renderContactCard(isContactRevealed: Boolean) {

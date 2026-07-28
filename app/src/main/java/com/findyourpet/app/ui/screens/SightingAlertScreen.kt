@@ -1,19 +1,55 @@
-﻿package com.findyourpet.app.ui.screens
+package com.findyourpet.app.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,12 +59,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.findyourpet.app.data.location.DeviceLocationProvider
+import com.findyourpet.app.data.product.LocationSource
+import com.findyourpet.app.data.product.MediaSource
+import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.TealSecondary
 import com.findyourpet.app.ui.viewmodel.PetViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +82,7 @@ fun SightingAlertScreen(
 ) {
     val post by viewModel.selectedPost.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(postId) {
         viewModel.selectPost(postId)
@@ -47,29 +90,112 @@ fun SightingAlertScreen(
 
     val pet = post ?: return
 
-    var locationName by remember { mutableStateOf("Frente a Farmacia La Central, San José") }
-    var latitude by remember { mutableStateOf(9.9345) }
-    var longitude by remember { mutableStateOf(-84.0815) }
-    var notes by remember { mutableStateOf("Vi un perrito igualito a ${pet.petName} cerca de las 10:30 AM. Estaba caminando despacio hacia el norte.") }
-
-    val presetPhotos = listOf(
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80"
-    )
-    var selectedPhotoUri by remember { mutableStateOf(presetPhotos.first()) }
+    var locationName by remember { mutableStateOf("") }
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
+    var locationSource by remember { mutableStateOf(LocationSource.NONE) }
+    var notes by remember { mutableStateOf("") }
+    var selectedPhotoUri by remember { mutableStateOf("") }
+    var mediaSource by remember { mutableStateOf<MediaSource?>(null) }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var formMessage by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
+    val authMessage by viewModel.authMessage.collectAsState()
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            selectedPhotoUri = uri.toString()
+            mediaSource = MediaSource.GALLERY
+            formMessage = null
+        }
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val uri = pendingCameraUri
+        if (success && uri != null) {
+            selectedPhotoUri = uri.toString()
+            mediaSource = MediaSource.CAMERA
+            formMessage = null
+        } else if (uri != null) {
+            CameraImageCapture.cleanUp(context, uri)
+            formMessage = "No se pudo capturar la foto."
+        }
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = CameraImageCapture.createOutputUri(context)
+            pendingCameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            formMessage = "Permiso de camara denegado."
+        }
+    }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        if (grants.values.any { it }) {
+            scope.launch {
+                val captured = DeviceLocationProvider.currentLocation(context)
+                if (captured.source == LocationSource.DEVICE_GPS) {
+                    latitude = captured.latitude
+                    longitude = captured.longitude
+                    locationSource = captured.source
+                    if (locationName.isBlank()) locationName = captured.label
+                    formMessage = "Ubicacion actual capturada."
+                } else {
+                    formMessage = "No se pudo obtener la ubicacion actual. Puedes ingresar una referencia manual."
+                }
+            }
+        } else {
+            formMessage = "Permiso de ubicacion denegado. Puedes ingresar una referencia manual."
+        }
+    }
+
+    fun launchCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            val uri = CameraImageCapture.createOutputUri(context)
+            pendingCameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    fun requestCurrentLocation() {
+        val permissions = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+        val hasLocation = permissions.any {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+        if (hasLocation) {
+            scope.launch {
+                val captured = DeviceLocationProvider.currentLocation(context)
+                if (captured.source == LocationSource.DEVICE_GPS) {
+                    latitude = captured.latitude
+                    longitude = captured.longitude
+                    locationSource = captured.source
+                    if (locationName.isBlank()) locationName = captured.label
+                    formMessage = "Ubicacion actual capturada."
+                } else {
+                    formMessage = "No se pudo obtener la ubicacion actual. Puedes ingresar una referencia manual."
+                }
+            }
+        } else {
+            locationPermissionLauncher.launch(permissions)
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "🚨 Botón de Alerta de Avistamiento",
-                        fontWeight = FontWeight.Bold,
-                        color = AlertRed
-                    )
-                },
+                title = { Text(text = "Alerta de Avistamiento", fontWeight = FontWeight.Bold, color = AlertRed) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -83,23 +209,17 @@ fun SightingAlertScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Pet Header Box
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(pet.photoUri)
-                            .crossfade(true)
-                            .build(),
+                        model = ImageRequest.Builder(context).data(pet.photoUri).crossfade(true).build(),
                         contentDescription = pet.petName,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -108,13 +228,9 @@ fun SightingAlertScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
+                        Text("Reportando avistamiento de: ${pet.petName}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         Text(
-                            text = "Reportando avistamiento de: ${pet.petName}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                        Text(
-                            text = "Raza: ${pet.breed} • Perderse en: ${pet.lastSeenLocation}",
+                            text = "Raza: ${pet.breed} - Ultima referencia: ${pet.lastSeenLocation}",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -122,149 +238,73 @@ fun SightingAlertScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Photo Attachment Section
-            Text(
-                text = "📸 Adjunta una foto tomada en el lugar",
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-            Text(
-                text = "Selecciona una fotografía del avistamiento para que el dueño pueda confirmar.",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Selected Photo Preview
+            Text("Foto del avistamiento (opcional)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(selectedPhotoUri)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Foto elegida",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                Surface(
-                    color = Color.Black.copy(alpha = 0.6f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                ) {
-                    Text(
-                        text = "Foto Capturada",
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                if (selectedPhotoUri.isBlank()) {
+                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxSize()) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text("Sin foto adjunta", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                } else {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context).data(selectedPhotoUri).crossfade(true).build(),
+                        contentDescription = "Foto del avistamiento",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Photo Presets
-            Text(text = "Elegir foto de prueba / Galería:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(6.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(presetPhotos) { uri ->
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { selectedPhotoUri = uri }
-                    ) {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Galeria")
+                }
+                OutlinedButton(onClick = { launchCamera() }, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.CameraAlt, contentDescription = null)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Camara")
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Demo location section.
-            Text(
-                text = "📍 Ubicación de prueba",
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
+            Text("Ubicacion del avistamiento", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             OutlinedTextField(
                 value = locationName,
-                onValueChange = { locationName = it },
-                label = { Text("Punto de referencia / Calle exacto") },
+                onValueChange = {
+                    locationName = it
+                    if (it.isNotBlank() && locationSource != LocationSource.DEVICE_GPS) {
+                        locationSource = LocationSource.MANUAL_COARSE
+                    } else if (it.isBlank()) {
+                        locationSource = LocationSource.NONE
+                    }
+                },
+                label = { Text("Punto de referencia, barrio o calle") },
                 leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = CoralPrimary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = TealSecondary.copy(alpha = 0.1f)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MyLocation,
-                        contentDescription = null,
-                        tint = TealSecondary
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Coordenadas de prueba:",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TealSecondary
-                        )
-                        Text(
-                            text = "Lat: $latitude, Long: $longitude",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    TextButton(onClick = {
-                        latitude += (Math.random() - 0.5) * 0.005
-                        longitude += (Math.random() - 0.5) * 0.005
-                    }) {
-                        Text("Ajustar coordenadas", fontSize = 11.sp)
-                    }
-                }
+            OutlinedButton(onClick = { requestCurrentLocation() }, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Filled.MyLocation, contentDescription = null, tint = TealSecondary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (locationSource == LocationSource.DEVICE_GPS) "Ubicacion GPS capturada" else "Usar ubicacion actual")
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Notes Section
-            Text(
-                text = "📝 Detalles Adicionales",
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("Detalles adicionales", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Describe el estado de la mascota, comportamiento, etc.") },
+                label = { Text("Describe el estado de la mascota o hacia donde iba") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),
@@ -272,9 +312,6 @@ fun SightingAlertScreen(
                 maxLines = 4
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Urgent Submit Button
             Button(
                 onClick = {
                     isSubmitting = true
@@ -287,13 +324,19 @@ fun SightingAlertScreen(
                         longitude = longitude,
                         notes = notes,
                         ownerId = pet.ownerId,
+                        mediaSource = mediaSource,
+                        locationSource = locationSource,
                         onComplete = { chatId ->
                             isSubmitting = false
                             onAlertSent(chatId)
+                        },
+                        onError = { message ->
+                            isSubmitting = false
+                            formMessage = message
                         }
                     )
                 },
-                enabled = !isSubmitting,
+                enabled = !isSubmitting && locationName.isNotBlank() && locationSource != LocationSource.NONE,
                 colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -303,18 +346,22 @@ fun SightingAlertScreen(
                 if (isSubmitting) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
-                    Icon(
-                        imageVector = Icons.Filled.Send,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(imageVector = Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "🚨 ENVIAR ALERTA DE DEMO",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp
-                    )
+                    Text(text = "ENVIAR ALERTA", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 }
+            }
+
+            authMessage?.let { message ->
+                Text(text = message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+            }
+            formMessage?.let { message ->
+                val isSuccess = message.contains("capturada")
+                Text(
+                    text = message,
+                    color = if (isSuccess) TealSecondary else MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp
+                )
             }
         }
     }

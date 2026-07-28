@@ -32,6 +32,7 @@ fun ProfileScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val allPosts by viewModel.allPosts.collectAsState()
+    val postFeedState by viewModel.postFeedState.collectAsState()
 
     val myPosts = allPosts.filter { it.ownerId == currentUser.id }
 
@@ -60,6 +61,10 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // User Card
+            item {
+                com.findyourpet.app.ui.components.SyncStatusBanner(state = postFeedState)
+            }
+
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -152,7 +157,7 @@ fun ProfileScreen(
                 }
             }
 
-            // Local demo contact notice.
+            // Contact notice.
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -172,14 +177,14 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Comunidad colaborativa local",
+                                text = "Comunidad colaborativa",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = TealSecondary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "En esta demo, los datos de contacto no se muestran en fichas públicas y el chat usa datos locales.",
+                                text = "Los datos de contacto no se muestran en fichas publicas y el dueno controla cuando compartirlos.",
                                 fontSize = 11.sp,
                                 lineHeight = 15.sp,
                                 color = MaterialTheme.colorScheme.onSurface

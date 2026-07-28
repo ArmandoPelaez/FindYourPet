@@ -25,6 +25,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.domain.OwnershipPolicy
+import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.ReunitedGreen
@@ -44,7 +45,11 @@ fun ChatDetailScreen(
     onViewPetDetailClick: (String) -> Unit
 ) {
     val messages by viewModel.activeChatMessages.collectAsState()
+    val messagesState by viewModel.activeChatMessagesState.collectAsState()
     val chatSession by viewModel.activeChatSession.collectAsState()
+    val chatSessionState by viewModel.activeChatSessionState.collectAsState()
+    val contactGrant by viewModel.activeContactGrant.collectAsState()
+    val contactGrantState by viewModel.activeContactGrantState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
@@ -63,7 +68,7 @@ fun ChatDetailScreen(
 
     val session = chatSession
     val isOwner = session?.let { OwnershipPolicy.canManagePost(currentUser.id, it.ownerId) } == true
-    val isContactShared = session?.isContactSharedByOwner == true
+    val isContactShared = contactGrant?.isActive == true
 
     Scaffold(
         topBar = {
@@ -115,7 +120,11 @@ fun ChatDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Demo contact visibility control.
+            SyncStatusBanner(state = chatSessionState)
+            SyncStatusBanner(state = messagesState)
+            SyncStatusBanner(state = contactGrantState)
+
+            // Contact visibility control.
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = if (isContactShared) ReunitedGreenContainer else MaterialTheme.colorScheme.surfaceVariant
@@ -142,16 +151,16 @@ fun ChatDetailScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = if (isContactShared) "Contacto directo compartido" else "Contacto oculto en esta demo",
+                                    text = if (isContactShared) "Contacto directo compartido" else "Contacto oculto",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
                                     color = if (isContactShared) ReunitedGreen else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = if (isContactShared)
-                                        "El dueño habilitó el contacto dentro de este chat local."
+                                        "El dueno habilito el contacto dentro de esta conversacion."
                                     else
-                                        "Tus datos de teléfono y correo no se muestran en la ficha pública.",
+                                        "El contacto directo solo aparece cuando el dueno lo autoriza para este chat.",
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -166,6 +175,27 @@ fun ChatDetailScreen(
                             )
                         }
                     }
+
+                    contactGrant?.takeIf { it.isActive }?.let { grant ->
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = grant.ownerName,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = grant.ownerPhone,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = grant.ownerEmail,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
 
@@ -177,6 +207,16 @@ fun ChatDetailScreen(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                if (messages.isEmpty()) {
+                    item {
+                        Text(
+                            text = if (messagesState.isLoading) "Cargando mensajes." else "Sin mensajes todavia.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
                 items(messages, key = { it.id }) { msg ->
                     ChatMessageItem(
                         message = msg,
@@ -198,16 +238,6 @@ fun ChatDetailScreen(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {
-                        viewModel.sendChatMessage("📸 [Imagen del avistamiento adjunta]", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80")
-                    }) {
-                        Icon(
-                            imageVector = Icons.Outlined.AddPhotoAlternate,
-                            contentDescription = "Adjuntar Foto",
-                            tint = TealSecondary
-                        )
-                    }
-
                     OutlinedTextField(
                         value = textInput,
                         onValueChange = { textInput = it },

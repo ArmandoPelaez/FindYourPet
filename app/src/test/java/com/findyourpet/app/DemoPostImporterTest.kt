@@ -4,7 +4,6 @@ import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.domain.DemoPostImporter
 import com.findyourpet.app.ui.viewmodel.UserProfile
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class DemoPostImporterTest {
@@ -24,7 +23,6 @@ class DemoPostImporterTest {
     assertEquals("Real User", productionPost.ownerName)
     assertEquals("+555", productionPost.ownerPhone)
     assertEquals("real@example.com", productionPost.ownerEmail)
-    assertFalse(productionPost.isContactRevealedToAll)
   }
 
   @Test(expected = IllegalArgumentException::class)
@@ -54,7 +52,6 @@ class DemoPostImporterTest {
       ownerName = "Demo Owner",
       ownerPhone = "+111",
       ownerEmail = "demo@example.com",
-      ownerAddress = "Demo",
-      isContactRevealedToAll = true
+      ownerAddress = "Demo"
     )
 }

@@ -25,6 +25,7 @@ import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.ProtectedContactCard
+import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.TealSecondary
@@ -43,7 +44,9 @@ fun PetDetailScreen(
     onStartChatClick: (String) -> Unit
 ) {
     val post by viewModel.selectedPost.collectAsState()
+    val postState by viewModel.selectedPostState.collectAsState()
     val sightings by viewModel.selectedPostSightings.collectAsState()
+    val sightingsState by viewModel.selectedPostSightingsState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
@@ -51,10 +54,39 @@ fun PetDetailScreen(
         viewModel.selectPost(postId)
     }
 
-    val pet = post ?: return
+    val pet = post
+    if (pet == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Ficha de mascota", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                SyncStatusBanner(state = postState)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = postState.errorMessage ?: "Cargando ficha",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        return
+    }
 
     val isOwner = OwnershipPolicy.canManagePost(currentUser.id, pet.ownerId)
-    val isContactRevealed = pet.isContactRevealedToAll
 
     Scaffold(
         topBar = {
@@ -87,6 +119,10 @@ fun PetDetailScreen(
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
+            item {
+                SyncStatusBanner(state = postState)
+                SyncStatusBanner(state = sightingsState)
+            }
             // Hero Image
             item {
                 Box(
@@ -239,7 +275,7 @@ fun PetDetailScreen(
                             )
                         }
                         Text(
-                            text = "Registra una foto de muestra y una ubicación para avisar al dueño.",
+                            text = "Registra una ubicacion y detalles utiles para avisar al dueno.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp, start = 4.dp)
@@ -255,10 +291,8 @@ fun PetDetailScreen(
                         ownerName = pet.ownerName,
                         ownerPhone = pet.ownerPhone,
                         ownerEmail = pet.ownerEmail,
-                        isContactRevealed = isContactRevealed,
-                        onContactToggle = if (isOwner) {
-                            { viewModel.toggleContactSharing(!isContactRevealed) }
-                        } else null,
+                        isContactRevealed = false,
+                        onContactToggle = null,
                         onStartChat = {
                             val chatId = "${pet.id}_${currentUser.id}"
                             onStartChatClick(chatId)
@@ -271,7 +305,7 @@ fun PetDetailScreen(
             item {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Ubicación registrada de pérdida",
+                        text = "Ubicacion registrada de perdida",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -303,7 +337,7 @@ fun PetDetailScreen(
                                         fontSize = 14.sp
                                     )
                                     Text(
-                                        text = "Referencia local de demo; las coordenadas exactas no se muestran en la ficha pública.",
+                                        text = "Referencia registrada; las coordenadas exactas no se muestran en la ficha publica.",
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -324,7 +358,7 @@ fun PetDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "👀 Avistamientos Reportados (${sightings.size})",
+                    text = "Avistamientos reportados (${sightings.size})",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -334,7 +368,7 @@ fun PetDetailScreen(
             if (sightings.isEmpty()) {
                 item {
                     Text(
-                        text = "Aún no se han registrado avistamientos para esta mascota.",
+                        text = if (sightingsState.isLoading) "Cargando avistamientos." else "Aun no se han registrado avistamientos para esta mascota.",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -432,7 +466,7 @@ fun SightingItemCard(sighting: SightingAlertEntity, context: android.content.Con
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Los detalles completos quedan dentro del chat local.",
+                    text = "Los detalles completos quedan dentro de la conversacion.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2

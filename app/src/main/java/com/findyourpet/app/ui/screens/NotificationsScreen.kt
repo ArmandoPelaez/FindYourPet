@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
+import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.ReunitedGreen
@@ -34,11 +35,12 @@ fun NotificationsScreen(
     onNotificationClick: (String) -> Unit
 ) {
     val notifications by viewModel.allNotifications.collectAsState()
+    val notificationsState by viewModel.notificationsState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notificaciones Push", fontWeight = FontWeight.Bold) },
+                title = { Text("Notificaciones", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -52,6 +54,7 @@ fun NotificationsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            SyncStatusBanner(state = notificationsState)
             if (notifications.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -66,7 +69,7 @@ fun NotificationsScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No tienes notificaciones recibidas",
+                            text = if (notificationsState.isLoading) "Cargando notificaciones" else "No tienes notificaciones recibidas",
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )

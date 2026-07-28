@@ -9,13 +9,18 @@ import com.findyourpet.app.data.auth.UnavailableAuthRepository
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.product.LocationSource
+import com.findyourpet.app.data.product.MediaSource
+import com.findyourpet.app.data.product.RealProductValidators
 import com.findyourpet.app.data.profile.FirestoreUserProfileRepository
 import com.findyourpet.app.data.profile.UnavailableUserProfileRepository
 import com.findyourpet.app.data.profile.UserProfileDocument
 import com.findyourpet.app.data.profile.UserProfileRepository
 import com.findyourpet.app.data.repository.PetRepository
+import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.domain.AuthSessionMapper
 import com.findyourpet.app.domain.OwnershipPolicy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,7 +71,15 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     val selectedSpecies = MutableStateFlow("Todos") // Todos, Perro, Gato, Ave, Otro
     val selectedStatusFilter = MutableStateFlow("Todos") // Todos, PERDIDO, AVISTADO, REUNIDO
 
-    val allPosts: StateFlow<List<PetPostEntity>> = repository.allPosts
+    val postFeedState: StateFlow<BackendSyncState<List<PetPostEntity>>> = repository.postFeedState
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+        )
+
+    val allPosts: StateFlow<List<PetPostEntity>> = postFeedState
+        .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val filteredPosts: StateFlow<List<PetPostEntity>> = combine(
@@ -90,53 +103,143 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Selected Post State
-    val selectedPostId = MutableStateFlow<String?>("post_1")
+    val selectedPostId = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val selectedPost: StateFlow<PetPostEntity?> = selectedPostId.flatMapLatest { id ->
-        if (id == null) flowOf(null) else repository.getPostById(id)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val selectedPostState: StateFlow<BackendSyncState<PetPostEntity?>> = selectedPostId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data<PetPostEntity?>(null, isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getPostByIdState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading<PetPostEntity?>(null, repository.usesRemoteBackend)
+    )
+
+    val selectedPost: StateFlow<PetPostEntity?> = selectedPostState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val selectedPostSightings: StateFlow<List<SightingAlertEntity>> = selectedPostId.flatMapLatest { id ->
-        if (id == null) flowOf(emptyList()) else repository.getSightingsForPost(id)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val selectedPostSightingsState: StateFlow<BackendSyncState<List<SightingAlertEntity>>> = selectedPostId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getSightingsForPostState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+    )
+
+    val selectedPostSightings: StateFlow<List<SightingAlertEntity>> = selectedPostSightingsState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Active Chat State
-    val activeChatId = MutableStateFlow<String?>("post_1_finder_1")
+    val activeChatId = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeChatMessages: StateFlow<List<ChatMessageEntity>> = activeChatId.flatMapLatest { id ->
-        if (id == null) flowOf(emptyList()) else repository.getMessagesForChat(id)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val activeChatMessagesState: StateFlow<BackendSyncState<List<ChatMessageEntity>>> = activeChatId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getMessagesForChatState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+    )
+
+    val activeChatMessages: StateFlow<List<ChatMessageEntity>> = activeChatMessagesState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeChatSession: StateFlow<ChatSessionEntity?> = activeChatId.flatMapLatest { id ->
-        if (id == null) flowOf(null) else repository.getChatSessionById(id)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val activeChatSessionState: StateFlow<BackendSyncState<ChatSessionEntity?>> = activeChatId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data<ChatSessionEntity?>(null, isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getChatSessionByIdState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading<ChatSessionEntity?>(null, repository.usesRemoteBackend)
+    )
+
+    val activeChatSession: StateFlow<ChatSessionEntity?> = activeChatSessionState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val userChatSessions: StateFlow<List<ChatSessionEntity>> = currentUser.flatMapLatest { user ->
-        if (user.id.isBlank()) flowOf(emptyList()) else repository.getChatSessionsForUser(user.id)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val activeContactGrantState: StateFlow<BackendSyncState<ContactGrantEntity?>> = activeChatId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(BackendSyncState.data<ContactGrantEntity?>(null, isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getActiveContactGrantForChatState(id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading<ContactGrantEntity?>(null, repository.usesRemoteBackend)
+    )
 
-    val allNotifications: StateFlow<List<AppNotificationEntity>> = repository.allNotifications
+    val activeContactGrant: StateFlow<ContactGrantEntity?> = activeContactGrantState
+        .map { it.data?.takeIf { grant -> grant.isActive } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val userChatSessionsState: StateFlow<BackendSyncState<List<ChatSessionEntity>>> = currentUser.flatMapLatest { user ->
+        if (user.id.isBlank()) {
+            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getChatSessionsForUserState(user.id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+    )
+
+    val userChatSessions: StateFlow<List<ChatSessionEntity>> = userChatSessionsState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val notificationsState: StateFlow<BackendSyncState<List<AppNotificationEntity>>> = currentUser.flatMapLatest { user ->
+        if (user.id.isBlank()) {
+            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
+        } else {
+            repository.getNotificationsForUser(user.id)
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+    )
+
+    val allNotifications: StateFlow<List<AppNotificationEntity>> = notificationsState
+        .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
-        viewModelScope.launch {
-            repository.seedInitialDataIfNeeded()
-        }
         viewModelScope.launch {
             authState.collectLatest { state ->
                 if (state is AuthUiState.SignedIn) {
                     val profileResult = profileRepository.ensureProfile(state.user)
                     activeProfile.value = profileResult.getOrNull()
+                    repository.retainPrivateCacheForUser(state.user.uid)
                     profileResult.exceptionOrNull()?.let { error ->
                         _authMessage.value = error.message ?: "Profile could not be loaded."
                     }
                 } else {
                     activeProfile.value = null
+                    repository.clearPrivateCache()
                 }
             }
         }
@@ -170,6 +273,9 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         authRepository.signOut()
         activeProfile.value = null
         _authMessage.value = null
+        viewModelScope.launch {
+            repository.clearPrivateCache()
+        }
     }
 
     fun selectPost(postId: String) {
@@ -189,47 +295,79 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         longitude: Double,
         notes: String,
         ownerId: String,
-        onComplete: (String) -> Unit
+        mediaSource: MediaSource? = null,
+        locationSource: LocationSource,
+        onComplete: (String) -> Unit,
+        onError: (String) -> Unit = {}
     ) {
-        val user = currentAuthenticatedUser() ?: return
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de reportar.")
+            return
+        }
+        val validation = RealProductValidators.validateSighting(
+            reporterId = user.id,
+            postId = postId,
+            ownerId = ownerId,
+            locationName = locationName,
+            locationSource = locationSource,
+            photoUri = photoUri
+        )
+        if (!validation.isValid) {
+            val message = validation.message ?: "Completa los datos del avistamiento."
+            _authMessage.value = message
+            onError(message)
+            return
+        }
         viewModelScope.launch {
-            val chatId = repository.submitSightingAlert(
-                postId = postId,
-                petName = petName,
-                reporterId = user.id,
-                reporterName = user.name,
-                photoUri = photoUri.ifBlank { "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80" },
-                locationName = locationName,
-                latitude = latitude,
-                longitude = longitude,
-                notes = notes,
-                ownerId = ownerId
-            )
-            activeChatId.value = chatId
-            onComplete(chatId)
+            runCatching {
+                repository.submitSightingAlert(
+                    postId = postId,
+                    petName = petName,
+                    reporterId = user.id,
+                    reporterName = user.name,
+                    photoUri = photoUri,
+                    locationName = locationName,
+                    latitude = latitude,
+                    longitude = longitude,
+                    notes = notes,
+                    ownerId = ownerId,
+                    mediaSource = mediaSource,
+                    locationSource = locationSource
+                )
+            }.onSuccess { chatId ->
+                activeChatId.value = chatId
+                onComplete(chatId)
+            }.onFailure { error ->
+                val message = backendWriteErrorMessage(error, "No se pudo enviar el avistamiento.")
+                onError(message)
+            }
         }
     }
 
     fun sendChatMessage(text: String, photoUri: String? = null) {
         val chatId = activeChatId.value ?: return
         val post = selectedPost.value
-        val postId = post?.id ?: "post_1"
-        val user = currentAuthenticatedUser() ?: return
         val session = activeChatSession.value
+        val postId = post?.id ?: session?.postId ?: return
+        val user = currentAuthenticatedUser() ?: return
         if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
             _authMessage.value = "Only chat participants can send messages."
             return
         }
 
         viewModelScope.launch {
-            repository.sendChatMessage(
-                chatId = chatId,
-                postId = postId,
-                senderId = user.id,
-                senderName = user.name,
-                text = text,
-                photoUri = photoUri
-            )
+            runCatching {
+                repository.sendChatMessage(
+                    chatId = chatId,
+                    postId = postId,
+                    senderId = user.id,
+                    senderName = user.name,
+                    text = text,
+                    photoUri = photoUri
+                )
+            }.onFailure {
+                _authMessage.value = it.message ?: "No se pudo enviar el mensaje."
+            }
         }
     }
 
@@ -242,13 +380,18 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
-            repository.toggleChatContactSharing(
-                chatId = chatId,
-                isShared = isShared,
-                ownerName = user.name,
-                phone = user.phone,
-                email = user.email
-            )
+            runCatching {
+                repository.toggleChatContactSharing(
+                    chatId = chatId,
+                    isShared = isShared,
+                    ownerId = user.id,
+                    ownerName = user.name,
+                    phone = user.phone,
+                    email = user.email
+                )
+            }.onFailure {
+                _authMessage.value = it.message ?: "No se pudo actualizar el contacto."
+            }
         }
     }
 
@@ -264,9 +407,27 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         longitude: Double,
         rewardAmount: String,
         status: String = "PERDIDO",
-        onComplete: () -> Unit
+        mediaSource: MediaSource,
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE,
+        onComplete: () -> Unit,
+        onError: (String) -> Unit = {}
     ) {
-        val user = currentAuthenticatedUser() ?: return
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de publicar.")
+            return
+        }
+        val validation = RealProductValidators.validatePost(
+            petName = petName,
+            photoUri = photoUri,
+            ownerId = user.id,
+            locationName = lastSeenLocation
+        )
+        if (!validation.isValid) {
+            val message = validation.message ?: "Completa los datos de la publicacion."
+            _authMessage.value = message
+            onError(message)
+            return
+        }
         viewModelScope.launch {
             val newPost = PetPostEntity(
                 id = UUID.randomUUID().toString(),
@@ -276,7 +437,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 color = color,
                 features = features,
                 status = status,
-                photoUri = photoUri.ifBlank { "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=600&q=80" },
+                photoUri = photoUri,
                 dateLost = System.currentTimeMillis(),
                 lastSeenLocation = lastSeenLocation,
                 latitude = latitude,
@@ -286,12 +447,21 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 ownerName = user.name,
                 ownerPhone = user.phone,
                 ownerEmail = user.email,
-                ownerAddress = "Dirección configurada por " + user.name,
-                isContactRevealedToAll = false
+                ownerAddress = "Direccion configurada por " + user.name
             )
-            repository.insertPost(newPost)
-            selectedPostId.value = newPost.id
-            onComplete()
+            runCatching {
+                repository.insertPost(
+                    post = newPost,
+                    mediaSource = mediaSource,
+                    locationSource = locationSource
+                )
+            }.onSuccess {
+                selectedPostId.value = newPost.id
+                onComplete()
+            }.onFailure { error ->
+                val message = backendWriteErrorMessage(error, "No se pudo publicar la ficha.")
+                onError(message)
+            }
         }
     }
 
@@ -303,13 +473,22 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
-            repository.updatePostStatus(postId, newStatus)
+            runCatching {
+                repository.updatePostStatus(postId, newStatus)
+            }.onFailure {
+                _authMessage.value = it.message ?: "No se pudo actualizar la ficha."
+            }
         }
     }
 
     fun markNotificationAsRead(id: String) {
+        val user = currentAuthenticatedUser() ?: return
         viewModelScope.launch {
-            repository.markNotificationAsRead(id)
+            runCatching {
+                repository.markNotificationAsRead(user.id, id)
+            }.onFailure {
+                _authMessage.value = it.message ?: "No se pudo marcar la notificacion."
+            }
         }
     }
 
@@ -320,6 +499,17 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             return null
         }
         return user
+    }
+
+    private fun backendWriteErrorMessage(error: Throwable, fallback: String): String {
+        val rawMessage = error.message.orEmpty()
+        return if (rawMessage.contains("PERMISSION_DENIED", ignoreCase = true) ||
+            rawMessage.contains("Missing or insufficient permissions", ignoreCase = true)
+        ) {
+            "Firestore rechazo la escritura. Revisa que firestore.rules este publicado en el proyecto Firebase de prueba."
+        } else {
+            rawMessage.ifBlank { fallback }
+        }
     }
 
 }
