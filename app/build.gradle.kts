@@ -1,3 +1,5 @@
+import buildlogic.ValidateReleaseSigningTask
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
@@ -7,6 +9,7 @@ plugins {
 
 if (file("google-services.json").isFile) {
   pluginManager.apply("com.google.gms.google-services")
+  pluginManager.apply("com.google.firebase.crashlytics")
 }
 
 android {
@@ -30,7 +33,7 @@ android {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
       storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
+      keyAlias = System.getenv("KEY_ALIAS")
       keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
@@ -44,7 +47,7 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
@@ -85,6 +88,7 @@ dependencies {
   implementation(libs.androidx.credentials.play.services)
   implementation(libs.coil.compose)
   implementation(libs.firebase.auth)
+  implementation(libs.firebase.crashlytics)
   implementation(libs.firebase.firestore)
   implementation(libs.cloudinary.android)
   implementation(libs.googleid)
@@ -113,4 +117,23 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
 
   "ksp"(libs.androidx.room.compiler)
+}
+
+val releaseKeystorePath = providers.environmentVariable("KEYSTORE_PATH")
+  .orElse(rootProject.layout.projectDirectory.file("my-upload-key.jks").asFile.absolutePath)
+val releaseStorePassword = providers.environmentVariable("STORE_PASSWORD")
+val releaseKeyAlias = providers.environmentVariable("KEY_ALIAS")
+val releaseKeyPassword = providers.environmentVariable("KEY_PASSWORD")
+
+tasks.register<ValidateReleaseSigningTask>("validateReleaseSigning") {
+  group = "verification"
+  description = "Validates release signing inputs without printing secret values."
+  keystorePath.set(releaseKeystorePath)
+  storePassword.set(releaseStorePassword)
+  keyAlias.set(releaseKeyAlias)
+  keyPassword.set(releaseKeyPassword)
+}
+
+tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+  dependsOn("validateReleaseSigning")
 }
