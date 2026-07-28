@@ -11,7 +11,7 @@ class StaticProjectGuardrailsTest {
   private val root: File = repoRoot()
 
   @Test
-  fun manifest_declaresOnlyInternetPermission() {
+  fun manifest_declaresOnlyImplementedProductionPermissions() {
     val androidNamespace = "http://schemas.android.com/apk/res/android"
     val permissions = manifestDocument().getElementsByTagName("uses-permission").let { nodes ->
       (0 until nodes.length)
@@ -20,7 +20,15 @@ class StaticProjectGuardrailsTest {
         .sorted()
     }
 
-    assertEquals(listOf("android.permission.INTERNET"), permissions)
+    assertEquals(
+      listOf(
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.INTERNET"
+      ),
+      permissions
+    )
   }
 
   @Test
@@ -75,8 +83,9 @@ class StaticProjectGuardrailsTest {
       Regex("""libs\.okhttp"""),
       Regex("""libs\.logging[.-]?interceptor"""),
       Regex("""libs\.accompanist[.-]?permissions"""),
-      Regex("""libs\.play[.-]?services[.-]?location"""),
       Regex("""libs\.androidx[.-]?camera"""),
+      Regex("""libs\.firebase\.messaging"""),
+      Regex("""libs\.firebase\.storage"""),
       Regex("""googleServices\.missing\.passthrough""")
     )
 

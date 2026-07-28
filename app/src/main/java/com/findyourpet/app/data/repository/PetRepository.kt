@@ -1,6 +1,11 @@
 package com.findyourpet.app.data.repository
 
 import android.content.Context
+import android.net.Uri
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
+import com.findyourpet.app.BuildConfig
 import com.findyourpet.app.data.local.AppDatabase
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
@@ -8,6 +13,8 @@ import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.product.LocationSource
+import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.data.remote.BackendCollections
 import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.data.remote.RemoteMappers.toChatMessageEntity
@@ -17,7 +24,6 @@ import com.findyourpet.app.data.remote.RemoteMappers.toDocument
 import com.findyourpet.app.data.remote.RemoteMappers.toNotificationEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toPetPostEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toSightingEntity
-import com.findyourpet.app.util.NotificationHelper
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -34,13 +40,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class PetRepository(context: Context) {
     private val database = AppDatabase.getDatabase(context)
     private val petDao = database.petDao()
     private val appContext = context.applicationContext
     private val firestore = configuredFirestore(appContext)
+    private val cloudinaryReady = configuredCloudinary(appContext)
 
     val usesRemoteBackend: Boolean = firestore != null
 
@@ -215,15 +225,29 @@ class PetRepository(context: Context) {
             }
         } ?: petDao.getAllNotifications().toLocalState(emptyList())
 
-    suspend fun insertPost(post: PetPostEntity) {
+    suspend fun insertPost(
+        post: PetPostEntity,
+        mediaSource: MediaSource = MediaSource.GALLERY,
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE
+    ) {
         val db = firestore
         if (db == null) {
             petDao.insertPost(post)
             return
         }
+        val uploaded = uploadImageForCloudinary(sourceUri = post.photoUri)
+        val storedPost = post.copy(photoUri = uploaded.displayUrl)
         db.collection(BackendCollections.PET_POSTS)
             .document(post.id)
-            .set(post.toDocument())
+            .set(
+                storedPost.toDocument(
+                    mediaProvider = uploaded.provider,
+                    mediaPublicId = uploaded.publicId,
+                    mediaContentType = uploaded.contentType,
+                    mediaSource = mediaSource.name,
+                    locationSource = locationSource.name
+                )
+            )
             .await()
     }
 
@@ -260,7 +284,9 @@ class PetRepository(context: Context) {
         latitude: Double,
         longitude: Double,
         notes: String,
-        ownerId: String
+        ownerId: String,
+        mediaSource: MediaSource? = null,
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE
     ): String {
         val db = firestore
         val timestamp = System.currentTimeMillis()
@@ -278,6 +304,11 @@ class PetRepository(context: Context) {
         }
         val resolvedOwnerId = derivedPost?.ownerId?.ifBlank { ownerId } ?: ownerId
         require(resolvedOwnerId.isNotBlank()) { "No se pudo identificar al dueno de la publicacion." }
+        val uploadedPhoto = if (photoUri.isBlank() || db == null) {
+            UploadedImage(displayUrl = photoUri, provider = "", publicId = "", contentType = "")
+        } else {
+            uploadImageForCloudinary(sourceUri = photoUri)
+        }
 
         val sighting = SightingAlertEntity(
             id = sightingId,
@@ -285,7 +316,7 @@ class PetRepository(context: Context) {
             ownerId = resolvedOwnerId,
             reporterId = reporterId,
             reporterName = reporterName,
-            photoUri = photoUri,
+            photoUri = uploadedPhoto.displayUrl,
             locationName = locationName,
             latitude = latitude,
             longitude = longitude,
@@ -297,7 +328,7 @@ class PetRepository(context: Context) {
             id = chatId,
             postId = postId,
             petName = petName,
-            petPhotoUri = photoUri,
+            petPhotoUri = derivedPost?.photoUri ?: uploadedPhoto.displayUrl,
             ownerId = resolvedOwnerId,
             reporterId = reporterId,
             reporterName = reporterName,
@@ -311,8 +342,8 @@ class PetRepository(context: Context) {
             postId = postId,
             senderId = reporterId,
             senderName = reporterName,
-            text = "ALERTA DE AVISTAMIENTO\nUbicacion: $locationName\nNota: $notes",
-            photoUri = photoUri,
+            text = "Nuevo avistamiento reportado. Abre el detalle para revisar la informacion autorizada.",
+            photoUri = uploadedPhoto.displayUrl.ifBlank { null },
             timestamp = timestamp,
             isSystemMessage = true
         )
@@ -336,7 +367,15 @@ class PetRepository(context: Context) {
             db.runBatch { batch ->
                 batch.set(
                     db.collection(BackendCollections.SIGHTINGS).document(sightingId),
-                    sighting.toDocument(resolvedOwnerId)
+                    sighting.toDocument(
+                        ownerId = resolvedOwnerId,
+                        mediaProvider = uploadedPhoto.provider,
+                        mediaPublicId = uploadedPhoto.publicId,
+                        mediaContentType = uploadedPhoto.contentType,
+                        mediaSource = mediaSource?.name.orEmpty(),
+                        locationSource = locationSource.name,
+                        preciseLocationConsented = locationSource == LocationSource.DEVICE_GPS
+                    )
                 )
                 batch.set(chatRef, chatSession.toDocument(), com.google.firebase.firestore.SetOptions.merge())
                 batch.set(
@@ -352,13 +391,6 @@ class PetRepository(context: Context) {
                 )
             }.await()
         }
-
-        NotificationHelper.showNotification(
-            appContext,
-            (timestamp % 10000).toInt(),
-            notification.title,
-            notification.message
-        )
 
         return chatId
     }
@@ -833,4 +865,76 @@ class PetRepository(context: Context) {
             }
             if (FirebaseApp.getApps(context).isEmpty()) null else FirebaseFirestore.getInstance()
         }.getOrNull()
+
+    private fun configuredCloudinary(context: Context): Boolean =
+        runCatching {
+            MediaManager.get()
+            true
+        }.recoverCatching {
+            MediaManager.init(
+                context,
+                mapOf("cloud_name" to BuildConfig.CLOUDINARY_CLOUD_NAME)
+            )
+            true
+        }.getOrDefault(false)
+
+    private suspend fun uploadImageForCloudinary(sourceUri: String): UploadedImage {
+        val uri = Uri.parse(sourceUri)
+        val scheme = uri.scheme.orEmpty()
+        if (scheme !in setOf("content", "file")) {
+            return UploadedImage(displayUrl = sourceUri, provider = "", publicId = "", contentType = "")
+        }
+        require(cloudinaryReady) { "Cloudinary no esta configurado." }
+        return suspendCancellableCoroutine { continuation ->
+            MediaManager.get()
+                .upload(uri)
+                .unsigned(BuildConfig.CLOUDINARY_UPLOAD_PRESET)
+                .option("resource_type", "image")
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String) = Unit
+
+                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) = Unit
+
+                    override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                        val secureUrl = resultData["secure_url"] as? String
+                        val publicId = resultData["public_id"] as? String
+                        if (secureUrl.isNullOrBlank() || publicId.isNullOrBlank()) {
+                            continuation.resumeWithException(
+                                IllegalStateException("Cloudinary no devolvio la referencia de la imagen.")
+                            )
+                            return
+                        }
+                        val format = resultData["format"] as? String
+                        continuation.resume(
+                            UploadedImage(
+                                displayUrl = secureUrl,
+                                provider = "CLOUDINARY",
+                                publicId = publicId,
+                                contentType = format?.let { "image/$it" } ?: "image/jpeg"
+                            )
+                        )
+                    }
+
+                    override fun onError(requestId: String, error: ErrorInfo) {
+                        continuation.resumeWithException(
+                            IllegalStateException(error.description ?: "La subida de imagen fallo.")
+                        )
+                    }
+
+                    override fun onReschedule(requestId: String, error: ErrorInfo) {
+                        continuation.resumeWithException(
+                            IllegalStateException(error.description ?: "La subida de imagen fue reprogramada.")
+                        )
+                    }
+                })
+                .dispatch()
+        }
+    }
+
+    private data class UploadedImage(
+        val displayUrl: String,
+        val provider: String,
+        val publicId: String,
+        val contentType: String
+    )
 }

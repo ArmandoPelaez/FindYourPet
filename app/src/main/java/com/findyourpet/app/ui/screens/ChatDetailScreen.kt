@@ -238,16 +238,6 @@ fun ChatDetailScreen(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {
-                        viewModel.sendChatMessage("📸 [Imagen del avistamiento adjunta]", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80")
-                    }) {
-                        Icon(
-                            imageVector = Icons.Outlined.AddPhotoAlternate,
-                            contentDescription = "Adjuntar Foto",
-                            tint = TealSecondary
-                        )
-                    }
-
                     OutlinedTextField(
                         value = textInput,
                         onValueChange = { textInput = it },

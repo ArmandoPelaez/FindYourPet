@@ -54,9 +54,46 @@ service cloud.firestore {
         'ownerPhone',
         'ownerEmail',
         'ownerAddress',
+        'ownerLatitude',
+        'ownerLongitude',
         'latitude',
         'longitude'
       ]);
+    }
+
+    function validCloudinaryMediaReference(data) {
+      return data.photoUri is string
+        && data.photoUri.matches('https://res.cloudinary.com/.*')
+        && data.mediaProvider == 'CLOUDINARY'
+        && data.mediaPublicId is string
+        && data.mediaPublicId.size() > 0
+        && data.mediaContentType is string
+        && data.mediaContentType.matches('image/.*')
+        && data.mediaSource in ['CAMERA', 'GALLERY', ''];
+    }
+
+    function validOptionalMediaReference(data) {
+      return (
+          data.photoUri == ''
+          && data.mediaProvider == ''
+          && data.mediaPublicId == ''
+          && data.mediaContentType == ''
+          && data.mediaSource == ''
+        )
+        || validCloudinaryMediaReference(data);
+    }
+
+    function validLocationSource(data) {
+      return data.locationSource in ['DEVICE_GPS', 'MANUAL_COARSE', 'NONE', ''];
+    }
+
+    function preciseSightingLocationIsConsented(data) {
+      return data.locationSource != 'DEVICE_GPS'
+        || (
+          data.preciseLocationConsented == true
+          && data.latitude is number
+          && data.longitude is number
+        );
     }
 
     function hasNoSensitiveNotificationFields(data) {
@@ -126,10 +163,14 @@ service cloud.firestore {
         && request.resource.data.id == postId
         && request.resource.data.petName is string
         && request.resource.data.status in ['PERDIDO', 'AVISTADO', 'REUNIDO']
+        && validCloudinaryMediaReference(request.resource.data)
+        && validLocationSource(request.resource.data)
         && hasNoPublicContactFields(request.resource.data);
       allow update: if isPostOwner()
         && keepsOwnerId()
         && request.resource.data.id == resource.data.id
+        && validCloudinaryMediaReference(request.resource.data)
+        && validLocationSource(request.resource.data)
         && hasNoPublicContactFields(request.resource.data);
       allow delete: if isPostOwner();
     }
@@ -141,7 +182,10 @@ service cloud.firestore {
         && request.resource.data.reporterId == uid()
         && request.resource.data.ownerId is string
         && request.resource.data.postId is string
-        && request.resource.data.ownerId == get(/databases/$(database)/documents/petPosts/$(request.resource.data.postId)).data.ownerId;
+        && request.resource.data.ownerId == get(/databases/$(database)/documents/petPosts/$(request.resource.data.postId)).data.ownerId
+        && validOptionalMediaReference(request.resource.data)
+        && validLocationSource(request.resource.data)
+        && preciseSightingLocationIsConsented(request.resource.data);
       allow update, delete: if false;
     }
 

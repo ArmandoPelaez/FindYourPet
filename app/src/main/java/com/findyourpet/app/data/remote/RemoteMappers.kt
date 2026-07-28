@@ -11,7 +11,14 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 
 object RemoteMappers {
-    fun PetPostEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
+    fun PetPostEntity.toDocument(
+        createdAt: Any = FieldValue.serverTimestamp(),
+        mediaProvider: String = "",
+        mediaPublicId: String = "",
+        mediaContentType: String = "",
+        mediaSource: String = "",
+        locationSource: String = "MANUAL_COARSE"
+    ): Map<String, Any?> =
         mapOf(
             "id" to id,
             "petName" to petName,
@@ -21,8 +28,14 @@ object RemoteMappers {
             "features" to features,
             "status" to status,
             "photoUri" to photoUri,
+            "mediaProvider" to mediaProvider,
+            "mediaPublicId" to mediaPublicId,
+            "mediaContentType" to mediaContentType,
+            "mediaSource" to mediaSource,
             "dateLost" to dateLost,
             "lastSeenLocation" to lastSeenLocation,
+            "locationSource" to locationSource,
+            "publicLocationName" to lastSeenLocation,
             "rewardAmount" to rewardAmount,
             "ownerId" to ownerId,
             "ownerName" to ownerName,
@@ -55,7 +68,16 @@ object RemoteMappers {
     fun DocumentSnapshot.toPetPostEntity(): PetPostEntity? =
         data?.toPetPostEntity(id)
 
-    fun SightingAlertEntity.toDocument(ownerId: String, createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
+    fun SightingAlertEntity.toDocument(
+        ownerId: String,
+        createdAt: Any = FieldValue.serverTimestamp(),
+        mediaProvider: String = "",
+        mediaPublicId: String = "",
+        mediaContentType: String = "",
+        mediaSource: String = "",
+        locationSource: String = "MANUAL_COARSE",
+        preciseLocationConsented: Boolean = false
+    ): Map<String, Any?> =
         mapOf(
             "id" to id,
             "postId" to postId,
@@ -63,9 +85,15 @@ object RemoteMappers {
             "reporterId" to reporterId,
             "reporterName" to reporterName,
             "photoUri" to photoUri,
+            "mediaProvider" to mediaProvider,
+            "mediaPublicId" to mediaPublicId,
+            "mediaContentType" to mediaContentType,
+            "mediaSource" to mediaSource,
             "locationName" to locationName,
             "latitude" to latitude,
             "longitude" to longitude,
+            "locationSource" to locationSource,
+            "preciseLocationConsented" to preciseLocationConsented,
             "notes" to notes,
             "timestamp" to timestamp,
             "createdAt" to createdAt

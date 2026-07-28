@@ -20,6 +20,8 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("request.resource.data.ownerId == resource.data.ownerId"))
     assertTrue(rulesText.contains("allow delete: if isPostOwner()"))
     assertTrue(rulesText.contains("hasNoPublicContactFields(request.resource.data)"))
+    assertTrue(rulesText.contains("validCloudinaryMediaReference(request.resource.data)"))
+    assertTrue(rulesText.contains("validLocationSource(request.resource.data)"))
     assertTrue(rulesText.contains("'isContactRevealedToAll'"))
     assertTrue(rulesText.contains("'ownerPhone'"))
     assertTrue(rulesText.contains("'ownerEmail'"))
@@ -32,6 +34,17 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("documents/petPosts/$(request.resource.data.postId)"))
     assertTrue(rulesText.contains("match /sightings/{sightingId}"))
     assertTrue(rulesText.contains("allow update, delete: if false"))
+    assertTrue(rulesText.contains("preciseSightingLocationIsConsented(request.resource.data)"))
+  }
+
+  @Test
+  fun firestoreRulesRequireCloudinaryMediaMetadata() {
+    assertTrue(rulesText.contains("validCloudinaryMediaReference"))
+    assertTrue(rulesText.contains("data.photoUri.matches('https://res.cloudinary.com/.*')"))
+    assertTrue(rulesText.contains("data.mediaProvider == 'CLOUDINARY'"))
+    assertTrue(rulesText.contains("data.mediaPublicId is string"))
+    assertTrue(rulesText.contains("data.mediaContentType.matches('image/.*')"))
+    assertTrue(rulesText.contains("validOptionalMediaReference(request.resource.data)"))
   }
 
   @Test

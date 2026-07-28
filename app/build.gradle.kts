@@ -21,6 +21,8 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"mqt4dzrt\"")
+    buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"findyourpet_unsigned\"")
   }
 
   signingConfigs {
@@ -84,10 +86,12 @@ dependencies {
   implementation(libs.coil.compose)
   implementation(libs.firebase.auth)
   implementation(libs.firebase.firestore)
+  implementation(libs.cloudinary.android)
   implementation(libs.googleid)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.coroutines.play.services)
+  implementation(libs.play.services.location)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

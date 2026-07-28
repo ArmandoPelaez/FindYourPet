@@ -12,6 +12,9 @@ import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.product.LocationSource
+import com.findyourpet.app.data.product.MediaSource
+import com.findyourpet.app.data.product.RealProductValidators
 import com.findyourpet.app.data.profile.FirestoreUserProfileRepository
 import com.findyourpet.app.data.profile.UnavailableUserProfileRepository
 import com.findyourpet.app.data.profile.UserProfileDocument
@@ -226,9 +229,6 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            repository.seedInitialDataIfNeeded()
-        }
-        viewModelScope.launch {
             authState.collectLatest { state ->
                 if (state is AuthUiState.SignedIn) {
                     val profileResult = profileRepository.ensureProfile(state.user)
@@ -295,10 +295,29 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         longitude: Double,
         notes: String,
         ownerId: String,
+        mediaSource: MediaSource? = null,
+        locationSource: LocationSource,
         onComplete: (String) -> Unit,
         onError: (String) -> Unit = {}
     ) {
-        val user = currentAuthenticatedUser() ?: return
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de reportar.")
+            return
+        }
+        val validation = RealProductValidators.validateSighting(
+            reporterId = user.id,
+            postId = postId,
+            ownerId = ownerId,
+            locationName = locationName,
+            locationSource = locationSource,
+            photoUri = photoUri
+        )
+        if (!validation.isValid) {
+            val message = validation.message ?: "Completa los datos del avistamiento."
+            _authMessage.value = message
+            onError(message)
+            return
+        }
         viewModelScope.launch {
             runCatching {
                 repository.submitSightingAlert(
@@ -306,19 +325,20 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     petName = petName,
                     reporterId = user.id,
                     reporterName = user.name,
-                    photoUri = photoUri.ifBlank { "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80" },
+                    photoUri = photoUri,
                     locationName = locationName,
                     latitude = latitude,
                     longitude = longitude,
                     notes = notes,
-                    ownerId = ownerId
+                    ownerId = ownerId,
+                    mediaSource = mediaSource,
+                    locationSource = locationSource
                 )
             }.onSuccess { chatId ->
                 activeChatId.value = chatId
                 onComplete(chatId)
             }.onFailure { error ->
-                val message = error.message ?: "No se pudo enviar el avistamiento."
-                _authMessage.value = message
+                val message = backendWriteErrorMessage(error, "No se pudo enviar el avistamiento.")
                 onError(message)
             }
         }
@@ -387,10 +407,27 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         longitude: Double,
         rewardAmount: String,
         status: String = "PERDIDO",
+        mediaSource: MediaSource,
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE,
         onComplete: () -> Unit,
         onError: (String) -> Unit = {}
     ) {
-        val user = currentAuthenticatedUser() ?: return
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de publicar.")
+            return
+        }
+        val validation = RealProductValidators.validatePost(
+            petName = petName,
+            photoUri = photoUri,
+            ownerId = user.id,
+            locationName = lastSeenLocation
+        )
+        if (!validation.isValid) {
+            val message = validation.message ?: "Completa los datos de la publicacion."
+            _authMessage.value = message
+            onError(message)
+            return
+        }
         viewModelScope.launch {
             val newPost = PetPostEntity(
                 id = UUID.randomUUID().toString(),
@@ -400,7 +437,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 color = color,
                 features = features,
                 status = status,
-                photoUri = photoUri.ifBlank { "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=600&q=80" },
+                photoUri = photoUri,
                 dateLost = System.currentTimeMillis(),
                 lastSeenLocation = lastSeenLocation,
                 latitude = latitude,
@@ -413,13 +450,16 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                 ownerAddress = "Direccion configurada por " + user.name
             )
             runCatching {
-                repository.insertPost(newPost)
+                repository.insertPost(
+                    post = newPost,
+                    mediaSource = mediaSource,
+                    locationSource = locationSource
+                )
             }.onSuccess {
                 selectedPostId.value = newPost.id
                 onComplete()
             }.onFailure { error ->
-                val message = error.message ?: "No se pudo publicar la ficha."
-                _authMessage.value = message
+                val message = backendWriteErrorMessage(error, "No se pudo publicar la ficha.")
                 onError(message)
             }
         }
@@ -459,6 +499,17 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             return null
         }
         return user
+    }
+
+    private fun backendWriteErrorMessage(error: Throwable, fallback: String): String {
+        val rawMessage = error.message.orEmpty()
+        return if (rawMessage.contains("PERMISSION_DENIED", ignoreCase = true) ||
+            rawMessage.contains("Missing or insufficient permissions", ignoreCase = true)
+        ) {
+            "Firestore rechazo la escritura. Revisa que firestore.rules este publicado en el proyecto Firebase de prueba."
+        } else {
+            rawMessage.ifBlank { fallback }
+        }
     }
 
 }

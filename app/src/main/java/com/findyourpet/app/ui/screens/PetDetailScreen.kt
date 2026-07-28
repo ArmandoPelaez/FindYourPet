@@ -275,7 +275,7 @@ fun PetDetailScreen(
                             )
                         }
                         Text(
-                            text = "Registra una foto de muestra y una ubicacion para avisar al dueno.",
+                            text = "Registra una ubicacion y detalles utiles para avisar al dueno.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp, start = 4.dp)

@@ -52,6 +52,27 @@ class RemoteMappersTest {
   }
 
   @Test
+  fun mediaAndLocationMetadataAreMappedForProductionDocuments() {
+    val post = samplePost(ownerId = "uid_owner").copy(photoUri = "https://res.cloudinary.com/mqt4dzrt/image/upload/example.jpg")
+
+    val document = post.toDocument(
+      createdAt = 100L,
+      mediaProvider = "CLOUDINARY",
+      mediaPublicId = "findyourpet/example",
+      mediaContentType = "image/jpeg",
+      mediaSource = "CAMERA",
+      locationSource = "MANUAL_COARSE"
+    )
+
+    assertEquals("CLOUDINARY", document["mediaProvider"])
+    assertEquals("findyourpet/example", document["mediaPublicId"])
+    assertEquals("image/jpeg", document["mediaContentType"])
+    assertEquals("CAMERA", document["mediaSource"])
+    assertEquals("MANUAL_COARSE", document["locationSource"])
+    assertEquals("Barrio Central", document["publicLocationName"])
+  }
+
+  @Test
   fun sightingDocumentRequiresReporterAndDerivedOwner() {
     val sighting = SightingAlertEntity(
       id = "sighting_1",
@@ -73,6 +94,40 @@ class RemoteMappersTest {
     assertEquals("uid_owner", document["ownerId"])
     assertEquals("uid_reporter", document["reporterId"])
     assertEquals("uid_owner", mapped.ownerId)
+  }
+
+  @Test
+  fun sightingDocumentStoresMediaAndConsentedLocationMetadata() {
+    val sighting = SightingAlertEntity(
+      id = "sighting_1",
+      postId = "post_1",
+      ownerId = "uid_owner",
+      reporterId = "uid_reporter",
+      reporterName = "Reporter",
+      photoUri = "https://res.cloudinary.com/mqt4dzrt/image/upload/sighting.jpg",
+      locationName = "Corner",
+      latitude = 1.0,
+      longitude = 2.0,
+      notes = "Possible match",
+      timestamp = 123L
+    )
+
+    val document = sighting.toDocument(
+      ownerId = "uid_owner",
+      createdAt = 100L,
+      mediaProvider = "CLOUDINARY",
+      mediaPublicId = "findyourpet/sighting",
+      mediaContentType = "image/jpeg",
+      mediaSource = "GALLERY",
+      locationSource = "DEVICE_GPS",
+      preciseLocationConsented = true
+    )
+
+    assertEquals("CLOUDINARY", document["mediaProvider"])
+    assertEquals("findyourpet/sighting", document["mediaPublicId"])
+    assertEquals("GALLERY", document["mediaSource"])
+    assertEquals("DEVICE_GPS", document["locationSource"])
+    assertEquals(true, document["preciseLocationConsented"])
   }
 
   @Test
