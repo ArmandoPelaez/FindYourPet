@@ -2,7 +2,6 @@
 
 ## Purpose
 Define backend notification inbox behavior and privacy-safe notification previews.
-
 ## Requirements
 ### Requirement: Per-User Notification Inbox
 The system SHALL persist backend notification records under the recipient user's data so notifications survive app restarts and device changes.
@@ -26,12 +25,22 @@ The system SHALL allow users to read and update only their own notification reco
 - **THEN** the backend denies access
 
 ### Requirement: Notification Content Is Minimised
-The system SHALL avoid storing or displaying full sensitive message, location or contact data in notification preview fields.
+The system SHALL avoid storing or displaying full sensitive message, location or contact data in notification preview fields, local notification text, and push notification payloads.
 
 #### Scenario: Chat notification is created
 - **GIVEN** a participant sends a private chat message
 - **WHEN** the recipient notification is created
 - **THEN** the notification preview uses generic text and links to the chat instead of exposing full message body or contact fields
+
+#### Scenario: Contact share notification is created
+- **GIVEN** an owner shares contact inside a chat
+- **WHEN** the recipient notification or push payload is created
+- **THEN** it uses generic contact availability text and links to the chat without phone, email, address or precise coordinates
+
+#### Scenario: Contact revoke notification is created
+- **GIVEN** an owner revokes contact sharing inside a chat
+- **WHEN** the recipient notification or push payload is created
+- **THEN** it uses generic contact availability text and does not include previously shared contact values
 
 ### Requirement: Notification Read State
 The system SHALL allow the recipient to mark their own notifications as read.
@@ -40,3 +49,4 @@ The system SHALL allow the recipient to mark their own notifications as read.
 - **GIVEN** user A has an unread notification
 - **WHEN** user A marks it as read
 - **THEN** the backend updates only that notification's read state
+
