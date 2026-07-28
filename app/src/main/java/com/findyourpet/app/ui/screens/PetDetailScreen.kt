@@ -251,7 +251,7 @@ fun PetDetailScreen(
             }
 
             // Big Urgent Sighting Alert Button
-            if (pet.status != "REUNIDO") {
+            if (pet.status != "REUNIDO" && OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId)) {
                 item {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                         Button(

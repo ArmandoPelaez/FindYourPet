@@ -84,10 +84,11 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     val filteredPosts: StateFlow<List<PetPostEntity>> = combine(
         allPosts,
+        currentUser,
         searchQuery,
         selectedSpecies,
         selectedStatusFilter
-    ) { posts, query, species, status ->
+    ) { posts, user, query, species, status ->
         posts.filter { post ->
             val matchesQuery = query.isBlank() ||
                     post.petName.contains(query, ignoreCase = true) ||
@@ -97,8 +98,9 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
             val matchesSpecies = species == "Todos" || post.species.equals(species, ignoreCase = true)
             val matchesStatus = status == "Todos" || post.status.equals(status, ignoreCase = true)
+            val visibleToCurrentUser = OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId)
 
-            matchesQuery && matchesSpecies && matchesStatus
+            visibleToCurrentUser && matchesQuery && matchesSpecies && matchesStatus
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

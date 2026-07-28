@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.PetPostEntity
+import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
@@ -57,6 +58,7 @@ fun HomeScreen(
     val selectedSpecies by viewModel.selectedSpecies.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
     val notifications by viewModel.allNotifications.collectAsState()
 
     val unreadNotificationsCount = notifications.count { !it.isRead }
@@ -183,7 +185,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (feedState.errorMessage != null) "Revisa tu conexion o vuelve a intentarlo." else "Publica una nueva ficha usando el boton '+'.",
+                                text = if (feedState.errorMessage != null) "Revisa tu conexion o vuelve a intentarlo." else "Tus publicaciones propias aparecen en Perfil; aca veras fichas de otros usuarios.",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -242,6 +244,7 @@ fun HomeScreen(
                     val post = posts[page]
                     PetPostCard(
                         post = post,
+                        canReportSighting = OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId),
                         onClick = {
                             viewModel.selectPost(post.id)
                             onNavigateToDetail(post.id)
@@ -260,6 +263,7 @@ fun HomeScreen(
 @Composable
 fun PetPostCard(
     post: PetPostEntity,
+    canReportSighting: Boolean = true,
     onClick: () -> Unit,
     onAlertClick: () -> Unit
 ) {
@@ -456,7 +460,7 @@ fun PetPostCard(
                         Text(text = "Ver Ficha", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
 
-                    if (post.status != "REUNIDO") {
+                    if (post.status != "REUNIDO" && canReportSighting) {
                         Button(
                             onClick = onAlertClick,
                             colors = ButtonDefaults.buttonColors(containerColor = AlertRed),

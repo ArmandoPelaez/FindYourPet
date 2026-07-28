@@ -171,6 +171,40 @@ class StaticProjectGuardrailsTest {
   }
 
   @Test
+  fun selfSightings_areBlockedAcrossAppEntryPoints() {
+    val policyText = File(root, "app/src/main/java/com/findyourpet/app/domain/OwnershipPolicy.kt").readText()
+    val validatorText = File(root, "app/src/main/java/com/findyourpet/app/data/product/RealProductValidators.kt").readText()
+    val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
+    val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+    val detailText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/PetDetailScreen.kt").readText()
+    val alertText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/SightingAlertScreen.kt").readText()
+
+    assertTrue(policyText.contains("fun canReportSighting"))
+    assertTrue(policyText.contains("currentUid != ownerId"))
+    assertTrue(validatorText.contains("OwnershipPolicy.canReportSighting(reporterId, ownerId)"))
+    assertTrue(repositoryText.contains("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))"))
+    assertTrue(repositoryText.indexOf("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))") < repositoryText.indexOf("val sighting = SightingAlertEntity"))
+    assertTrue(homeText.contains("canReportSighting = OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId)"))
+    assertTrue(homeText.contains("post.status != \"REUNIDO\" && canReportSighting"))
+    assertTrue(detailText.contains("pet.status != \"REUNIDO\" && OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId)"))
+    assertTrue(alertText.contains("if (!OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId))"))
+  }
+
+  @Test
+  fun discoveryFeed_excludesCurrentUsersOwnPostsButProfileKeepsThem() {
+    val policyText = File(root, "app/src/main/java/com/findyourpet/app/domain/OwnershipPolicy.kt").readText()
+    val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val profileText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/ProfileScreen.kt").readText()
+
+    assertTrue(policyText.contains("fun canAppearInDiscoveryFeed"))
+    assertTrue(policyText.contains("currentUid != ownerId"))
+    assertTrue(viewModelText.contains("currentUser,"))
+    assertTrue(viewModelText.contains("OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId)"))
+    assertTrue(profileText.contains("val myPosts = allPosts.filter { it.ownerId == currentUser.id }"))
+    assertTrue(profileText.contains("Estado: ${'$'}{pet.status}"))
+  }
+
+  @Test
   fun mainSourceText_doesNotContainMojibakeOrUnsupportedPrivacyClaims() {
     val sourceRoot = File(root, "app/src/main")
     val checkedFiles = sourceRoot

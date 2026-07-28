@@ -31,6 +31,7 @@ class FirestoreRulesStaticTest {
   @Test
   fun sightingRulesDeriveOwnerFromReferencedPostAndStayAppendOnly() {
     assertTrue(rulesText.contains("request.resource.data.reporterId == uid()"))
+    assertTrue(rulesText.contains("request.resource.data.reporterId != request.resource.data.ownerId"))
     assertTrue(rulesText.contains("documents/petPosts/$(request.resource.data.postId)"))
     assertTrue(rulesText.contains("match /sightings/{sightingId}"))
     assertTrue(rulesText.contains("allow update, delete: if false"))
@@ -50,6 +51,7 @@ class FirestoreRulesStaticTest {
   @Test
   fun chatRulesRequireParticipantsAndImmutableMessages() {
     assertTrue(rulesText.contains("validParticipantIds"))
+    assertTrue(rulesText.contains("data.ownerId != data.reporterId"))
     assertTrue(rulesText.contains("uid() in data.participantIds"))
     assertTrue(rulesText.contains("allow get: if isChatParticipant(resource.data)"))
     assertTrue(rulesText.contains("allow list: if signedIn()"))

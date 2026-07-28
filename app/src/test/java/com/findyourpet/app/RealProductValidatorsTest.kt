@@ -66,6 +66,30 @@ class RealProductValidatorsTest {
   }
 
   @Test
+  fun sightingRequiresReporterDifferentFromOwner() {
+    val selfSighting = RealProductValidators.validateSighting(
+      reporterId = "uid_owner",
+      postId = "post_1",
+      ownerId = "uid_owner",
+      locationName = "Barrio Central",
+      locationSource = LocationSource.MANUAL_COARSE,
+      photoUri = ""
+    )
+    val crossUserSighting = RealProductValidators.validateSighting(
+      reporterId = "uid_reporter",
+      postId = "post_1",
+      ownerId = "uid_owner",
+      locationName = "Barrio Central",
+      locationSource = LocationSource.MANUAL_COARSE,
+      photoUri = ""
+    )
+
+    assertFalse(selfSighting.isValid)
+    assertTrue(selfSighting.message?.contains("propia publicacion") == true)
+    assertTrue(crossUserSighting.isValid)
+  }
+
+  @Test
   fun mediaUploadStateCarriesUploadedCloudinaryReference() {
     val reference = MediaReference(
       localUri = Uri.parse("content://media/pet.jpg"),

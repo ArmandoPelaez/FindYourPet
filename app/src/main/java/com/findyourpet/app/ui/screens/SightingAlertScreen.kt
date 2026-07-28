@@ -65,6 +65,7 @@ import coil.request.ImageRequest
 import com.findyourpet.app.data.location.DeviceLocationProvider
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
+import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
@@ -81,6 +82,7 @@ fun SightingAlertScreen(
     onAlertSent: (String) -> Unit
 ) {
     val post by viewModel.selectedPost.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -89,6 +91,47 @@ fun SightingAlertScreen(
     }
 
     val pet = post ?: return
+
+    if (!OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId)) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Alerta de Avistamiento", fontWeight = FontWeight.Bold, color = AlertRed) },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "No puedes reportar avistamientos de tu propia publicacion.",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Puedes gestionar esta mascota desde su ficha y reportar avistamientos en publicaciones de otros usuarios.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(onClick = onBackClick) {
+                    Text("Volver")
+                }
+            }
+        }
+        return
+    }
 
     var locationName by remember { mutableStateOf("") }
     var latitude by remember { mutableStateOf(0.0) }

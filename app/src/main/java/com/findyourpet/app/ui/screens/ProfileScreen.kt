@@ -229,7 +229,7 @@ fun ProfileScreen(
                                     fontSize = 16.sp
                                 )
                                 Text(
-                                    text = "${pet.species} • Estado: ${pet.status}",
+                                    text = "Estado: ${pet.status}",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
