@@ -1,10 +1,6 @@
 ﻿package com.findyourpet.app.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -19,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,11 +26,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.domain.OwnershipPolicy
+import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.TealSecondary
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,7 +40,6 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     viewModel: PetViewModel,
-    onNavigateToDetail: (String) -> Unit,
     onNavigateToCreate: () -> Unit,
     onNavigateToAlert: (String) -> Unit,
     onNavigateToNotifications: () -> Unit,
@@ -57,7 +51,6 @@ fun HomeScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedSpecies by viewModel.selectedSpecies.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val notifications by viewModel.allNotifications.collectAsState()
 
@@ -117,34 +110,19 @@ fun HomeScreen(
                             )
                         }
                     }
-                    IconButton(onClick = onNavigateToChatList) {
-                        Icon(
-                            imageVector = Icons.Outlined.Chat,
-                            contentDescription = "Chats Privados"
-                        )
-                    }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = "Perfil"
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        floatingActionButton = {
-            if (isAuthenticated) {
-                ExtendedFloatingActionButton(
-                    onClick = onNavigateToCreate,
-                    containerColor = CoralPrimary,
-                    contentColor = Color.White,
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    text = { Text("Publicar Mascota", fontWeight = FontWeight.Bold) }
-                )
-            }
+        bottomBar = {
+            BottomPrimaryActionBanner(
+                onProfileClick = onNavigateToProfile,
+                onCreatePostClick = onNavigateToCreate,
+                onChatClick = onNavigateToChatList,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
         }
     ) { padding ->
         Column(
@@ -195,49 +173,11 @@ fun HomeScreen(
             } else {
                 val pagerState = rememberPagerState(pageCount = { posts.size })
 
-                // Header bar showing horizontal swiping hint and position counter
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Outlined.Swipe,
-                            contentDescription = null,
-                            tint = CoralPrimary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Desliza a los lados ↔",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = "${pagerState.currentPage + 1} de ${posts.size}",
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 12.dp),
+                        .padding(bottom = 20.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     pageSpacing = 16.dp
                 ) { page ->
@@ -245,10 +185,6 @@ fun HomeScreen(
                     PetPostCard(
                         post = post,
                         canReportSighting = OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId),
-                        onClick = {
-                            viewModel.selectPost(post.id)
-                            onNavigateToDetail(post.id)
-                        },
                         onAlertClick = {
                             viewModel.selectPost(post.id)
                             onNavigateToAlert(post.id)
@@ -264,7 +200,6 @@ fun HomeScreen(
 fun PetPostCard(
     post: PetPostEntity,
     canReportSighting: Boolean = true,
-    onClick: () -> Unit,
     onAlertClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -274,9 +209,7 @@ fun PetPostCard(
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxSize(),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -341,35 +274,8 @@ fun PetPostCard(
                         }
                     }
                 }
-
-                // Protected Owner Badge on Image
-                Surface(
-                    color = Color.Black.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(topEnd = 12.dp),
-                    modifier = Modifier.align(Alignment.BottomStart)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Lock,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Dueño: ${post.ownerName.take(3)}*** (Protegido)",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
             }
 
-            // Details Body
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -400,7 +306,55 @@ fun PetPostCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    InfoPill(
+                        icon = Icons.Outlined.Palette,
+                        label = "Color",
+                        value = post.color,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Información reportada",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    )
+                ) {
+                    Text(
+                        text = post.features,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = 19.sp,
+                        modifier = Modifier.padding(14.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Ubicación en la que se perdió",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -427,62 +381,74 @@ fun PetPostCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
+                if (post.status != "REUNIDO" && canReportSighting) {
+                    Button(
+                        onClick = onAlertClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.NotificationsActive,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "¡Lo he visto!",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoPill(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = CoralPrimary,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
                 Text(
-                    text = "Características:",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = label,
+                    fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = post.features,
+                    text = value,
                     fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 18.sp,
-                    modifier = Modifier.padding(top = 2.dp)
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Action Buttons Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Text(text = "Ver Ficha", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    if (post.status != "REUNIDO" && canReportSighting) {
-                        Button(
-                            onClick = onAlertClick,
-                            colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
-                            modifier = Modifier
-                                .weight(1.3f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.NotificationsActive,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "🚨 ¡Lo he visto!",
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                }
             }
         }
     }

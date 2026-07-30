@@ -102,15 +102,41 @@ class ReleaseReadinessStaticTest {
       "contentDescription = \"Notificaciones\"",
       "contentDescription = \"Chats Privados\"",
       "contentDescription = \"Perfil\"",
+      "contentDescription = \"Crear publicacion\"",
       "contentDescription = \"Enviar\"",
       "Foto de la mascota",
       "Foto del avistamiento",
       "Usar ubicacion actual",
-      "Publicar Mascota",
       "ENVIAR ALERTA"
     ).forEach { label ->
       assertTrue("Missing accessibility/visible label: $label", mainSources.contains(label))
     }
+  }
+
+  @Test
+  fun homeTopBar_doesNotDuplicateBottomPrimaryActions() {
+    val homeSource = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+
+    assertTrue(homeSource.contains("BottomPrimaryActionBanner("))
+    assertTrue(homeSource.contains("onProfileClick = onNavigateToProfile"))
+    assertTrue(homeSource.contains("onCreatePostClick = onNavigateToCreate"))
+    assertTrue(homeSource.contains("onChatClick = onNavigateToChatList"))
+    assertTrue(homeSource.contains("contentDescription = \"Notificaciones\""))
+    assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToChatList)"))
+    assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToProfile)"))
+    assertTrue(!homeSource.contains("ExtendedFloatingActionButton("))
+  }
+
+  @Test
+  fun createPostForm_omitsCurrentLocationAndRewardInputs() {
+    val createPostSource = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/CreatePetPostScreen.kt").readText()
+
+    assertTrue(createPostSource.contains("Text(text = \"Ubicacion\""))
+    assertTrue(createPostSource.contains("rewardAmount = \"Sin recompensa\""))
+    assertTrue(!createPostSource.contains("Usar ubicacion actual"))
+    assertTrue(!createPostSource.contains("Ubicacion GPS capturada"))
+    assertTrue(!createPostSource.contains("Recompensa ofrecida"))
+    assertTrue(!createPostSource.contains("requestCurrentLocation"))
   }
 
   private fun repoRoot(): File {

@@ -27,8 +27,7 @@ import com.findyourpet.app.ui.viewmodel.PetViewModel
 @Composable
 fun ProfileScreen(
     viewModel: PetViewModel,
-    onBackClick: () -> Unit,
-    onNavigateToDetail: (String) -> Unit
+    onBackClick: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val allPosts by viewModel.allPosts.collectAsState()

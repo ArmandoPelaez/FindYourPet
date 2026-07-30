@@ -23,8 +23,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Publish
@@ -49,7 +47,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,14 +60,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.findyourpet.app.data.location.DeviceLocationProvider
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.TealSecondary
 import com.findyourpet.app.ui.viewmodel.PetViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +75,6 @@ fun CreatePetPostScreen(
     onPostCreated: () -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var petName by remember { mutableStateOf("") }
     var selectedSpecies by remember { mutableStateOf("Mascota") }
@@ -91,7 +85,6 @@ fun CreatePetPostScreen(
     var latitude by remember { mutableStateOf(0.0) }
     var longitude by remember { mutableStateOf(0.0) }
     var locationSource by remember { mutableStateOf(LocationSource.MANUAL_COARSE) }
-    var rewardAmount by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf("") }
     var mediaSource by remember { mutableStateOf<MediaSource?>(null) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -132,28 +125,6 @@ fun CreatePetPostScreen(
             formMessage = "Permiso de camara denegado."
         }
     }
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { grants ->
-        if (grants.values.any { it }) {
-            scope.launch {
-                val captured = DeviceLocationProvider.currentLocation(context)
-                if (captured.source == LocationSource.DEVICE_GPS) {
-                    latitude = captured.latitude
-                    longitude = captured.longitude
-                    locationSource = captured.source
-                    if (lastSeenLocation.isBlank()) lastSeenLocation = captured.label
-                    formMessage = "Ubicacion actual capturada."
-                } else {
-                    locationSource = LocationSource.MANUAL_COARSE
-                    formMessage = "No se pudo obtener la ubicacion actual. Puedes ingresar una referencia manual."
-                }
-            }
-        } else {
-            locationSource = LocationSource.MANUAL_COARSE
-            formMessage = "Permiso de ubicacion denegado. Puedes ingresar una referencia manual."
-        }
-    }
 
     fun launchCamera() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -162,33 +133,6 @@ fun CreatePetPostScreen(
             cameraLauncher.launch(uri)
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
-
-    fun requestCurrentLocation() {
-        val permissions = arrayOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-        val hasLocation = permissions.any {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-        }
-        if (hasLocation) {
-            scope.launch {
-                val captured = DeviceLocationProvider.currentLocation(context)
-                if (captured.source == LocationSource.DEVICE_GPS) {
-                    latitude = captured.latitude
-                    longitude = captured.longitude
-                    locationSource = captured.source
-                    if (lastSeenLocation.isBlank()) lastSeenLocation = captured.label
-                    formMessage = "Ubicacion actual capturada."
-                } else {
-                    locationSource = LocationSource.MANUAL_COARSE
-                    formMessage = "No se pudo obtener la ubicacion actual. Puedes ingresar una referencia manual."
-                }
-            }
-        } else {
-            locationPermissionLauncher.launch(permissions)
         }
     }
 
@@ -317,34 +261,20 @@ fun CreatePetPostScreen(
                 maxLines = 4
             )
 
-            Text(text = "Ubicacion y recompensa", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(text = "Ubicacion", fontWeight = FontWeight.Bold, fontSize = 15.sp)
 
             OutlinedTextField(
                 value = lastSeenLocation,
                 onValueChange = {
                     lastSeenLocation = it
-                    if (locationSource != LocationSource.DEVICE_GPS) locationSource = LocationSource.MANUAL_COARSE
+                    locationSource = LocationSource.MANUAL_COARSE
+                    latitude = 0.0
+                    longitude = 0.0
                 },
                 label = { Text("Ultima ubicacion vista (Barrio, Ciudad, Calle)") },
                 leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = CoralPrimary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
-            )
-
-            OutlinedButton(onClick = { requestCurrentLocation() }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Filled.MyLocation, contentDescription = null, tint = TealSecondary)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (locationSource == LocationSource.DEVICE_GPS) "Ubicacion GPS capturada" else "Usar ubicacion actual")
-            }
-
-            OutlinedTextField(
-                value = rewardAmount,
-                onValueChange = { rewardAmount = it },
-                label = { Text("Recompensa ofrecida (Opcional, Ej. $100 USD)") },
-                leadingIcon = { Icon(Icons.Filled.CardGiftcard, contentDescription = null, tint = CoralPrimary) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
             )
 
             Button(
@@ -365,7 +295,7 @@ fun CreatePetPostScreen(
                         lastSeenLocation = lastSeenLocation,
                         latitude = latitude,
                         longitude = longitude,
-                        rewardAmount = rewardAmount.ifBlank { "Sin recompensa" },
+                        rewardAmount = "Sin recompensa",
                         mediaSource = selectedMediaSource,
                         locationSource = locationSource,
                         onComplete = {

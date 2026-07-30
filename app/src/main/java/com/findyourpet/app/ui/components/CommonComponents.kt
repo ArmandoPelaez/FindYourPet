@@ -1,6 +1,8 @@
 ﻿package com.findyourpet.app.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +63,74 @@ fun PetStatusChip(status: String, modifier: Modifier = Modifier) {
 }
 
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Composable
+fun BottomPrimaryActionBanner(
+    onProfileClick: () -> Unit,
+    onCreatePostClick: () -> Unit,
+    onChatClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .navigationBarsPadding()
+            .semantics { contentDescription = "Acciones principales" },
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.96f),
+        tonalElevation = 6.dp,
+        shadowElevation = 10.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(
+                onClick = onProfileClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Perfil",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            FilledIconButton(
+                onClick = onCreatePostClick,
+                modifier = Modifier.size(56.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = CoralPrimary,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Crear publicacion",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            IconButton(
+                onClick = onChatClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.Chat,
+                    contentDescription = "Chats Privados",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun <T> SyncStatusBanner(
@@ -261,7 +333,7 @@ fun ProtectedContactCard(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Chat,
+                    imageVector = Icons.AutoMirrored.Filled.Chat,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
