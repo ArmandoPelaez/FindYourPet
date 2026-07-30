@@ -1,5 +1,6 @@
 ﻿package com.findyourpet.app.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -18,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -177,8 +180,8 @@ fun HomeScreen(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 20.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(bottom = 28.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     pageSpacing = 16.dp
                 ) { page ->
                     val post = posts[page]
@@ -207,11 +210,12 @@ fun PetPostCard(
         val sdf = SimpleDateFormat("dd MMM, yyyy", Locale("es", "ES"))
         sdf.format(Date(post.dateLost))
     }
+    val shareText = remember(post) { buildPetPostShareText(post) }
 
     Card(
         modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(26.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -219,11 +223,10 @@ fun PetPostCard(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Hero Photo Section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .heightIn(min = 260.dp, max = 320.dp)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -235,149 +238,90 @@ fun PetPostCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Top Badges
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
+                        .align(Alignment.BottomCenter)
+                        .padding(14.dp)
                 ) {
                     PetStatusChip(
                         status = post.status,
-                        modifier = Modifier.align(Alignment.TopStart)
+                        modifier = Modifier.align(Alignment.BottomEnd)
                     )
-
-                    val showRewardBadge = false
-                    if (showRewardBadge && post.rewardAmount.isNotBlank() && post.rewardAmount != "Sin recompensa") {
-                        Surface(
-                            color = CoralPrimary,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.align(Alignment.TopEnd)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.CardGiftcard,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = post.rewardAmount,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 18.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = post.petName,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 24.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = post.breed,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+                PetIdentitySection(post = post)
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    InfoPill(
-                        icon = Icons.Outlined.Palette,
-                        label = "Color",
-                        value = post.color,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                PetAttributeGrid(post = post)
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = "Información reportada",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                     )
                 ) {
                     Text(
                         text = post.features,
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 19.sp,
-                        modifier = Modifier.padding(14.dp)
+                        lineHeight = 21.sp,
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
                     text = "Ubicación en la que se perdió",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.LocationOn,
                         contentDescription = null,
                         tint = CoralPrimary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = post.lastSeenLocation,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
+                        text = post.lastSeenLocation,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
                         text = formattedDate,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.outline
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -389,23 +333,134 @@ fun PetPostCard(
                         colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp)
+                            .height(54.dp)
+                            .semantics { contentDescription = "Reportar avistamiento de ${post.petName}" },
+                        shape = RoundedCornerShape(18.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.NotificationsActive,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "¡Lo he visto!",
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.sp
+                            fontSize = 16.sp
                         )
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
+
+                OutlinedButton(
+                    onClick = {
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(
+                            Intent.createChooser(sendIntent, "Compartir publicacion")
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .semantics { contentDescription = "Compartir publicacion de ${post.petName}" },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = CoralPrimary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Compartir",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 15.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(88.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun PetIdentitySection(post: PetPostEntity) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = post.petName,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 28.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        if (post.breed.isNotBlank()) {
+            Spacer(modifier = Modifier.width(10.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = post.breed,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PetAttributeGrid(post: PetPostEntity) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            InfoPill(
+                icon = Icons.Outlined.Palette,
+                label = "Color",
+                value = post.color,
+                modifier = Modifier.weight(1f)
+            )
+            InfoPill(
+                icon = Icons.Outlined.Pets,
+                label = "Especie",
+                value = post.species,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (post.breed.isNotBlank()) {
+            InfoPill(
+                icon = Icons.Outlined.Badge,
+                label = "Raza",
+                value = post.breed,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        if (post.features.isNotBlank()) {
+            InfoPill(
+                icon = Icons.Outlined.Info,
+                label = "Señas",
+                value = post.features,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -425,7 +480,10 @@ private fun InfoPill(
         )
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 70.dp)
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -452,4 +510,15 @@ private fun InfoPill(
             }
         }
     }
+}
+
+fun buildPetPostShareText(post: PetPostEntity): String {
+    val breed = post.breed.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
+    return listOf(
+        "Mascota perdida: ${post.petName}$breed",
+        "Especie: ${post.species}",
+        "Color: ${post.color}",
+        "Ultima ubicacion vista: ${post.lastSeenLocation}",
+        "Si la viste, usa FindYourPet para reportar el avistamiento."
+    ).joinToString(separator = "\n")
 }
