@@ -1,0 +1,55 @@
+# Orchestration State: remove-unwanted-information-from-main-screen
+
+Status: PASSED
+Branch: ops/remove-unwanted-information-from-main-screen
+
+## OpenSpec
+
+- [x] Change listed
+- [x] Status loaded
+- [x] proposal.md present
+- [x] design.md present
+- [x] tasks.md present
+- [x] specs present
+- [x] openspec validate passed
+
+## Git
+
+- [x] Current branch checked
+- [x] Working tree reviewed
+- [x] Branch ready
+
+## Implementation
+
+- [x] Handoff prepared
+- [x] Implementer completed work
+- [x] Report received
+
+## Verification
+
+- [x] Diff reviewed
+- [x] Unit tests passed
+- [x] Debug build passed
+- [x] Acceptance criteria validated
+- [x] OpenSpec validate passed
+
+## Result
+
+Final: PASSED
+
+## Evidence
+
+- 2026-07-31: `openspec list --json` lists `remove-unwanted-information-from-main-screen` as in progress with 0/17 tasks complete.
+- 2026-07-31: `openspec status --change "remove-unwanted-information-from-main-screen" --json` reports all planning artifacts complete.
+- 2026-07-31: Verified artifact files exist: `proposal.md`, `design.md`, `tasks.md`, and `specs/home-feed-presentation/spec.md`.
+- 2026-07-31: `openspec validate "remove-unwanted-information-from-main-screen" --strict` passed.
+- 2026-07-31: `git status --short` reviewed; only untracked orchestration/skill/proposal artifacts are present.
+- 2026-07-31: Prepared and switched to branch `ops/remove-unwanted-information-from-main-screen`.
+- 2026-07-31: Handoff prepared for implementation; no Kotlin, UI, or test code was modified during preflight.
+- 2026-07-31: Implementer report received; `openspec instructions apply --change "remove-unwanted-information-from-main-screen" --json` reports 17/17 tasks complete and state `all_done`.
+- 2026-07-31: Diff reviewed; implementation only changes `HomeScreen.kt`, `HomeFeedPresentationTest.kt`, and change `tasks.md`.
+- 2026-07-31: Acceptance validated by checking home feed removes visible `Especie` and duplicate `Raza`, preserves the breed chip, and removes the species line from share text.
+- 2026-07-31: `rg -n "Especie|especie" .` reviewed; remaining matches are OpenSpec/change documentation, privacy policy data-contract text, and tests asserting absence.
+- 2026-07-31: `openspec validate "remove-unwanted-information-from-main-screen" --strict` passed.
+- 2026-07-31: `.\gradlew.bat testDebugUnitTest` passed.
+- 2026-07-31: `.\gradlew.bat assembleDebug` passed.
