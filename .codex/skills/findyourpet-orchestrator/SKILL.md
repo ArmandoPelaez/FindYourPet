@@ -52,12 +52,16 @@ Ese archivo registra:
 
 Para un cambio `<change>` ejecutar:
 
-1. `openspec list --json`
-2. `openspec status --change "<change>" --json`
-3. Verificar proposal/design/tasks/specs
-4. `openspec validate "<change>" --strict`
-5. `git status --short`
-6. revisar o preparar rama `ops/<change>`
+1. Crear `.codex/orchestration/<change>.md` si no existe.
+2. Si existe, leerlo y usarlo como memoria operativa.
+3. Registrar estado `PREFLIGHT`.
+4. `openspec list --json`
+5. `openspec status --change "<change>" --json`
+6. Verificar proposal/design/tasks/specs.
+7. `openspec validate "<change>" --strict`
+8. `git status --short`
+9. Revisar o preparar rama `ops/<change>`.
+10. Registrar comandos ejecutados, resultados y evidencia del preflight en `.codex/orchestration/<change>.md`.
 
 # Delegación Al Implementador
 
