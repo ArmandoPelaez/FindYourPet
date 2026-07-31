@@ -1,5 +1,9 @@
 package com.findyourpet.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -7,6 +11,7 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.dp
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.ui.screens.PetPostCard
 import com.findyourpet.app.ui.screens.buildPetPostShareText
@@ -40,11 +45,12 @@ class HomeFeedPresentationTest {
     }
 
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
-    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(2)
+    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(1)
     composeTestRule.onNodeWithText("Color").assertIsDisplayed()
     composeTestRule.onNodeWithText("Marron").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Especie").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Perro").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Especie").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Raza").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Perro").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Información reportada").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(1)
@@ -70,6 +76,30 @@ class HomeFeedPresentationTest {
   }
 
   @Test
+  fun petPostCard_compactPhoneViewport_keepsBreedChipWithoutRemovedAttributes() {
+    composeTestRule.setContent {
+      MascotasPerdidasTheme {
+        Box(
+          modifier = Modifier
+            .width(360.dp)
+            .height(740.dp)
+        ) {
+          PetPostCard(
+            post = samplePost(),
+            canReportSighting = true,
+            onAlertClick = {}
+          )
+        }
+      }
+    }
+
+    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Especie").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Raza").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Color").assertCountEquals(1)
+  }
+
+  @Test
   fun shareText_usesOnlyPublicPostSummary() {
     val post = samplePost(
       ownerPhone = "3415551234",
@@ -82,9 +112,12 @@ class HomeFeedPresentationTest {
     val shareText = buildPetPostShareText(post)
 
     assertTrue(shareText.contains("REX"))
-    assertTrue(shareText.contains("Perro"))
+    assertTrue(shareText.contains("Boxer"))
     assertTrue(shareText.contains("Marron"))
     assertTrue(shareText.contains("Parque Central"))
+    assertFalse(shareText.contains("Especie"))
+    assertFalse(shareText.contains("Perro"))
+    assertFalse(shareText.lines().any { it.startsWith("Especie:") })
     assertFalse(shareText.contains("3415551234"))
     assertFalse(shareText.contains("owner@example.com"))
     assertFalse(shareText.contains("Calle Privada"))

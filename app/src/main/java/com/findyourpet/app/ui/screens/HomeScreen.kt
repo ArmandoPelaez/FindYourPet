@@ -429,31 +429,12 @@ private fun PetIdentitySection(post: PetPostEntity) {
 @Composable
 private fun PetAttributeGrid(post: PetPostEntity) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            InfoPill(
-                icon = Icons.Outlined.Palette,
-                label = "Color",
-                value = post.color,
-                modifier = Modifier.weight(1f)
-            )
-            InfoPill(
-                icon = Icons.Outlined.Pets,
-                label = "Especie",
-                value = post.species,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        if (post.breed.isNotBlank()) {
-            InfoPill(
-                icon = Icons.Outlined.Badge,
-                label = "Raza",
-                value = post.breed,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        InfoPill(
+            icon = Icons.Outlined.Palette,
+            label = "Color",
+            value = post.color,
+            modifier = Modifier.fillMaxWidth()
+        )
         if (post.features.isNotBlank()) {
             InfoPill(
                 icon = Icons.Outlined.Info,
@@ -516,7 +497,6 @@ fun buildPetPostShareText(post: PetPostEntity): String {
     val breed = post.breed.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
     return listOf(
         "Mascota perdida: ${post.petName}$breed",
-        "Especie: ${post.species}",
         "Color: ${post.color}",
         "Ultima ubicacion vista: ${post.lastSeenLocation}",
         "Si la viste, usa FindYourPet para reportar el avistamiento."
