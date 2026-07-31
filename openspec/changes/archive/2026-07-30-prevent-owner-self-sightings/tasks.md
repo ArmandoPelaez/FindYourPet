@@ -29,10 +29,10 @@
 
 - [x] 5.1 Run unit tests for affected app logic.
 - [x] 5.2 Run Android debug build.
-- [ ] 5.3 Manually validate User A can publish a lost pet and User B can report a sighting for User A's post.
-- [ ] 5.4 Manually validate User B can publish a lost pet and User A can report a sighting for User B's post.
-- [ ] 5.5 Manually validate neither User A nor User B can report a sighting for their own post from feed, detail, or direct sighting route.
-- [ ] 5.6 Confirm no private chat, owner notification, or sighting record is created for blocked self-report attempts.
+- [x] 5.3 Manually validate User A can publish a lost pet and User B can report a sighting for User A's post.
+- [x] 5.4 Manually validate User B can publish a lost pet and User A can report a sighting for User B's post.
+- [x] 5.5 Manually validate neither User A nor User B can report a sighting for their own post from feed, detail, or direct sighting route.
+- [x] 5.6 Confirm no private chat, owner notification, or sighting record is created for blocked self-report attempts.
 
 ## 6. Discovery Feed And Profile Ownership
 
