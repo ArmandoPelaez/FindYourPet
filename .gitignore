@@ -16,7 +16,9 @@
 local.properties
 .env
 debug.keystore
-app/google-services.json
+
+# Local Firebase config and signing keys
+/app/google-services.json
 my-upload-key.jks
 *.jks
 *.keystore
