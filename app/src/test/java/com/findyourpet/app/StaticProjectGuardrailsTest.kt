@@ -157,7 +157,7 @@ class StaticProjectGuardrailsTest {
   fun contactSharing_isScopedToChatGrantAndNotPublicPetDetailToggle() {
     val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
     val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
-    val petDetailText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/PetDetailScreen.kt").readText()
+    val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
 
     assertTrue(repositoryText.contains("collection(BackendCollections.CONTACT_GRANTS)"))
     assertTrue(repositoryText.contains("document(BackendCollections.OWNER_CONTACT_GRANT)"))
@@ -166,8 +166,65 @@ class StaticProjectGuardrailsTest {
     assertTrue(repositoryText.contains("petDao.clearContactGrantForChat(chatId)"))
     assertTrue(viewModelText.contains("activeContactGrantState"))
     assertTrue(viewModelText.contains("ownerId = user.id"))
-    assertTrue(petDetailText.contains("isContactRevealed = false"))
-    assertTrue(petDetailText.contains("onContactToggle = null"))
+    assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
+    assertTrue(!homeText.contains("post.ownerPhone"))
+    assertTrue(!homeText.contains("post.ownerEmail"))
+    assertTrue(!homeText.contains("onContactToggle"))
+  }
+
+  @Test
+  fun selfSightings_areBlockedAcrossAppEntryPoints() {
+    val policyText = File(root, "app/src/main/java/com/findyourpet/app/domain/OwnershipPolicy.kt").readText()
+    val validatorText = File(root, "app/src/main/java/com/findyourpet/app/data/product/RealProductValidators.kt").readText()
+    val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
+    val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+    val alertText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/SightingAlertScreen.kt").readText()
+
+    assertTrue(policyText.contains("fun canReportSighting"))
+    assertTrue(policyText.contains("currentUid != ownerId"))
+    assertTrue(validatorText.contains("OwnershipPolicy.canReportSighting(reporterId, ownerId)"))
+    assertTrue(repositoryText.contains("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))"))
+    assertTrue(repositoryText.indexOf("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))") < repositoryText.indexOf("val sighting = SightingAlertEntity"))
+    assertTrue(homeText.contains("canReportSighting = OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId)"))
+    assertTrue(homeText.contains("post.status != \"REUNIDO\" && canReportSighting"))
+    assertTrue(alertText.contains("if (!OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId))"))
+  }
+
+  @Test
+  fun petDetailRoute_isNotPartOfPrimaryNavigation() {
+    val mainActivityText = File(root, "app/src/main/java/com/findyourpet/app/MainActivity.kt").readText()
+    val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+
+    assertTrue(!mainActivityText.contains("route = \"detail/{postId}\""))
+    assertTrue(!mainActivityText.contains("navigate(\"detail/"))
+    assertTrue(!homeText.contains("Ver Ficha"))
+    assertTrue(homeText.contains("Información reportada"))
+    assertTrue(homeText.contains("Ubicación en la que se perdió"))
+  }
+
+  @Test
+  fun homePetCard_omitsRemovedVisualElements() {
+    val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+
+    assertTrue(!homeText.contains("Desliza a los lados"))
+    assertTrue(!homeText.contains("pagerState.currentPage + 1"))
+    assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
+    assertTrue(!homeText.contains("label = \"Tipo\""))
+    assertTrue(homeText.contains("label = \"Color\""))
+  }
+
+  @Test
+  fun discoveryFeed_excludesCurrentUsersOwnPostsButProfileKeepsThem() {
+    val policyText = File(root, "app/src/main/java/com/findyourpet/app/domain/OwnershipPolicy.kt").readText()
+    val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val profileText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/ProfileScreen.kt").readText()
+
+    assertTrue(policyText.contains("fun canAppearInDiscoveryFeed"))
+    assertTrue(policyText.contains("currentUid != ownerId"))
+    assertTrue(viewModelText.contains("currentUser,"))
+    assertTrue(viewModelText.contains("OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId)"))
+    assertTrue(profileText.contains("val myPosts = allPosts.filter { it.ownerId == currentUser.id }"))
+    assertTrue(profileText.contains("Estado: ${'$'}{pet.status}"))
   }
 
   @Test

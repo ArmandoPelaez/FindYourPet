@@ -1,6 +1,5 @@
 ﻿package com.findyourpet.app.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,8 +40,7 @@ import java.util.Locale
 fun ChatDetailScreen(
     viewModel: PetViewModel,
     chatId: String,
-    onBackClick: () -> Unit,
-    onViewPetDetailClick: (String) -> Unit
+    onBackClick: () -> Unit
 ) {
     val messages by viewModel.activeChatMessages.collectAsState()
     val messagesState by viewModel.activeChatMessagesState.collectAsState()
@@ -75,10 +73,7 @@ fun ChatDetailScreen(
             TopAppBar(
                 title = {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            session?.postId?.let { onViewPetDetailClick(it) }
-                        }
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)

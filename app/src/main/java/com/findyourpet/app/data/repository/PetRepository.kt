@@ -24,6 +24,7 @@ import com.findyourpet.app.data.remote.RemoteMappers.toDocument
 import com.findyourpet.app.data.remote.RemoteMappers.toNotificationEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toPetPostEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toSightingEntity
+import com.findyourpet.app.domain.OwnershipPolicy
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -304,6 +305,9 @@ class PetRepository(context: Context) {
         }
         val resolvedOwnerId = derivedPost?.ownerId?.ifBlank { ownerId } ?: ownerId
         require(resolvedOwnerId.isNotBlank()) { "No se pudo identificar al dueno de la publicacion." }
+        require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId)) {
+            "No puedes reportar avistamientos de tu propia publicacion."
+        }
         val uploadedPhoto = if (photoUri.isBlank() || db == null) {
             UploadedImage(displayUrl = photoUri, provider = "", publicId = "", contentType = "")
         } else {

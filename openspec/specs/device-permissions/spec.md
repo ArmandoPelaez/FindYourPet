@@ -2,15 +2,14 @@
 
 ## Purpose
 Define the Android permission surface allowed by the current implemented app flows.
-
 ## Requirements
 ### Requirement: Manifest Declares Only Implemented Permissions
-The Android manifest SHALL declare only permissions required by real implemented flows in the current app stage.
+The Android manifest SHALL declare only permissions required by real implemented flows in the current app stage, including camera, media/photo access and location permissions only when the corresponding production flow is implemented.
 
-#### Scenario: Current stage only needs internet
-- **GIVEN** camera, gallery, GPS, push notification, and backend flows are not implemented as real production features
+#### Scenario: Current stage declares real product permissions
+- **GIVEN** camera, gallery and location flows are implemented as real production features
 - **WHEN** the Android manifest is inspected
-- **THEN** the manifest declares `android.permission.INTERNET` and no camera, location, contacts, storage, microphone, SMS, phone, or notification permissions
+- **THEN** the manifest declares only the permissions required by those implemented flows plus `android.permission.INTERNET`
 
 #### Scenario: Future sensitive permission requires a feature flow
 - **GIVEN** a future change adds camera, media, location, notification, or other sensitive Android permission
@@ -18,19 +17,20 @@ The Android manifest SHALL declare only permissions required by real implemented
 - **THEN** the proposal and tasks include the user-visible flow, runtime permission handling, denial behavior, and validation
 
 ### Requirement: Simulated Features Do Not Request Runtime Permissions
-The app SHALL NOT request runtime permissions for simulated photo, location, notification, chat, or contact flows.
+The app SHALL NOT request runtime permissions for simulated photo, location, chat, or contact flows, and SHALL request runtime permissions only from real user-initiated production flows.
 
-#### Scenario: Simulated location uses manual/local input
-- **GIVEN** the sighting flow still uses typed or seeded location values
-- **WHEN** the user opens the sighting UI
-- **THEN** the app does not request fine or coarse location permission
+#### Scenario: Real location uses runtime permission
+- **GIVEN** the sighting flow captures GPS coordinates from the device
+- **WHEN** the user asks to use current location
+- **THEN** the app requests the required location permission and handles granted, denied, permanently denied and unavailable states
 
-#### Scenario: Preset photo flow avoids camera permission
-- **GIVEN** photo upload still uses preset/demo assets
-- **WHEN** the user creates or reports a pet post
-- **THEN** the app does not request camera or media permissions
+#### Scenario: Real media input uses scoped access
+- **GIVEN** the user creates or reports a pet post with real media
+- **WHEN** camera or gallery access is required
+- **THEN** the app requests only the permission or picker access required for the selected action
 
 #### Scenario: Permission denial states are required before permission use
-- **GIVEN** a future feature needs a runtime permission
+- **GIVEN** a feature needs a runtime permission
 - **WHEN** that feature is implemented
 - **THEN** the UI handles granted, denied, permanently denied, and unavailable states before the permission is considered production-ready
+

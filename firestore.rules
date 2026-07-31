@@ -38,6 +38,7 @@ service cloud.firestore {
 
     function validParticipantIds(data) {
       return data.participantIds is list
+        && data.ownerId != data.reporterId
         && data.participantIds.size() == 2
         && data.participantIds.hasAll([data.ownerId, data.reporterId]);
     }
@@ -182,6 +183,7 @@ service cloud.firestore {
         && request.resource.data.reporterId == uid()
         && request.resource.data.ownerId is string
         && request.resource.data.postId is string
+        && request.resource.data.reporterId != request.resource.data.ownerId
         && request.resource.data.ownerId == get(/databases/$(database)/documents/petPosts/$(request.resource.data.postId)).data.ownerId
         && validOptionalMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)

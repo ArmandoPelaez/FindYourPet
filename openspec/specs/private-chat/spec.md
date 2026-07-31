@@ -2,7 +2,6 @@
 
 ## Purpose
 Define participant-only backend chat sessions, messages and contact-sharing control.
-
 ## Requirements
 ### Requirement: Chat Session Membership
 The system SHALL represent each chat session with immutable `ownerId` and `reporterId` participant fields.
@@ -47,9 +46,50 @@ The system SHALL prevent clients from updating or deleting production chat messa
 - **THEN** the backend denies the update
 
 ### Requirement: Contact Sharing Is Owner-Controlled
-The system SHALL allow only the post owner participant to modify contact-sharing fields on a chat session.
+The system SHALL allow only the post owner participant to create, update or revoke contact-sharing state for a specific chat session.
 
 #### Scenario: Reporter attempts to reveal owner contact
 - **GIVEN** user B is the reporter in a chat session
 - **WHEN** user B attempts to enable owner contact sharing
 - **THEN** the backend denies the update
+
+#### Scenario: Owner shares contact in one chat
+- **GIVEN** user A is the owner participant in chat A
+- **WHEN** user A enables contact sharing for chat A
+- **THEN** the system creates or activates contact sharing only for chat A
+
+#### Scenario: Owner revokes contact in one chat
+- **GIVEN** user A previously shared contact in chat A
+- **WHEN** user A revokes contact sharing for chat A
+- **THEN** the system deactivates contact sharing for chat A and does not change unrelated chats
+
+#### Scenario: Contact shared in another chat is unavailable
+- **GIVEN** user A shared contact in chat A
+- **WHEN** a participant opens chat B without an active contact grant
+- **THEN** the chat UI hides user A's direct contact data
+
+### Requirement: Contact Share Events Are Auditable
+The system SHALL record contact share and revoke actions as generic chat system events without embedding direct contact values in message text.
+
+#### Scenario: Owner shares contact
+- **GIVEN** the owner enables contact sharing in a chat
+- **WHEN** the system records the chat event
+- **THEN** the event identifies that contact availability changed without including phone, email, address or precise coordinates
+
+#### Scenario: Owner revokes contact
+- **GIVEN** the owner revokes contact sharing in a chat
+- **WHEN** the system records the chat event
+- **THEN** the event identifies that contact is no longer available without including prior contact values
+
+### Requirement: Sighting Chats Require Distinct Participants
+The system SHALL create or reuse sighting chat sessions only when the post owner and sighting reporter are two distinct authenticated users.
+
+#### Scenario: Valid sighting chat has two users
+- **GIVEN** user B submits a valid sighting for user A's post
+- **WHEN** the chat session is created or reused
+- **THEN** the session contains user A as `ownerId`, user B as `reporterId`, and both users in `participantIds`
+
+#### Scenario: Self-sighting chat is blocked
+- **GIVEN** user A owns a pet post
+- **WHEN** user A attempts to create a sighting-derived chat for that post as reporter
+- **THEN** the system creates no chat session and opens no private conversation for that self-report

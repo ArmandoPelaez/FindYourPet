@@ -1,5 +1,7 @@
 package com.findyourpet.app.data.product
 
+import com.findyourpet.app.domain.OwnershipPolicy
+
 object RealProductValidators {
     private val demoPhotoMarkers = listOf(
         "images.unsplash.com",
@@ -31,6 +33,9 @@ object RealProductValidators {
     ): FormValidationResult {
         if (reporterId.isBlank()) return FormValidationResult(false, "Inicia sesion antes de reportar.")
         if (postId.isBlank() || ownerId.isBlank()) return FormValidationResult(false, "No se pudo identificar la publicacion.")
+        if (!OwnershipPolicy.canReportSighting(reporterId, ownerId)) {
+            return FormValidationResult(false, "No puedes reportar avistamientos de tu propia publicacion.")
+        }
         if (locationName.isBlank()) return FormValidationResult(false, "Indica donde viste la mascota.")
         if (locationSource == LocationSource.NONE) return FormValidationResult(false, "Usa ubicacion actual o una ubicacion manual.")
         if (!photoUri.isNullOrBlank() && !isRealMediaUri(photoUri)) {

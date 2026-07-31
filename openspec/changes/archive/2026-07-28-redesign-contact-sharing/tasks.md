@@ -34,6 +34,6 @@
 
 - [x] 5.1 Run unit tests with `.\gradlew.bat testDebugUnitTest`.
 - [x] 5.2 Run Android debug build with `.\gradlew.bat assembleDebug`.
-- [ ] 5.3 Manually validate owner shares contact in chat, reporter sees it only in that chat, and pet detail remains hidden.
-- [ ] 5.4 Manually validate owner revokes contact and reporter no longer sees phone/email after returning through chat, pet detail and notification entry points.
-- [ ] 5.5 Manually validate notification and push-preview copy for sighting, chat, contact share and revoke flows contains no direct contact values.
+- [x] 5.3 Manually validate owner shares contact in chat, reporter sees it only in that chat, and pet detail remains hidden.
+- [x] 5.4 Manually validate owner revokes contact and reporter no longer sees phone/email after returning through chat, pet detail and notification entry points.
+- [x] 5.5 Manually validate notification and push-preview copy for sighting, chat, contact share and revoke flows contains no direct contact values.

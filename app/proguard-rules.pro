@@ -12,9 +12,17 @@
 #   public *;
 #}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Preserve useful release stack traces for Crashlytics/R8 mapping.
+-keepattributes SourceFile,LineNumberTable
+
+# Keep Room database metadata generated from annotations.
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+
+# Keep public app model constructors stable for Firebase/Room reflective paths.
+-keepclassmembers class com.findyourpet.app.data.local.entity.** {
+    public <init>(...);
+}
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.

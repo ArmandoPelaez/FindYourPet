@@ -27,8 +27,7 @@ import com.findyourpet.app.ui.viewmodel.PetViewModel
 @Composable
 fun ProfileScreen(
     viewModel: PetViewModel,
-    onBackClick: () -> Unit,
-    onNavigateToDetail: (String) -> Unit
+    onBackClick: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val allPosts by viewModel.allPosts.collectAsState()
@@ -229,7 +228,7 @@ fun ProfileScreen(
                                     fontSize = 16.sp
                                 )
                                 Text(
-                                    text = "${pet.species} • Estado: ${pet.status}",
+                                    text = "Estado: ${pet.status}",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

@@ -23,7 +23,6 @@ import com.findyourpet.app.ui.screens.ChatListScreen
 import com.findyourpet.app.ui.screens.CreatePetPostScreen
 import com.findyourpet.app.ui.screens.HomeScreen
 import com.findyourpet.app.ui.screens.NotificationsScreen
-import com.findyourpet.app.ui.screens.PetDetailScreen
 import com.findyourpet.app.ui.screens.ProfileScreen
 import com.findyourpet.app.ui.screens.SightingAlertScreen
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
@@ -59,26 +58,11 @@ fun PetAppNavigation(viewModel: PetViewModel) {
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,
-                onNavigateToDetail = { postId -> navController.navigate("detail/$postId") },
                 onNavigateToCreate = { navController.navigate("create") },
                 onNavigateToAlert = { postId -> navController.navigate("alert/$postId") },
                 onNavigateToNotifications = { navController.navigate("notifications") },
                 onNavigateToChatList = { navController.navigate("chats") },
                 onNavigateToProfile = { navController.navigate("profile") }
-            )
-        }
-
-        composable(
-            route = "detail/{postId}",
-            arguments = listOf(navArgument("postId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val postId = backStackEntry.arguments?.getString("postId") ?: ""
-            PetDetailScreen(
-                viewModel = viewModel,
-                postId = postId,
-                onBackClick = { navController.popBackStack() },
-                onSendAlertClick = { navController.navigate("alert/$postId") },
-                onStartChatClick = { chatId -> navController.navigate("chat/$chatId") }
             )
         }
 
@@ -114,8 +98,7 @@ fun PetAppNavigation(viewModel: PetViewModel) {
             ChatDetailScreen(
                 viewModel = viewModel,
                 chatId = chatId,
-                onBackClick = { navController.popBackStack() },
-                onViewPetDetailClick = { postId -> navController.navigate("detail/$postId") }
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -140,8 +123,7 @@ fun PetAppNavigation(viewModel: PetViewModel) {
         composable("profile") {
             ProfileScreen(
                 viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onNavigateToDetail = { postId -> navController.navigate("detail/$postId") }
+                onBackClick = { navController.popBackStack() }
             )
         }
     }
