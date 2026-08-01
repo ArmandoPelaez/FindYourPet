@@ -4,126 +4,132 @@
 Define how FindYourPet limits exposure of owner contact details, precise location data, and sensitive notification text.
 ## Requirements
 ### Requirement: Public Pet UI Hides Direct Contact Data By Default
-The app SHALL hide owner phone, email, address, and precise location from public pet cards and pet detail surfaces. Public surfaces SHALL NOT show direct contact data based on local state or post-level reveal flags.
+The app SHALL hide and avoid app-managed disclosure of owner phone, email, address, and precise personal contact location from public pet cards, pet detail surfaces, chat surfaces, profile-derived contact surfaces, and notification entry points. Public surfaces SHALL NOT show direct contact data based on local state, post-level reveal flags, chat-scoped grants, or profile fields.
 
 #### Scenario: Public details hide contact fields
-- **GIVEN** a pet post has owner phone and email values in legacy local data
+- **GIVEN** a pet post has owner phone and email values in legacy local or remote data
 - **WHEN** the public pet detail screen is rendered for a non-owner
 - **THEN** the phone and email values are not displayed
 
 #### Scenario: Public reveal flag does not disclose contact
 - **GIVEN** a pet post has a legacy public contact reveal flag enabled
 - **WHEN** a non-owner opens the pet detail screen
-- **THEN** the app still hides owner phone, email, address and precise location
+- **THEN** the app hides owner phone, email, address and precise personal contact location
 
-#### Scenario: Address and coordinates are not exposed as direct contact
-- **GIVEN** a pet or sighting contains an address, location name, latitude, or longitude
-- **WHEN** a public-facing screen renders the data
-- **THEN** it does not expose precise contact/location data as a substitute for direct contact permission
+#### Scenario: Profile data is not reused as contact data
+- **GIVEN** the authenticated profile contains an email or display name for account operation
+- **WHEN** a post, chat, notification, or public detail surface renders
+- **THEN** the app does not present that account field as a direct contact method
 
 ### Requirement: Contact Sharing Copy Matches Actual Behavior
-The app SHALL describe contact sharing as a private chat-scoped owner consent flow and SHALL NOT imply that contact is public, globally revealed, encrypted, or visible outside the authorized chat.
+The app SHALL describe contact between owner and reporter as in-app chat only and SHALL NOT imply that the app can reveal, authorize, revoke, unlock, or otherwise manage direct personal contact details.
 
-#### Scenario: Copy describes chat-scoped sharing
+#### Scenario: Copy describes chat-only contact
 - **GIVEN** direct contact data is hidden on a public pet detail screen
-- **WHEN** users read contact-sharing copy
-- **THEN** the copy states that direct contact can be shared only by the owner inside a conversation
+- **WHEN** users read contact-related copy
+- **THEN** the copy directs them to continue in the in-app chat without mentioning app-managed phone, email, or address sharing
 
-#### Scenario: Hidden state explains limited exposure
-- **GIVEN** contact data is hidden
-- **WHEN** the protected contact component is rendered
-- **THEN** the visible text explains that direct contact details are not shown in the public card
+#### Scenario: Voluntary personal data warning is bounded
+- **GIVEN** users are in a private chat
+- **WHEN** chat privacy copy is shown
+- **THEN** it states that any voluntary exchange of phone, email, address, or similar personal data inside messages is the users' responsibility and does not claim automatic app protection
 
-#### Scenario: Revoked state explains unavailability
-- **GIVEN** a chat contact grant was revoked
-- **WHEN** the chat contact area renders
-- **THEN** the visible text does not show contact values and indicates that contact is no longer available in that conversation
+#### Scenario: Retired reveal states are not shown
+- **GIVEN** a legacy contact grant or reveal flag exists in local or remote data
+- **WHEN** the related screen renders
+- **THEN** visible copy does not say contact is available, revoked, unlocked, shared, or hidden behind a grant
 
 ### Requirement: Sensitive Contact Data Is Not Sent In Notifications
-The app SHALL NOT include phone, email, address, precise coordinates, or full private-message content in local notification text, backend notification records, or push notification payloads.
+The app SHALL NOT include phone, email, address, precise coordinates, direct personal contact values, or full private-message content in local notification text, backend notification records, or push notification payloads. The app SHALL NOT emit contact-sharing notifications because the contact-sharing flow is retired.
 
 #### Scenario: Sighting notification avoids precise sensitive data
 - **GIVEN** a sighting includes a reporter name, location name, latitude, longitude, and notes
 - **WHEN** notification text is generated
-- **THEN** the notification avoids phone, email, address, exact coordinates, and full private note content
+- **THEN** the notification avoids phone, email, address, exact coordinates, full private note content, and direct personal contact values
 
-#### Scenario: Contact-sharing notification avoids direct contact values
-- **GIVEN** contact sharing changes state
-- **WHEN** a notification, push payload, or chat preview is generated
-- **THEN** it does not expose phone or email values outside the protected in-app contact surface
+#### Scenario: Chat notification avoids message and contact values
+- **GIVEN** a participant sends a private chat message
+- **WHEN** the recipient notification or push payload is created
+- **THEN** it uses generic chat text and does not expose phone, email, address, exact coordinates, full message content, or other user-entered contact values
 
-#### Scenario: Revocation notification avoids previous contact values
-- **GIVEN** contact sharing is revoked for a chat
-- **WHEN** the recipient notification is created
-- **THEN** the notification uses generic text and does not include the previously shared phone or email
+#### Scenario: Contact-sharing notification is not created
+- **GIVEN** legacy code or data attempts to represent a contact-sharing state change
+- **WHEN** notification generation runs
+- **THEN** no `CONTACT_SHARED` notification is created or displayed
 
 ### Requirement: Authenticated Contact Sharing Control
-The app SHALL allow only the authenticated owner participant of a chat to create, update, or revoke contact sharing for that chat.
+The app SHALL NOT allow any authenticated user, including the post owner, to create, update, revoke, or view an app-managed contact-sharing grant for a chat.
 
-#### Scenario: Owner shares contact in a chat
-- **WHEN** the authenticated user's Firebase `uid` equals the chat `ownerId` and they enable contact sharing for that chat
-- **THEN** Firestore allows the chat-scoped contact-sharing update
+#### Scenario: Owner attempts to share contact through retired control
+- **GIVEN** the authenticated user's Firebase `uid` equals the chat `ownerId`
+- **WHEN** the app renders the chat or pet detail actions
+- **THEN** no control exists to enable owner phone, email, address, or personal contact sharing
 
-#### Scenario: Non-owner shares contact
-- **WHEN** an authenticated user's Firebase `uid` differs from the chat `ownerId` and they attempt to enable contact sharing
-- **THEN** Firestore denies the update
+#### Scenario: Client attempts contact grant write
+- **WHEN** any authenticated client attempts to create or update a contact-sharing grant
+- **THEN** Firestore denies the write and the app does not display the grant data
 
-#### Scenario: Owner revokes contact in a chat
-- **GIVEN** contact sharing is active for a chat
-- **WHEN** the authenticated chat owner revokes sharing
-- **THEN** Firestore allows the revocation and the app stops showing contact values to the reporter
+#### Scenario: Legacy contact grant exists
+- **GIVEN** a chat has a legacy active contact grant
+- **WHEN** either participant opens the chat
+- **THEN** the app ignores the grant and does not show owner phone, email, address, or direct personal contact values
 
 ### Requirement: Contact Data Remains Hidden By Default
-The app SHALL keep owner phone, email, address, and precise location hidden unless an authenticated active contact grant for the current chat allows disclosure to that chat participant.
+The app SHALL keep owner phone, email, address, and precise personal contact location hidden in all app-managed surfaces regardless of authentication, ownership, chat membership, legacy grants, or cached reveal state.
 
-#### Scenario: Contact sharing is disabled
-- **WHEN** a post or chat has no owner-approved active chat contact grant
-- **THEN** the UI hides phone, email, address, and precise location from non-owners
+#### Scenario: Chat has no contact grant
+- **WHEN** a post or chat has no contact grant
+- **THEN** the UI uses chat-only communication and shows no phone, email, address, or direct personal contact values
 
-#### Scenario: Contact sharing is enabled for an authorized participant
-- **WHEN** the owner has enabled contact sharing for the authenticated reporter in the current chat
-- **THEN** the UI may show the approved contact fields only inside that chat context
+#### Scenario: Chat has active legacy contact grant
+- **GIVEN** the owner previously enabled contact sharing before this change
+- **WHEN** the authenticated reporter opens the current chat
+- **THEN** the UI does not show the approved contact fields and does not offer a replacement reveal action
 
-#### Scenario: Contact sharing is enabled in another chat
-- **GIVEN** the owner shared contact in chat A
-- **WHEN** the same reporter or another user opens chat B without an active grant
-- **THEN** the app hides owner contact data in chat B
+#### Scenario: Owner views own post
+- **GIVEN** an owner opens their own pet post or chat
+- **WHEN** the app renders owner actions
+- **THEN** the owner can manage allowed post/chat actions but cannot publish or grant direct personal contact values through the app
 
 ### Requirement: Contact Privacy Uses Backend Rules
-Contact-sharing behavior SHALL NOT rely only on local UI state for production authorization, and shared pet post reads SHALL NOT provide direct owner contact values to non-owners.
+Contact privacy SHALL be enforced by removing and denying app-managed contact-sharing backend paths, not by relying only on local UI state. Shared pet post and chat session reads SHALL NOT provide direct owner contact values to non-owners or reporters.
 
 #### Scenario: Local UI attempts unauthorized reveal
 - **WHEN** a non-owner manipulates local state to reveal contact information
-- **THEN** Firestore rules still deny unauthorized contact grant writes and restricted reads
+- **THEN** Firestore rules and mappers still prevent contact grant reads and direct contact values from becoming rendered app state
 
 #### Scenario: Shared pet post is read
 - **GIVEN** a signed-in non-owner reads a shared pet post
 - **WHEN** the backend returns the post document
-- **THEN** the document does not expose owner phone, email, address or precise contact coordinates
+- **THEN** the document does not expose owner phone, email, address or precise personal contact coordinates
+
+#### Scenario: Contact grant collection is requested
+- **WHEN** any client attempts to read a retired contact grant document
+- **THEN** the backend denies the read or the client ignores the document without rendering personal contact values
 
 ### Requirement: Public Contact Reveal State Is Retired
-The app SHALL NOT expose or honor any post-level public contact reveal state for owner phone, email, address or precise location.
+The app SHALL NOT expose or honor any post-level or chat-level contact reveal state for owner phone, email, address or precise personal contact location.
 
 #### Scenario: Legacy public reveal flag is present
 - **GIVEN** a local or remote pet post contains `isContactRevealedToAll = true`
 - **WHEN** the app renders a public pet card or pet detail surface for a non-owner
-- **THEN** the app hides owner phone, email, address and precise location
+- **THEN** the app hides owner phone, email, address and precise personal contact location
 
-#### Scenario: User enters from a notification
-- **GIVEN** a notification links to a pet post or chat
-- **WHEN** the recipient opens the target without an active chat contact grant
-- **THEN** owner phone, email, address and precise location remain hidden
+#### Scenario: Legacy chat share flag is present
+- **GIVEN** a local or remote chat session contains `isContactSharedByOwner = true`
+- **WHEN** either participant opens chat list or chat detail
+- **THEN** the app does not show "contact available" state and does not expose owner contact values
 
 ### Requirement: Contact Revocation Hides Shared Data Immediately
-The app SHALL hide previously shared owner contact data as soon as a chat contact grant is revoked or becomes inactive.
+The app SHALL treat all legacy shared contact data as unavailable immediately after this change, regardless of whether an explicit revoke action has occurred.
 
-#### Scenario: Owner revokes contact in a chat
-- **GIVEN** a reporter is viewing owner contact in an authorized chat
-- **WHEN** the owner revokes contact sharing for that chat
-- **THEN** the reporter's chat UI hides phone, email, address and precise location after the current grant state is observed
-
-#### Scenario: Cached grant is inactive
+#### Scenario: Previously shared contact is cached
 - **GIVEN** local cache contains a previous contact grant for a chat
-- **WHEN** the current backend grant is missing or inactive
-- **THEN** the app treats contact as hidden and does not render cached phone or email values
+- **WHEN** the app starts or the chat screen observes local state
+- **THEN** the app treats contact as unavailable and does not render cached phone, email, address, or personal contact values
+
+#### Scenario: Remote grant still exists
+- **GIVEN** a remote contact grant remains in Firestore from a previous build
+- **WHEN** the updated app syncs the chat
+- **THEN** the app ignores or deletes the local copy and continues to show only the chat conversation
 

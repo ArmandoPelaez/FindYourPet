@@ -46,40 +46,35 @@ The system SHALL prevent clients from updating or deleting production chat messa
 - **THEN** the backend denies the update
 
 ### Requirement: Contact Sharing Is Owner-Controlled
-The system SHALL allow only the post owner participant to create, update or revoke contact-sharing state for a specific chat session.
+The system SHALL retire owner-controlled contact sharing. No chat participant SHALL be able to enable, revoke, read, or depend on an app-managed contact-sharing state for direct personal data.
 
 #### Scenario: Reporter attempts to reveal owner contact
 - **GIVEN** user B is the reporter in a chat session
-- **WHEN** user B attempts to enable owner contact sharing
-- **THEN** the backend denies the update
+- **WHEN** user B attempts to access a retired owner contact sharing path
+- **THEN** the backend denies the request and the chat UI shows no contact reveal state
 
-#### Scenario: Owner shares contact in one chat
+#### Scenario: Owner opens chat actions
 - **GIVEN** user A is the owner participant in chat A
-- **WHEN** user A enables contact sharing for chat A
-- **THEN** the system creates or activates contact sharing only for chat A
+- **WHEN** user A opens the chat actions
+- **THEN** the app provides messaging actions only and no contact-sharing toggle
 
-#### Scenario: Owner revokes contact in one chat
-- **GIVEN** user A previously shared contact in chat A
-- **WHEN** user A revokes contact sharing for chat A
-- **THEN** the system deactivates contact sharing for chat A and does not change unrelated chats
-
-#### Scenario: Contact shared in another chat is unavailable
-- **GIVEN** user A shared contact in chat A
-- **WHEN** a participant opens chat B without an active contact grant
-- **THEN** the chat UI hides user A's direct contact data
+#### Scenario: Legacy contact sharing state exists
+- **GIVEN** chat A contains a legacy active contact-sharing flag
+- **WHEN** either participant opens chat A
+- **THEN** the system ignores that flag and does not change unrelated chats or messages
 
 ### Requirement: Contact Share Events Are Auditable
-The system SHALL record contact share and revoke actions as generic chat system events without embedding direct contact values in message text.
+The system SHALL stop creating contact share or revoke system events because app-managed contact sharing is retired. Existing legacy events SHALL be displayed, if at all, as generic historical system messages without exposing contact values or active availability.
 
-#### Scenario: Owner shares contact
-- **GIVEN** the owner enables contact sharing in a chat
-- **WHEN** the system records the chat event
-- **THEN** the event identifies that contact availability changed without including phone, email, address or precise coordinates
+#### Scenario: Owner would have shared contact
+- **GIVEN** the owner is in a chat
+- **WHEN** the owner opens current chat controls
+- **THEN** no action exists that records a contact share event
 
-#### Scenario: Owner revokes contact
-- **GIVEN** the owner revokes contact sharing in a chat
-- **WHEN** the system records the chat event
-- **THEN** the event identifies that contact is no longer available without including prior contact values
+#### Scenario: Legacy share event is present
+- **GIVEN** a prior chat history contains a contact share or revoke event
+- **WHEN** the chat message list renders
+- **THEN** the event does not expose phone, email, address, precise coordinates, or current contact availability
 
 ### Requirement: Sighting Chats Require Distinct Participants
 The system SHALL create or reuse sighting chat sessions only when the post owner and sighting reporter are two distinct authenticated users.
@@ -93,3 +88,17 @@ The system SHALL create or reuse sighting chat sessions only when the post owner
 - **GIVEN** user A owns a pet post
 - **WHEN** user A attempts to create a sighting-derived chat for that post as reporter
 - **THEN** the system creates no chat session and opens no private conversation for that self-report
+
+### Requirement: Chat Is The Only App-Mediated Contact Path
+The app SHALL provide in-app private chat as the only app-mediated contact path between a pet owner and a reporter.
+
+#### Scenario: Reporter contacts owner
+- **GIVEN** a reporter submits or opens a sighting-derived conversation
+- **WHEN** the reporter wants to communicate with the owner
+- **THEN** the app provides the private chat and does not provide phone, email, address, or external-contact actions
+
+#### Scenario: Owner contacts reporter
+- **GIVEN** an owner opens a private chat with a reporter
+- **WHEN** the owner wants to follow up
+- **THEN** the app provides the private chat and does not provide an app-managed personal-data sharing control
+
