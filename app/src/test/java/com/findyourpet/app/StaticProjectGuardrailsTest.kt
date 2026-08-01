@@ -154,18 +154,21 @@ class StaticProjectGuardrailsTest {
   }
 
   @Test
-  fun contactSharing_isScopedToChatGrantAndNotPublicPetDetailToggle() {
+  fun contactSharing_isRetiredFromAppManagedState() {
     val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
     val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val componentText = File(root, "app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt").readText()
+    val chatText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/ChatDetailScreen.kt").readText()
     val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
 
-    assertTrue(repositoryText.contains("collection(BackendCollections.CONTACT_GRANTS)"))
-    assertTrue(repositoryText.contains("document(BackendCollections.OWNER_CONTACT_GRANT)"))
-    assertTrue(repositoryText.contains("require(ownerId == session.ownerId)"))
-    assertTrue(repositoryText.contains("batch.delete(grantRef)"))
-    assertTrue(repositoryText.contains("petDao.clearContactGrantForChat(chatId)"))
-    assertTrue(viewModelText.contains("activeContactGrantState"))
-    assertTrue(viewModelText.contains("ownerId = user.id"))
+    assertTrue(!repositoryText.contains("CONTACT_GRANTS"))
+    assertTrue(!repositoryText.contains("OWNER_CONTACT_GRANT"))
+    assertTrue(!repositoryText.contains("toggleChatContactSharing"))
+    assertTrue(!repositoryText.contains("ContactGrantEntity"))
+    assertTrue(!viewModelText.contains("activeContactGrant"))
+    assertTrue(!viewModelText.contains("toggleContactSharing"))
+    assertTrue(!componentText.contains("ProtectedContactCard"))
+    assertTrue(chatText.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
     assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
     assertTrue(!homeText.contains("post.ownerPhone"))
     assertTrue(!homeText.contains("post.ownerEmail"))

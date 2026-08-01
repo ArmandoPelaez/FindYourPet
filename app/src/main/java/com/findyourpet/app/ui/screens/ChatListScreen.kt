@@ -26,7 +26,6 @@ import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.ReunitedGreen
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -183,16 +182,16 @@ fun ChatSessionCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (session.isContactSharedByOwner) Icons.Filled.LockOpen else Icons.Filled.Lock,
+                        imageVector = Icons.Filled.Chat,
                         contentDescription = null,
-                        tint = if (session.isContactSharedByOwner) ReunitedGreen else MaterialTheme.colorScheme.outline,
+                        tint = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.size(12.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (session.isContactSharedByOwner) "Contacto disponible en este chat" else "Contacto oculto",
+                        text = "Contacto por chat interno",
                         fontSize = 10.sp,
-                        color = if (session.isContactSharedByOwner) ReunitedGreen else MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.outline,
                         fontWeight = FontWeight.Medium
                     )
                 }

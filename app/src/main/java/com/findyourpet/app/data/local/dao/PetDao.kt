@@ -8,7 +8,6 @@ import androidx.room.Update
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
-import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import kotlinx.coroutines.flow.Flow
@@ -80,27 +79,8 @@ interface PetDao {
     @Query("DELETE FROM chat_sessions")
     suspend fun clearChatSessions()
 
-    @Query("UPDATE chat_sessions SET isContactSharedByOwner = :isShared WHERE id = :chatId")
-    suspend fun updateChatContactShared(chatId: String, isShared: Boolean)
-
     @Query("UPDATE chat_sessions SET lastMessage = :lastMessage, lastMessageTimestamp = :timestamp WHERE id = :chatId")
     suspend fun updateChatLastMessage(chatId: String, lastMessage: String, timestamp: Long)
-
-    // Contact Grants
-    @Query("SELECT * FROM contact_grants WHERE chatId = :chatId AND isActive = 1 LIMIT 1")
-    fun getActiveContactGrantForChat(chatId: String): Flow<ContactGrantEntity?>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertContactGrant(grant: ContactGrantEntity)
-
-    @Query("DELETE FROM contact_grants WHERE chatId = :chatId")
-    suspend fun clearContactGrantForChat(chatId: String)
-
-    @Query("DELETE FROM contact_grants")
-    suspend fun clearContactGrants()
-
-    @Query("DELETE FROM contact_grants WHERE ownerId != :userId AND reporterId != :userId")
-    suspend fun clearContactGrantsNotForUser(userId: String)
 
     // Notifications
     @Query("SELECT * FROM app_notifications ORDER BY timestamp DESC")

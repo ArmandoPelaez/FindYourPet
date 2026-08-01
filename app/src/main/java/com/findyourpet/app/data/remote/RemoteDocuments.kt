@@ -56,7 +56,6 @@ data class ChatSessionDocument(
     val participantIds: List<String> = emptyList(),
     val lastMessage: String = "",
     val lastMessageTimestamp: Long = 0L,
-    val isContactSharedByOwner: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 )
@@ -84,21 +83,4 @@ data class AppNotificationDocument(
     val timestamp: Long = 0L,
     val isRead: Boolean = false,
     val createdAt: Long = 0L
-)
-
-data class ContactGrantDocument(
-    val id: String = "",
-    val chatId: String = "",
-    val postId: String = "",
-    val ownerId: String = "",
-    val reporterId: String = "",
-    val sharedBy: String = "",
-    val sharedAt: Long = 0L,
-    val revokedAt: Long? = null,
-    val isActive: Boolean = false,
-    val ownerName: String = "",
-    val ownerPhone: String = "",
-    val ownerEmail: String = "",
-    val createdAt: Long = 0L,
-    val updatedAt: Long = 0L
 )

@@ -1,13 +1,14 @@
 # Local Storage Policy
 
-FindYourPet is still a local Android demo. Room stores demo/cache data so the prototype can show lost-pet posts, sightings, local chat messages, and local notifications without a backend.
+FindYourPet uses Room for demo/cache data so the app can show lost-pet posts, sightings, local chat messages, and local notifications when a backend is unavailable or while authenticated data is cached.
 
 Sensitive local fields:
 
-- Owner name, phone, email, and address in pet posts.
+- Owner name in pet posts.
 - Pet and sighting location names plus latitude/longitude values.
 - Photo URLs for pet posts, sightings, and chat attachments.
 - Reporter names, chat messages, sighting notes, and notification previews.
+- Legacy contact grant rows, contact-sharing flags, owner phone, owner email, and owner address values from older builds are retired and removed or ignored during migration.
 
 Current storage guarantees:
 
@@ -15,6 +16,7 @@ Current storage guarantees:
 - Backup and data extraction rules exclude app private files, databases, shared preferences, and app-owned external files.
 - Cache and no-backup directories remain excluded by Android platform behavior.
 - FindYourPet does not implement app-level encryption for Room or files in this stage.
-- Contact values must stay hidden in public UI unless a local contact-reveal flow explicitly shows them.
+- Local storage no longer keeps an authoritative or displayable contact-sharing cache.
+- If users voluntarily type phone, email, address, or similar personal data inside messages, those values are treated as sensitive message content, not as an app-managed contact grant.
 
-Future production work must decide whether sensitive local state becomes encrypted cache, account-synced backend data, or short-lived local state after authentication and backend rules are defined.
+Future production work must decide whether sensitive local state becomes encrypted cache, account-synced backend data, or short-lived local state after authentication and backend rules are validated.

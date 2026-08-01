@@ -9,10 +9,7 @@ object DemoPostImporter {
         return seedPost.copy(
             id = if (seedPost.id.startsWith("post_")) "${seedPost.id}_${user.id}" else seedPost.id,
             ownerId = user.id,
-            ownerName = user.name,
-            ownerPhone = user.phone,
-            ownerEmail = user.email,
-            ownerAddress = "Address configured by ${user.name}"
+            ownerName = user.name
         )
     }
 }

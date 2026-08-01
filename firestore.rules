@@ -43,12 +43,6 @@ service cloud.firestore {
         && data.participantIds.hasAll([data.ownerId, data.reporterId]);
     }
 
-    function contactFieldsChanged() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
-        'isContactSharedByOwner'
-      ]);
-    }
-
     function hasNoPublicContactFields(data) {
       return !data.keys().hasAny([
         'isContactRevealedToAll',
@@ -59,6 +53,47 @@ service cloud.firestore {
         'ownerLongitude',
         'latitude',
         'longitude'
+      ]);
+    }
+
+    function publicContactFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'isContactRevealedToAll',
+        'ownerPhone',
+        'ownerEmail',
+        'ownerAddress',
+        'ownerLatitude',
+        'ownerLongitude',
+        'latitude',
+        'longitude'
+      ]);
+    }
+
+    function hasNoChatContactFields(data) {
+      return !data.keys().hasAny([
+        'isContactSharedByOwner',
+        'contactGrantId',
+        'contactGrantIds',
+        'ownerPhone',
+        'ownerEmail',
+        'ownerAddress',
+        'phone',
+        'email',
+        'address'
+      ]);
+    }
+
+    function chatContactFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'isContactSharedByOwner',
+        'contactGrantId',
+        'contactGrantIds',
+        'ownerPhone',
+        'ownerEmail',
+        'ownerAddress',
+        'phone',
+        'email',
+        'address'
       ]);
     }
 
@@ -112,15 +147,6 @@ service cloud.firestore {
       ]);
     }
 
-    function grantMatchesChat(chatId, grantData, chatData) {
-      return grantData.id == 'ownerContact'
-        && grantData.chatId == chatId
-        && grantData.postId == chatData.postId
-        && grantData.ownerId == chatData.ownerId
-        && grantData.reporterId == chatData.reporterId
-        && grantData.sharedBy == chatData.ownerId;
-    }
-
     function chatAfter(chatId) {
       return getAfter(/databases/$(database)/documents/chatSessions/$(chatId)).data;
     }
@@ -146,7 +172,7 @@ service cloud.firestore {
           && request.resource.data.recipientId == userId
           && request.resource.data.title is string
           && request.resource.data.message is string
-          && request.resource.data.type in ['ALERT', 'CHAT', 'CONTACT_SHARED']
+          && request.resource.data.type in ['ALERT', 'CHAT']
           && request.resource.data.targetId is string
           && request.resource.data.isRead == false
           && hasNoSensitiveNotificationFields(request.resource.data);
@@ -172,7 +198,7 @@ service cloud.firestore {
         && request.resource.data.id == resource.data.id
         && validCloudinaryMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
-        && hasNoPublicContactFields(request.resource.data);
+        && !publicContactFieldsChanged();
       allow delete: if isPostOwner();
     }
 
@@ -200,11 +226,12 @@ service cloud.firestore {
         && request.resource.data.ownerId is string
         && request.resource.data.reporterId is string
         && request.resource.data.postId is string
-        && validParticipantIds(request.resource.data);
+        && validParticipantIds(request.resource.data)
+        && hasNoChatContactFields(request.resource.data);
       allow update: if isChatParticipant(resource.data)
         && keepsChatParticipants()
         && request.resource.data.id == resource.data.id
-        && (!contactFieldsChanged() || resource.data.ownerId == uid());
+        && !chatContactFieldsChanged();
       allow delete: if signedIn() && resource.data.ownerId == uid();
 
       match /messages/{messageId} {
@@ -214,22 +241,7 @@ service cloud.firestore {
       }
 
       match /contactGrants/{grantId} {
-        allow get: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data)
-          && grantId == 'ownerContact';
-        allow list: if false;
-        allow create, update: if signedIn()
-          && get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid()
-          && grantId == 'ownerContact'
-          && request.resource.data.isActive == true
-          && request.resource.data.ownerPhone is string
-          && request.resource.data.ownerEmail is string
-          && grantMatchesChat(
-            chatId,
-            request.resource.data,
-            get(/databases/$(database)/documents/chatSessions/$(chatId)).data
-          );
-        allow delete: if signedIn()
-          && get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid();
+        allow read, write: if false;
       }
     }
 

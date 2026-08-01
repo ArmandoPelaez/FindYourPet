@@ -91,6 +91,42 @@ class ReleaseReadinessStaticTest {
   }
 
   @Test
+  fun releaseAndPublicDocs_followChatOnlyContactPolicy() {
+    val releaseAndPublicText = listOf(
+      "README.md",
+      "docs/privacy-policy.md",
+      "public/privacy-policy.html",
+      "docs/google-play-permissions.md",
+      "docs/google-play-data-safety-draft.md",
+      "docs/release-validation-prepare-production-release.md",
+      "openspec/changes/prepare-production-release/proposal.md",
+      "openspec/changes/prepare-production-release/design.md",
+      "openspec/changes/prepare-production-release/tasks.md",
+      "openspec/changes/prepare-production-release/specs/contact-privacy/spec.md",
+      "openspec/changes/prepare-production-release/specs/release-readiness/spec.md"
+    ).joinToString("\n") { relativePath ->
+      File(root, relativePath).readText()
+    }
+    val normalized = releaseAndPublicText.lowercase()
+    val forbiddenMarkers = listOf(
+      "contactgrants",
+      "contact grant",
+      "contact_shared",
+      "iscontactsharedbyowner",
+      "protectedcontactcard",
+      "ownercontact",
+      "contacto compartido",
+      "compartir contacto",
+      "revocar contacto",
+      "contacto protegido"
+    )
+    val matches = forbiddenMarkers.filter { it in normalized }
+
+    assertTrue("Release/public docs mention retired contact-sharing markers: $matches", matches.isEmpty())
+    assertTrue(normalized.contains("chat interno") || normalized.contains("in-app chat"))
+  }
+
+  @Test
   fun primaryActions_haveAccessibleLabelsOrVisibleText() {
     val mainSources = File(root, "app/src/main/java/com/findyourpet/app/ui")
       .walkTopDown()

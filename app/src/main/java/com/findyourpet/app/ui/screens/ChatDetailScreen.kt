@@ -27,8 +27,6 @@ import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.ReunitedGreen
-import com.findyourpet.app.ui.theme.ReunitedGreenContainer
 import com.findyourpet.app.ui.theme.TealSecondary
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
@@ -46,8 +44,6 @@ fun ChatDetailScreen(
     val messagesState by viewModel.activeChatMessagesState.collectAsState()
     val chatSession by viewModel.activeChatSession.collectAsState()
     val chatSessionState by viewModel.activeChatSessionState.collectAsState()
-    val contactGrant by viewModel.activeContactGrant.collectAsState()
-    val contactGrantState by viewModel.activeContactGrantState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
 
@@ -66,7 +62,6 @@ fun ChatDetailScreen(
 
     val session = chatSession
     val isOwner = session?.let { OwnershipPolicy.canManagePost(currentUser.id, it.ownerId) } == true
-    val isContactShared = contactGrant?.isActive == true
 
     Scaffold(
         topBar = {
@@ -94,7 +89,7 @@ fun ChatDetailScreen(
                                 fontSize = 15.sp
                             )
                             Text(
-                                text = if (isOwner) "Contacto con: ${session?.reporterName}" else "Contacto con el Dueño",
+                                text = if (isOwner) "Conversacion con: ${session?.reporterName}" else "Conversacion con el dueno",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -117,12 +112,10 @@ fun ChatDetailScreen(
         ) {
             SyncStatusBanner(state = chatSessionState)
             SyncStatusBanner(state = messagesState)
-            SyncStatusBanner(state = contactGrantState)
 
-            // Contact visibility control.
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isContactShared) ReunitedGreenContainer else MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -138,58 +131,26 @@ fun ChatDetailScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
-                                imageVector = if (isContactShared) Icons.Filled.LockOpen else Icons.Filled.Lock,
+                                imageVector = Icons.Outlined.Shield,
                                 contentDescription = null,
-                                tint = if (isContactShared) ReunitedGreen else CoralPrimary,
+                                tint = CoralPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = if (isContactShared) "Contacto directo compartido" else "Contacto oculto",
+                                    text = "Chat interno",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
-                                    color = if (isContactShared) ReunitedGreen else MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = if (isContactShared)
-                                        "El dueno habilito el contacto dentro de esta conversacion."
-                                    else
-                                        "El contacto directo solo aparece cuando el dueno lo autoriza para este chat.",
+                                    text = "FindYourPet no solicita ni comparte telefono, email o direccion. Si decides escribir datos personales en mensajes, esa decision es tu responsabilidad.",
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-
-                        if (isOwner) {
-                            Switch(
-                                checked = isContactShared,
-                                onCheckedChange = { viewModel.toggleContactSharing(it) },
-                                colors = SwitchDefaults.colors(checkedThumbColor = ReunitedGreen)
-                            )
-                        }
-                    }
-
-                    contactGrant?.takeIf { it.isActive }?.let { grant ->
-                        Spacer(modifier = Modifier.height(10.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = grant.ownerName,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = grant.ownerPhone,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = grant.ownerEmail,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
                     }
                 }
             }

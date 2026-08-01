@@ -6,7 +6,7 @@ FindYourPet necesita una primera publicacion controlada que no dependa de config
 
 - Activar minificacion y reglas de shrink/obfuscation para builds `release`, manteniendo los flujos principales funcionales.
 - Configurar la firma `release` para usar credenciales externas al repositorio y fallar de forma clara cuando falten secretos.
-- Ampliar la cobertura de tests sobre repositorios, ViewModel y flujos criticos de publicacion, avistamiento, contacto privado, autenticacion y estados vacios.
+- Ampliar la cobertura de tests sobre repositorios, ViewModel y flujos criticos de publicacion, avistamiento, chat interno, autenticacion y estados vacios.
 - Agregar una revision basica de accesibilidad para pantallas y controles principales.
 - Integrar crash reporting para capturar errores de produccion sin exponer datos sensibles.
 - Crear la politica de privacidad inicial y alinear sus declaraciones con datos, permisos, ubicacion, fotos, chats y notificaciones realmente implementados.
@@ -23,7 +23,7 @@ None.
 
 - `release-readiness`: agregar requisitos de build release firmado y minificado, cobertura de tests critica, accesibilidad basica, crash reporting, politica de privacidad, evidencia de validacion y estrategia de rollback.
 - `device-permissions`: exigir inventario y justificacion de permisos para Google Play, verificando que cada permiso declarado corresponda a un flujo real y validado.
-- `contact-privacy`: exigir que la politica de privacidad y el monitoreo no contradigan las garantias existentes sobre telefono, email, direccion, coordenadas, fotos, mensajes privados y notificaciones.
+- `contact-privacy`: exigir que la politica de privacidad y el monitoreo describan chat interno como unico contacto mediado por la app y no contradigan las reglas sobre telefono, email, direccion, coordenadas, fotos, mensajes privados y notificaciones.
 
 ## Impact
 

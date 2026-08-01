@@ -3,12 +3,10 @@ package com.findyourpet.app
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
-import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toChatMessageEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toChatSessionEntity
-import com.findyourpet.app.data.remote.RemoteMappers.toContactGrantEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toDocument
 import com.findyourpet.app.data.remote.RemoteMappers.toNotificationEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toPetPostEntity
@@ -35,8 +33,6 @@ class RemoteMappersTest {
     assertNull(document["isContactRevealedToAll"])
     assertNull(document["latitude"])
     assertNull(document["longitude"])
-    assertEquals("", mapped.ownerPhone)
-    assertEquals("", mapped.ownerEmail)
   }
 
   @Test
@@ -148,6 +144,7 @@ class RemoteMappersTest {
     val mapped = document.toChatSessionEntity("post_1_uid_reporter")
 
     assertEquals(listOf("uid_owner", "uid_reporter"), document["participantIds"])
+    assertNull(document["isContactSharedByOwner"])
     assertEquals("uid_owner", mapped.ownerId)
     assertEquals("uid_reporter", mapped.reporterId)
   }
@@ -194,66 +191,44 @@ class RemoteMappersTest {
   }
 
   @Test
-  fun contactGrantDocumentIsScopedToOneChat() {
-    val grant = ContactGrantEntity(
-      id = "ownerContact",
-      chatId = "chat_1",
-      postId = "post_1",
-      ownerId = "uid_owner",
-      reporterId = "uid_reporter",
-      sharedBy = "uid_owner",
-      sharedAt = 123L,
-      revokedAt = null,
-      isActive = true,
-      ownerName = "Owner",
-      ownerPhone = "+506 7000-0000",
-      ownerEmail = "owner@example.com"
-    )
+  fun legacyContactFieldsAreIgnoredByCurrentMappers() {
+    val post = mapOf(
+      "id" to "post_legacy",
+      "ownerId" to "uid_owner",
+      "ownerName" to "Owner",
+      "ownerPhone" to "+506 7000-0000",
+      "ownerEmail" to "owner@example.com",
+      "ownerAddress" to "Address",
+      "isContactRevealedToAll" to true
+    ).toPetPostEntity("post_legacy")
+    val chat = mapOf(
+      "id" to "chat_legacy",
+      "ownerId" to "uid_owner",
+      "reporterId" to "uid_reporter",
+      "participantIds" to listOf("uid_owner", "uid_reporter"),
+      "isContactSharedByOwner" to true
+    ).toChatSessionEntity("chat_legacy")
 
-    val document = grant.toDocument(createdAt = 100L)
-    val mapped = document.toContactGrantEntity("ownerContact")
-
-    assertEquals("chat_1", document["chatId"])
-    assertEquals("post_1", document["postId"])
-    assertEquals("uid_owner", document["ownerId"])
-    assertEquals("uid_reporter", document["reporterId"])
-    assertEquals("uid_owner", document["sharedBy"])
-    assertTrue(mapped.isActive)
-    assertEquals("+506 7000-0000", mapped.ownerPhone)
+    assertEquals("uid_owner", post.ownerId)
+    assertEquals("uid_owner", chat.ownerId)
+    assertNull(post.toDocument(createdAt = 100L)["ownerPhone"])
+    assertNull(post.toDocument(createdAt = 100L)["ownerEmail"])
+    assertNull(post.toDocument(createdAt = 100L)["ownerAddress"])
+    assertNull(post.toDocument(createdAt = 100L)["isContactRevealedToAll"])
+    assertNull(chat.toDocument(createdAt = 100L)["isContactSharedByOwner"])
   }
 
-  @Test
-  fun contactShareAndRevokeNotificationsRemainGeneric() {
-    val contactNotifications = listOf(
-      AppNotificationEntity(
-        id = "share_notification",
-        recipientId = "uid_reporter",
-        title = "Contacto actualizado",
-        message = "El dueno habilito contacto dentro de la conversacion.",
-        type = "CONTACT_SHARED",
-        targetId = "chat_1",
-        timestamp = 123L
-      ),
-      AppNotificationEntity(
-        id = "revoke_notification",
-        recipientId = "uid_reporter",
-        title = "Contacto actualizado",
-        message = "El dueno actualizo la disponibilidad de contacto.",
-        type = "CONTACT_SHARED",
-        targetId = "chat_1",
-        timestamp = 124L
-      )
-    )
-
-    contactNotifications.forEach { notification ->
-      val document = notification.toDocument(createdAt = 100L)
-      val message = document["message"].toString()
-
-      assertFalse(message.contains("+506"))
-      assertFalse(message.contains("@"))
-      assertFalse(message.contains("owner@example.com"))
-      assertFalse(message.contains("7000-0000"))
-    }
+  @Test(expected = IllegalArgumentException::class)
+  fun contactSharedNotificationTypeIsRetiredFromWrites() {
+    AppNotificationEntity(
+      id = "share_notification",
+      recipientId = "uid_reporter",
+      title = "Actividad de chat",
+      message = "Tienes actividad historica en una conversacion.",
+      type = "CONTACT_SHARED",
+      targetId = "chat_1",
+      timestamp = 123L
+    ).toDocument(createdAt = 100L)
   }
 
   private fun samplePost(ownerId: String): PetPostEntity =
@@ -272,9 +247,6 @@ class RemoteMappersTest {
       longitude = 2.0,
       rewardAmount = "Sin recompensa",
       ownerId = ownerId,
-      ownerName = "Owner",
-      ownerPhone = "+506 7000-0000",
-      ownerEmail = "owner@example.com",
-      ownerAddress = "Address"
+      ownerName = "Owner"
     )
 }

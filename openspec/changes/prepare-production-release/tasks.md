@@ -14,14 +14,14 @@
 
 ## 3. Test Coverage
 
-- [x] 3.1 Add repository/mapper tests for publication, sighting, chat/contact, profile and empty-state production data paths.
+- [x] 3.1 Add repository/mapper tests for publication, sighting, chat-only contact, profile and empty-state production data paths.
 - [ ] 3.2 Add ViewModel tests for loading, success, empty, validation error and backend error states in the critical flows.
 - [x] 3.3 Add static or unit tests that verify release minification, signing preflight behavior, Crashlytics configuration and sensitive-data logging guardrails.
 - [x] 3.4 Run `.\gradlew.bat testDebugUnitTest` and document the result in release validation notes.
 
 ## 4. Accessibility Review
 
-- [x] 4.1 Review primary Compose screens for accessible labels on icon buttons, image/media actions, permission actions, navigation, forms and contact controls.
+- [x] 4.1 Review primary Compose screens for accessible labels on icon buttons, image/media actions, permission actions, navigation, forms and chat controls.
 - [x] 4.2 Add tests or static checks for critical missing content descriptions where practical.
 - [ ] 4.3 Manually validate that primary flows remain reachable and understandable with basic Android accessibility settings and record findings.
 
@@ -35,7 +35,7 @@
 
 ## 6. Manual Release Validation And Rollback
 
-- [ ] 6.1 Install the signed release build on a supported device or emulator and validate feed, detail, create post, report sighting, auth, chat/contact, notification and profile flows.
+- [ ] 6.1 Install the signed release build on a supported device or emulator and validate feed, detail, create post, report sighting, auth, chat-only contact, notification and profile flows.
 - [ ] 6.2 Validate granted, denied, permanently denied and unavailable states for each runtime permission touched by the release.
 - [ ] 6.3 Create release validation notes with build artifact, versionCode, versionName, test output, manual validation, accessibility review, permissions review, privacy policy location and Crashlytics status.
 - [x] 6.4 Document rollback or corrective-release steps, including the previous valid build or required versionCode bump and the Crashlytics signal used to decide rollback.

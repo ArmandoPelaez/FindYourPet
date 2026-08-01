@@ -36,7 +36,6 @@ class FirestoreUserProfileRepository(
                 uid = authUser.uid,
                 displayName = authUser.displayName,
                 email = authUser.email,
-                phone = authUser.phone,
                 createdAt = now,
                 updatedAt = now
             )

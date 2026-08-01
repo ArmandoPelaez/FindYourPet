@@ -23,7 +23,7 @@ The project SHALL validate critical repository, ViewModel and user flows before 
 
 #### Scenario: Repository and mapper tests cover production data paths
 - **WHEN** local unit tests are run for repositories, remote mappers and validation logic
-- **THEN** publication, sighting, chat/contact, profile and empty-state data paths are covered by deterministic tests or documented as manual validation gaps
+- **THEN** publication, sighting, chat-only contact, profile and empty-state data paths are covered by deterministic tests or documented as manual validation gaps
 
 #### Scenario: ViewModel tests cover critical UI states
 - **WHEN** ViewModel tests run for primary app flows
@@ -31,7 +31,7 @@ The project SHALL validate critical repository, ViewModel and user flows before 
 
 #### Scenario: Main flows are manually validated on release build
 - **GIVEN** a signed release build is installed on a supported device or emulator
-- **WHEN** feed, detail, create post, report sighting, auth, chat/contact, notification and profile flows are exercised
+- **WHEN** feed, detail, create post, report sighting, auth, chat-only contact, notification and profile flows are exercised
 - **THEN** validation evidence records pass/fail result, device or emulator, build version and any blockers
 
 ### Requirement: Basic Accessibility Gate
@@ -39,7 +39,7 @@ The release process SHALL include a basic accessibility gate for the primary Com
 
 #### Scenario: Primary controls expose accessible labels
 - **WHEN** primary screens are reviewed or tested
-- **THEN** image buttons, permission actions, navigation actions, form fields and contact controls expose meaningful accessible labels or text
+- **THEN** image buttons, permission actions, navigation actions, form fields and chat controls expose meaningful accessible labels or text
 
 #### Scenario: Critical screens support readable interaction
 - **WHEN** primary screens are checked with common Android accessibility settings or inspection tools

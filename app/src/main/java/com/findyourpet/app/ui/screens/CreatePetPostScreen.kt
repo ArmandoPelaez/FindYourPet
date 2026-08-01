@@ -169,9 +169,9 @@ fun CreatePetPostScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text("Contacto limitado", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TealSecondary)
+                        Text("Contacto por chat interno", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TealSecondary)
                         Text(
-                            text = "La ficha publica oculta telefono y email hasta que decidas mostrarlos dentro del flujo de conversacion.",
+                            text = "La ficha no publica telefono, email ni direccion. Las personas se comunican mediante el chat de FindYourPet.",
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
                             color = MaterialTheme.colorScheme.onSurface

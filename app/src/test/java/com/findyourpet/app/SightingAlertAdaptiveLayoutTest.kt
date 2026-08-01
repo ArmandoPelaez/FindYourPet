@@ -134,9 +134,6 @@ class SightingAlertAdaptiveLayoutTest {
     longitude = -58.3816,
     rewardAmount = "Sin recompensa",
     ownerId = "owner_1",
-    ownerName = "Persona Responsable",
-    ownerPhone = "3415551234",
-    ownerEmail = "owner@example.com",
-    ownerAddress = "Calle Privada 123"
+    ownerName = "Persona Responsable"
   )
 }

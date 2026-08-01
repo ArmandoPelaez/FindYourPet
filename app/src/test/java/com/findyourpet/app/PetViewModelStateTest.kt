@@ -27,7 +27,6 @@ class PetViewModelStateTest {
     assertTrue(viewModel.allNotifications.value.isEmpty())
     assertEquals(null, viewModel.selectedPost.value)
     assertEquals(null, viewModel.activeChatSession.value)
-    assertEquals(null, viewModel.activeContactGrant.value)
   }
 
   @Test

@@ -37,8 +37,6 @@ class ProductionDataPathContractsTest {
 
     assertEquals("post_empty", post.id)
     assertEquals("PERDIDO", post.status)
-    assertEquals("", post.ownerPhone)
-    assertEquals("", post.ownerEmail)
     assertEquals("sighting_empty", sighting.id)
     assertEquals("chat_empty", chat.id)
     assertEquals("message_empty", message.id)
