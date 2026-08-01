@@ -7,7 +7,8 @@ Required cases:
 - `users/{uid}` allows create/read/update/delete only when `request.auth.uid == uid`.
 - `users/{uid}` denies another authenticated user.
 - `users/{uid}/notifications/{notificationId}` allows read/update/delete only for the recipient user.
-- `users/{uid}/notifications/{notificationId}` allows create only when `recipientId == uid`, type is one of `ALERT`, `CHAT`, `CONTACT_SHARED`, and the notification starts unread.
+- `users/{uid}/notifications/{notificationId}` allows create only when `recipientId == uid`, type is one of `ALERT` or `CHAT`, and the notification starts unread.
+- `users/{uid}/notifications/{notificationId}` denies `CONTACT_SHARED` and any notification payload containing direct contact fields or precise coordinates.
 - `petPosts/{postId}` allows read only to authenticated users.
 - `petPosts/{postId}` allows create only when `ownerId == request.auth.uid`, `id == postId`, and status is valid.
 - `petPosts/{postId}` denies owner reassignment on update.
@@ -20,9 +21,10 @@ Required cases:
 - `chatSessions` list queries filtered by `participantIds array-contains request.auth.uid` return only the signed-in user's sessions, including an empty result for users with no chats.
 - `chatSessions/{chatId}` requires `participantIds` to contain exactly `ownerId` and `reporterId`.
 - `chatSessions/{chatId}` denies owner, reporter or participant reassignment.
-- `chatSessions/{chatId}` allows contact-sharing changes only for `ownerId`.
+- `chatSessions/{chatId}` denies create/update attempts containing `isContactSharedByOwner`, contact grant ids, owner phone, owner email, owner address or equivalent contact-sharing fields.
 - `chatSessions/{chatId}/messages/{messageId}` allows create only when `senderId == request.auth.uid` and the sender is a session participant.
 - `chatSessions/{chatId}/messages/{messageId}` denies update/delete.
+- `chatSessions/{chatId}/contactGrants/{grantId}` denies all reads and writes.
 - Unknown collections deny all reads and writes.
 - Unauthenticated requests deny all production reads and writes.
 

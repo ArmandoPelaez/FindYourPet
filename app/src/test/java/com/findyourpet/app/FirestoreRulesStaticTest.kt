@@ -65,13 +65,12 @@ class FirestoreRulesStaticTest {
   @Test
   fun contactGrantRulesAreChatScopedAndOwnerControlled() {
     assertTrue(rulesText.contains("match /contactGrants/{grantId}"))
-    assertTrue(rulesText.contains("grantId == 'ownerContact'"))
-    assertTrue(rulesText.contains("allow get: if isChatParticipant"))
-    assertTrue(rulesText.contains("allow list: if false"))
-    assertTrue(rulesText.contains("get(/databases/$(database)/documents/chatSessions/$(chatId)).data.ownerId == uid()"))
-    assertTrue(rulesText.contains("grantMatchesChat"))
-    assertTrue(rulesText.contains("request.resource.data.ownerPhone is string"))
-    assertTrue(rulesText.contains("request.resource.data.ownerEmail is string"))
+    assertTrue(rulesText.contains("allow read, write: if false"))
+    assertTrue(rulesText.contains("hasNoChatContactFields(request.resource.data)"))
+    assertTrue(rulesText.contains("!chatContactFieldsChanged()"))
+    assertTrue(!rulesText.contains("grantMatchesChat"))
+    assertTrue(!rulesText.contains("request.resource.data.type in ['ALERT', 'CHAT', 'CONTACT_SHARED']"))
+    assertTrue(rulesText.contains("request.resource.data.type in ['ALERT', 'CHAT']"))
   }
 
   @Test

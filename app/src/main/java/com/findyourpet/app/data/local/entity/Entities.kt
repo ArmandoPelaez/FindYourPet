@@ -19,10 +19,7 @@ data class PetPostEntity(
     val longitude: Double,
     val rewardAmount: String,
     val ownerId: String,
-    val ownerName: String,
-    val ownerPhone: String,
-    val ownerEmail: String,
-    val ownerAddress: String
+    val ownerName: String
 )
 
 @Entity(tableName = "sighting_alerts")
@@ -63,24 +60,7 @@ data class ChatSessionEntity(
     val reporterId: String,
     val reporterName: String,
     val lastMessage: String,
-    val lastMessageTimestamp: Long,
-    val isContactSharedByOwner: Boolean = false
-)
-
-@Entity(tableName = "contact_grants")
-data class ContactGrantEntity(
-    @PrimaryKey val id: String,
-    val chatId: String,
-    val postId: String,
-    val ownerId: String,
-    val reporterId: String,
-    val sharedBy: String,
-    val sharedAt: Long,
-    val revokedAt: Long? = null,
-    val isActive: Boolean = false,
-    val ownerName: String,
-    val ownerPhone: String,
-    val ownerEmail: String
+    val lastMessageTimestamp: Long
 )
 
 @Entity(tableName = "app_notifications")
@@ -89,7 +69,7 @@ data class AppNotificationEntity(
     val recipientId: String = "",
     val title: String,
     val message: String,
-    val type: String, // ALERT, CHAT, CONTACT_SHARED
+    val type: String, // ALERT, CHAT
     val targetId: String,
     val timestamp: Long,
     val isRead: Boolean = false

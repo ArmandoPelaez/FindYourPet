@@ -14,22 +14,19 @@ class DemoPostImporterTest {
       user = UserProfile(
         id = "firebase_uid",
         name = "Real User",
-        phone = "+555",
         email = "real@example.com"
       )
     )
 
     assertEquals("firebase_uid", productionPost.ownerId)
     assertEquals("Real User", productionPost.ownerName)
-    assertEquals("+555", productionPost.ownerPhone)
-    assertEquals("real@example.com", productionPost.ownerEmail)
   }
 
   @Test(expected = IllegalArgumentException::class)
   fun importRequiresSignedInUser() {
     DemoPostImporter.toAuthenticatedProductionPost(
       seedPost = seedPost(ownerId = "owner_1"),
-      user = UserProfile(id = "", name = "", phone = "", email = "")
+      user = UserProfile(id = "", name = "", email = "")
     )
   }
 
@@ -49,9 +46,6 @@ class DemoPostImporterTest {
       longitude = 0.0,
       rewardAmount = "",
       ownerId = ownerId,
-      ownerName = "Demo Owner",
-      ownerPhone = "+111",
-      ownerEmail = "demo@example.com",
-      ownerAddress = "Demo"
+      ownerName = "Demo Owner"
     )
 }

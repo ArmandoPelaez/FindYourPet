@@ -31,7 +31,7 @@ Este cambio cruza cliente Android, configuracion Gradle, documentacion de releas
 - Mantener la firma release basada en variables de entorno y documentar un preflight que falle con un mensaje accionable si falta keystore, alias o passwords.
   - Rationale: evita secretos en el repositorio y permite repetir el build en maquinas autorizadas.
   - Alternatives considered: usar el debug keystore para generar un APK instalable. Se descarta porque no representa un release ni sirve para una ruta segura de Play.
-- Ejecutar pruebas locales y validaciones manuales sobre el build release/minificado para feed, detalle, crear publicacion, reportar avistamiento, chat/contacto, autenticacion, permisos, estados vacios y notificaciones.
+- Ejecutar pruebas locales y validaciones manuales sobre el build release/minificado para feed, detalle, crear publicacion, reportar avistamiento, chat interno, autenticacion, permisos, estados vacios y notificaciones.
   - Rationale: los bugs mas caros de release suelen aparecer por configuracion, shrinker o flujos no cubiertos.
 - Publicar primero por Google Play Internal testing, con testers internos/controlados, antes de ampliar a Closed testing.
   - Rationale: valida instalacion desde Play, firma, permisos, Crashlytics, politica de privacidad y flujos principales sin exponer la app ampliamente.
@@ -47,6 +47,8 @@ Este cambio cruza cliente Android, configuracion Gradle, documentacion de releas
   - Alternatives considered: conservar los datos de prueba anteriores para acelerar QA. Se descarta porque pueden confundir la validacion de estados vacios, privacidad, permisos y monitoreo.
 - No registrar telefono, email, direccion, coordenadas exactas, URLs privadas de fotos, mensajes privados completos ni notas de avistamientos como custom keys, logs o mensajes de excepcion.
   - Rationale: el monitoreo debe diagnosticar errores sin convertirse en una nueva superficie de fuga de datos.
+- No registrar ni monitorear estados de divulgacion administrada de telefono, email o direccion porque la app actual solo media chat interno.
+  - Rationale: mantener conceptos retirados en release docs podria reintroducir una promesa de privacidad que el producto retiro.
 - Confirmar que versionCode/versionName quedan visibles en reportes para correlacionar crashes con builds controlados.
 
 ### Local storage and privacy documentation

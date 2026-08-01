@@ -116,25 +116,6 @@ fun ProfileScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Phone,
-                                    contentDescription = null,
-                                    tint = CoralPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Teléfono: ",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = currentUser.phone,
-                                    fontSize = 13.sp
-                                )
-                            }
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
                                     imageVector = Icons.Outlined.Email,
                                     contentDescription = null,
                                     tint = CoralPrimary,
@@ -142,7 +123,7 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Email: ",
+                                    text = "Email de cuenta: ",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -183,7 +164,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Los datos de contacto no se muestran en fichas publicas y el dueno controla cuando compartirlos.",
+                                text = "El contacto entre dueno y reportero ocurre por chat interno. El email de cuenta no se muestra en fichas, chats ni notificaciones como metodo de contacto.",
                                 fontSize = 11.sp,
                                 lineHeight = 15.sp,
                                 color = MaterialTheme.colorScheme.onSurface

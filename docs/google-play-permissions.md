@@ -1,8 +1,10 @@
 # Inventario de permisos para Google Play
 
-Ultima actualizacion: 2026-07-28
+Ultima actualizacion: 2026-07-31
 
 Este inventario debe mantenerse alineado con `app/src/main/AndroidManifest.xml`, la politica de privacidad y la declaracion Data safety de Google Play.
+
+En este documento, "permiso" refiere solo a permisos Android/runtime y controles de autorizacion backend. FindYourPet no administra permisos de divulgacion de telefono, email o direccion entre usuarios.
 
 | Permiso | Flujo visible | Disparador del usuario | Datos accedidos | Justificacion Play | Evidencia requerida |
 | --- | --- | --- | --- | --- | --- |

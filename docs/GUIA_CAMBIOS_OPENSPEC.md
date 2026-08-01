@@ -176,36 +176,35 @@ Este es el paso mas importante para pasar de demo a producto.
 - El chat funciona entre dos usuarios reales.
 - No se puede leer o modificar informacion sin permiso.
 
-## Etapa 4: Contacto Privado Y Flujo De Seguridad
+## Etapa 4: Chat Interno Y Flujo De Seguridad
 
-**Objetivo:** arreglar la logica de privacidad del contacto.
+**Objetivo:** retirar la divulgacion administrada de datos personales y dejar el chat interno como unico contacto mediado por la app.
 
 **Problemas que resuelve:**
 
-- `isContactRevealedToAll` e `isContactSharedByOwner` se contradicen.
-- Contacto compartido en una pantalla pero no en otra.
-- Riesgo de exponer telefono/email.
+- Campos legacy como `isContactRevealedToAll`, `isContactSharedByOwner`, `ownerPhone`, `ownerEmail` u `ownerAddress` pueden reaparecer en modelos, reglas o docs.
+- Controles de revelar, compartir o revocar contacto pueden generar expectativas de un flujo retirado.
+- Riesgo de exponer telefono/email fuera de mensajes escritos voluntariamente por usuarios.
 
 **Propuestas OpenSpec sugeridas:**
 
-- `redesign-contact-sharing`
-- `add-contact-consent-flow`
-- `audit-contact-visibility`
+- `remove-personal-data-sharing`
+- `audit-chat-only-contact-policy`
 
 **Decision de diseno necesaria:**
 
-- Opcion A: el contacto solo se comparte dentro de un chat especifico.
-- Opcion B: el contacto se revela publicamente en la ficha.
+- Opcion A: la app solo facilita chat interno y no administra telefono/email/direccion.
+- Opcion B: conservar grants o tarjetas de contacto para usuarios legacy.
 
-**Recomendacion:** elegir la opcion A, porque reduce exposicion innecesaria de datos personales.
+**Recomendacion:** elegir la opcion A, porque reduce exposicion innecesaria de datos personales y alinea privacidad, reglas y Play Console.
 
 **Tareas principales:**
 
-- Eliminar "revelar publicamente" si no es necesario.
-- Guardar consentimiento por chat.
-- Mostrar datos solo al usuario autorizado.
-- Registrar cuando se compartio o revoco el contacto.
-- Evitar mandar telefono/email dentro de notificaciones push.
+- Eliminar grants, reveal flags, tarjetas de contacto y toggles de compartir/revocar.
+- Negar `contactGrants`, campos directos y `CONTACT_SHARED` en reglas.
+- Ignorar o eliminar caches legacy de contacto.
+- Mantener copy acotado: el intercambio voluntario de telefono/email/direccion dentro del chat es responsabilidad de las personas usuarias.
+- Evitar telefono/email/direccion dentro de notificaciones, previews o crash metadata.
 
 **Criterios de aceptacion:**
 

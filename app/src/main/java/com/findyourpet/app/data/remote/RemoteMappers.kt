@@ -3,7 +3,6 @@ package com.findyourpet.app.data.remote
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
-import com.findyourpet.app.data.local.entity.ContactGrantEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.google.firebase.Timestamp
@@ -59,10 +58,7 @@ object RemoteMappers {
             longitude = double("longitude"),
             rewardAmount = string("rewardAmount"),
             ownerId = string("ownerId"),
-            ownerName = string("ownerName"),
-            ownerPhone = "",
-            ownerEmail = "",
-            ownerAddress = ""
+            ownerName = string("ownerName")
         )
 
     fun DocumentSnapshot.toPetPostEntity(): PetPostEntity? =
@@ -126,7 +122,6 @@ object RemoteMappers {
             "participantIds" to listOf(ownerId, reporterId).distinct(),
             "lastMessage" to lastMessage,
             "lastMessageTimestamp" to lastMessageTimestamp,
-            "isContactSharedByOwner" to isContactSharedByOwner,
             "createdAt" to createdAt,
             "updatedAt" to FieldValue.serverTimestamp()
         )
@@ -141,8 +136,7 @@ object RemoteMappers {
             reporterId = string("reporterId"),
             reporterName = string("reporterName"),
             lastMessage = string("lastMessage"),
-            lastMessageTimestamp = long("lastMessageTimestamp"),
-            isContactSharedByOwner = bool("isContactSharedByOwner")
+            lastMessageTimestamp = long("lastMessageTimestamp")
         )
 
     fun ChatMessageEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
@@ -172,8 +166,9 @@ object RemoteMappers {
             isSystemMessage = bool("isSystemMessage")
         )
 
-    fun AppNotificationEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
-        mapOf(
+    fun AppNotificationEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> {
+        require(type in supportedNotificationTypes) { "Notification type is retired." }
+        return mapOf(
             "id" to id,
             "recipientId" to recipientId,
             "title" to title,
@@ -184,6 +179,7 @@ object RemoteMappers {
             "isRead" to isRead,
             "createdAt" to createdAt
         )
+    }
 
     fun Map<String, Any?>.toNotificationEntity(documentId: String = string("id")): AppNotificationEntity =
         AppNotificationEntity(
@@ -195,40 +191,6 @@ object RemoteMappers {
             targetId = string("targetId"),
             timestamp = long("timestamp"),
             isRead = bool("isRead")
-        )
-
-    fun ContactGrantEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
-        mapOf(
-            "id" to id,
-            "chatId" to chatId,
-            "postId" to postId,
-            "ownerId" to ownerId,
-            "reporterId" to reporterId,
-            "sharedBy" to sharedBy,
-            "sharedAt" to sharedAt,
-            "revokedAt" to revokedAt,
-            "isActive" to isActive,
-            "ownerName" to ownerName,
-            "ownerPhone" to ownerPhone,
-            "ownerEmail" to ownerEmail,
-            "createdAt" to createdAt,
-            "updatedAt" to FieldValue.serverTimestamp()
-        )
-
-    fun Map<String, Any?>.toContactGrantEntity(documentId: String = string("id")): ContactGrantEntity =
-        ContactGrantEntity(
-            id = string("id").ifBlank { documentId },
-            chatId = string("chatId"),
-            postId = string("postId"),
-            ownerId = string("ownerId"),
-            reporterId = string("reporterId"),
-            sharedBy = string("sharedBy"),
-            sharedAt = long("sharedAt"),
-            revokedAt = nullableLong("revokedAt"),
-            isActive = bool("isActive"),
-            ownerName = string("ownerName"),
-            ownerPhone = string("ownerPhone"),
-            ownerEmail = string("ownerEmail")
         )
 
     private fun Map<String, Any?>.string(key: String): String = this[key] as? String ?: ""
@@ -244,15 +206,6 @@ object RemoteMappers {
             else -> 0L
         }
 
-    private fun Map<String, Any?>.nullableLong(key: String): Long? =
-        when (val value = this[key]) {
-            is Long -> value
-            is Int -> value.toLong()
-            is Double -> value.toLong()
-            is Timestamp -> value.toDate().time
-            else -> null
-        }
-
     private fun Map<String, Any?>.double(key: String): Double =
         when (val value = this[key]) {
             is Double -> value
@@ -261,4 +214,6 @@ object RemoteMappers {
             is Int -> value.toDouble()
             else -> 0.0
         }
+
+    private val supportedNotificationTypes = setOf("ALERT", "CHAT")
 }

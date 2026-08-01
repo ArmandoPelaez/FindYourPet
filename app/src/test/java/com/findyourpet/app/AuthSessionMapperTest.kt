@@ -17,8 +17,7 @@ class AuthSessionMapperTest {
       UserProfileDocument(
         uid = "real_uid",
         displayName = "Saved User",
-        email = "saved@example.com",
-        phone = "+111"
+        email = "saved@example.com"
       )
     )
 
@@ -34,22 +33,19 @@ class AuthSessionMapperTest {
         AuthUser(
           uid = "firebase_uid",
           displayName = "Auth Name",
-          email = "auth@example.com",
-          phone = "+222"
+          email = "auth@example.com"
         )
       ),
       UserProfileDocument(
         uid = "firebase_uid",
         displayName = "Profile Name",
-        email = "profile@example.com",
-        phone = "+333"
+        email = "profile@example.com"
       )
     )
 
     assertEquals("firebase_uid", profile.id)
     assertEquals("Profile Name", profile.name)
     assertEquals("profile@example.com", profile.email)
-    assertEquals("+333", profile.phone)
     assertTrue(
       AuthSessionMapper.isAuthenticated(
         AuthUiState.SignedIn(AuthUser(uid = "firebase_uid", displayName = "", email = ""))

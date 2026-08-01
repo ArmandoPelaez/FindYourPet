@@ -1,6 +1,6 @@
 # FindYourPet / Mascotas Perdidas
 
-FindYourPet es una aplicacion Android nativa para publicar mascotas perdidas, reportar avistamientos y facilitar el contacto seguro entre la persona que busca a su mascota y quien puede aportar informacion.
+FindYourPet es una aplicacion Android nativa para publicar mascotas perdidas, reportar avistamientos y facilitar la comunicacion por chat interno entre la persona que busca a su mascota y quien puede aportar informacion.
 
 El objetivo del proyecto es convertir un prototipo local en un MVP productivo verificable: con autenticacion real, datos compartidos en backend, privacidad por diseno, carga real de imagenes, ubicacion consentida, chat entre participantes y una base preparada para Google Play Internal testing.
 
@@ -11,7 +11,7 @@ La perdida de una mascota suele depender de difusion rapida, datos claros y comu
 - Publicar fichas de mascotas perdidas con foto, descripcion, zona de referencia y recompensa opcional.
 - Permitir que otros usuarios autenticados reporten avistamientos.
 - Crear una conversacion privada entre dueno y reportante cuando hay un avistamiento.
-- Proteger telefono, email, direccion y ubicacion precisa hasta que exista consentimiento explicito.
+- No publicar ni compartir telefono, email, direccion o datos personales de contacto mediante flujos administrados por la app.
 - Evitar que los datos sensibles aparezcan en tarjetas publicas, previews o notificaciones.
 - Mantener reglas tecnicas claras para avanzar hacia una publicacion controlada.
 
@@ -41,8 +41,8 @@ Todavia requiere validacion manual final para release firmado, Play Console, acc
 - **Crear publicacion:** formulario para publicar una mascota asociada al `uid` autenticado.
 - **Reportar avistamiento:** flujo para enviar foto opcional, zona/ubicacion y notas sobre una mascota vista.
 - **Chat privado:** conversacion entre dueno y reportante derivada de un avistamiento.
-- **Contacto protegido:** el dueno controla si comparte telefono/email dentro de una conversacion concreta.
-- **Notificaciones internas:** avisos de avistamientos, mensajes y cambios de contacto sin exponer datos sensibles.
+- **Contacto por chat interno:** la app no ofrece telefono, email, direccion ni acciones externas de contacto entre dueno y reportante.
+- **Notificaciones internas:** avisos de avistamientos y mensajes sin exponer datos sensibles.
 - **Perfil:** datos basicos del usuario autenticado.
 
 ## Principios de producto y privacidad
@@ -50,17 +50,19 @@ Todavia requiere validacion manual final para release firmado, Play Console, acc
 El proyecto trata como sensibles:
 
 - Nombre del dueno.
-- Telefono y email.
-- Direccion.
+- Email de cuenta.
+- Datos personales que una persona decida escribir voluntariamente dentro de mensajes.
 - Coordenadas GPS.
 - Fotos.
 - Mensajes privados.
 - Historial de avistamientos.
+- Datos legacy de grants/contacto, que la app actual ignora o elimina de caches locales.
 
 Reglas base:
 
-- El contacto directo no es publico por defecto.
-- El contacto solo puede compartirse dentro de un chat autorizado.
+- La app solo media contacto mediante chat interno entre participantes.
+- La app no solicita, revela, autoriza, revoca ni notifica telefono, email o direccion como datos de contacto.
+- Si las personas usuarias escriben telefono, email, direccion u otros datos personales dentro del chat, lo hacen voluntariamente y bajo su responsabilidad.
 - Las notificaciones no deben incluir telefono, email, direccion, coordenadas exactas, URLs privadas, notas completas ni cuerpos completos de mensajes.
 - Las acciones de dueno se basan en el `uid` real de Firebase, no en ids hardcodeados.
 - Room no otorga autoridad productiva; funciona como cache/local demo.
@@ -186,7 +188,6 @@ Colecciones/modelos principales:
 - `sightings/{sightingId}`: avistamientos.
 - `chatSessions/{chatId}`: conversaciones entre dueno y reportante.
 - `chatSessions/{chatId}/messages/{messageId}`: mensajes del chat.
-- `chatSessions/{chatId}/contactGrants/{grantId}`: permisos de contacto por chat.
 - `users/{uid}/notifications/{notificationId}`: notificaciones internas.
 
 Las reglas viven en `firestore.rules` y deben validarse antes de usar datos reales.
@@ -249,7 +250,7 @@ Cada cambio relevante deberia tener:
 ## Roadmap cercano
 
 - Completar validacion manual de permisos en dispositivo/emulador.
-- Confirmar flujos reales de foto, ubicacion, avistamiento, chat y contacto sobre backend.
+- Confirmar flujos reales de foto, ubicacion, avistamiento y chat sobre backend.
 - Validar reglas Firestore en emulador o proyecto no productivo.
 - Generar artifact firmado para Internal testing.
 - Confirmar Crashlytics y mapping de release.

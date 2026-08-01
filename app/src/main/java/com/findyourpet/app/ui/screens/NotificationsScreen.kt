@@ -21,7 +21,6 @@ import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
 import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.ReunitedGreen
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,6 +35,7 @@ fun NotificationsScreen(
 ) {
     val notifications by viewModel.allNotifications.collectAsState()
     val notificationsState by viewModel.notificationsState.collectAsState()
+    val visibleNotifications = notifications.filter { it.type != "CONTACT_SHARED" }
 
     Scaffold(
         topBar = {
@@ -55,7 +55,7 @@ fun NotificationsScreen(
                 .padding(padding)
         ) {
             SyncStatusBanner(state = notificationsState)
-            if (notifications.isEmpty()) {
+            if (visibleNotifications.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -80,7 +80,7 @@ fun NotificationsScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(notifications, key = { it.id }) { notif ->
+                    items(visibleNotifications, key = { it.id }) { notif ->
                         NotificationCard(
                             notification = notif,
                             onClick = {
@@ -107,7 +107,6 @@ fun NotificationCard(
 
     val (icon, color) = when (notification.type) {
         "ALERT" -> Pair(Icons.Filled.NotificationsActive, AlertRed)
-        "CONTACT_SHARED" -> Pair(Icons.Filled.LockOpen, ReunitedGreen)
         else -> Pair(Icons.Filled.Chat, CoralPrimary)
     }
 

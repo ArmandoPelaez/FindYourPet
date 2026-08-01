@@ -102,9 +102,6 @@ class HomeFeedPresentationTest {
   @Test
   fun shareText_usesOnlyPublicPostSummary() {
     val post = samplePost(
-      ownerPhone = "3415551234",
-      ownerEmail = "owner@example.com",
-      ownerAddress = "Calle Privada 123",
       latitude = -34.6037,
       longitude = -58.3816
     )
@@ -152,9 +149,6 @@ class HomeFeedPresentationTest {
 
   private fun samplePost(
     status: String = "PERDIDO",
-    ownerPhone: String = "3410000000",
-    ownerEmail: String = "owner@example.com",
-    ownerAddress: String = "Direccion reservada",
     latitude: Double = -32.95,
     longitude: Double = -60.66
   ) = PetPostEntity(
@@ -172,10 +166,7 @@ class HomeFeedPresentationTest {
     longitude = longitude,
     rewardAmount = "Sin recompensa",
     ownerId = "owner_1",
-    ownerName = "Persona Responsable",
-    ownerPhone = ownerPhone,
-    ownerEmail = ownerEmail,
-    ownerAddress = ownerAddress
+    ownerName = "Persona Responsable"
   )
 
   private fun repoRoot(): File {

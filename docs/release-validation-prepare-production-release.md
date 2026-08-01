@@ -1,6 +1,6 @@
 # Validacion release: prepare-production-release
 
-Fecha: 2026-07-28
+Fecha: 2026-07-31
 
 ## Decisiones cerradas
 
@@ -41,6 +41,7 @@ Fecha: 2026-07-28
 - Politica Markdown: `docs/privacy-policy.md`.
 - Politica publica: `public/privacy-policy.html`.
 - Backup/data extraction: `allowBackup=false`, `backup_rules.xml` y `data_extraction_rules.xml` excluyen dominios sensibles.
+- Contacto owner/reportero: solo chat interno; sin controles de divulgacion administrada ni telefono/email/direccion compartidos por la app.
 
 ## Accesibilidad
 
@@ -60,7 +61,8 @@ Pendiente en dispositivo/emulador:
 - Feed vacio y feed con datos QA nuevos.
 - Crear publicacion.
 - Reportar avistamiento.
-- Chat/contacto.
+- Chat interno owner/reportero.
+- Ausencia de controles o valores de contacto personal administrados por la app.
 - Notificaciones.
 - Perfil y cierre de sesion.
 - Permisos concedido, denegado, denegado permanente y no disponible.

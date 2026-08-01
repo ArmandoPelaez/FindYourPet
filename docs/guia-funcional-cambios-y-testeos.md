@@ -18,8 +18,8 @@ La app se encuentra en una etapa de transicion desde demo/local hacia flujos pro
 | Cambio | Objetivo funcional | Mejora lograda | Foco principal de QA |
 | --- | --- | --- | --- |
 | `stabilize-android-build` | Dejar la app compilable, limpia y estable para futuras iteraciones. | Base Android mas confiable para probar y construir producto. | Apertura de app, navegacion principal, textos visibles y estados basicos. |
-| `harden-local-privacy` | Reducir exposicion innecesaria de datos sensibles en la demo local. | Backups locales desactivados, menos permisos innecesarios, contacto protegido y mensajes de privacidad mas honestos. | Permisos, backup local, visibilidad de contacto, previews, exposicion de datos sensibles y textos de privacidad. |
-| `add-user-authentication` | Incorporar identidad real y reglas de propiedad para usuarios autenticados. | Login con Firebase, perfiles en Firestore, acciones de dueno basadas en `uid` y reglas de acceso del backend. | Login/logout, perfil, propiedad de publicaciones, reglas Firestore, contacto protegido y frontera Room/demo. |
+| `harden-local-privacy` | Reducir exposicion innecesaria de datos sensibles en la demo local. | Backups locales desactivados, menos permisos innecesarios, chat interno y mensajes de privacidad mas honestos. | Permisos, backup local, chat, previews, exposicion de datos sensibles y textos de privacidad. |
+| `add-user-authentication` | Incorporar identidad real y reglas de propiedad para usuarios autenticados. | Login con Firebase, perfiles en Firestore, acciones de dueno basadas en `uid` y reglas de acceso del backend. | Login/logout, perfil, propiedad de publicaciones, reglas Firestore, chat interno y frontera Room/demo. |
 
 ## Cambio: `stabilize-android-build`
 
@@ -64,7 +64,7 @@ Desde producto, el cambio no incorpora una funcionalidad nueva para usuarios fin
 
 Este cambio reforzo la privacidad local de la app. Se ajusto la configuracion Android para evitar respaldos automaticos de datos sensibles, se limitaron los permisos declarados a lo que la app realmente usa hoy y se revisaron textos o pantallas que podian dar a entender garantias de privacidad todavia no implementadas.
 
-Tambien se reviso la exposicion de datos sensibles como telefono, email, direccion, coordenadas, mensajes y notas privadas. El foco fue que esos datos no aparezcan en espacios publicos o previews sin una accion explicita de revelado dentro de la app.
+Tambien se reviso la exposicion de datos sensibles como telefono, email, direccion, coordenadas, mensajes y notas privadas. El foco actual es que esos datos no aparezcan en espacios publicos, previews ni flujos administrados por la app; la comunicacion entre dueno y reportero queda limitada al chat interno.
 
 En concreto, el cambio dejo `android:allowBackup` desactivado, mantuvo reglas explicitas para excluir bases de datos, preferencias, archivos privados, cache y archivos externos propios de la app, y documento que la informacion local de la demo no cuenta todavia con cifrado propio de FindYourPet. La app conserva solo el permiso de internet y no pide permisos reales para flujos que siguen siendo simulados, como foto, ubicacion, chat o notificaciones.
 
@@ -72,8 +72,8 @@ En concreto, el cambio dejo `android:allowBackup` desactivado, mantuvo reglas ex
 
 - La app pide menos permisos innecesarios.
 - Los datos sensibles tienen menor riesgo de quedar expuestos en la experiencia local o en respaldos automaticos del dispositivo.
-- El contacto del dueno permanece protegido hasta que corresponde mostrarlo mediante una accion explicita.
-- Las pantallas publicas evitan mostrar telefono, email, direccion o coordenadas exactas como reemplazo del flujo de contacto protegido.
+- La app no ofrece controles para revelar telefono, email o direccion del dueno.
+- Las pantallas publicas evitan mostrar telefono, email, direccion o coordenadas exactas como reemplazo del chat interno.
 - Los previews de chat y notificaciones locales evitan incluir telefono, email, coordenadas exactas o contenido privado completo.
 - La app evita prometer cifrado, privacidad productiva, autorizacion real, verificacion o tiempo real si todavia no existe esa implementacion.
 - La base queda mejor preparada para futuras funciones de autenticacion, backend, GPS y carga real de fotos.
@@ -84,7 +84,7 @@ En concreto, el cambio dejo `android:allowBackup` desactivado, mantuvo reglas ex
 - Revisar el manifiesto Android y confirmar que solo declare `android.permission.INTERNET`.
 - Revisar que `android:allowBackup` este desactivado y que las reglas de backup/extraccion excluyan bases de datos, preferencias, archivos privados, cache y archivos externos propios de la app.
 - Ingresar a una ficha de mascota y verificar que telefono, email, direccion o coordenadas exactas no aparezcan expuestos publicamente.
-- Probar el flujo de revelar contacto y confirmar que el dato solo aparece cuando el usuario realiza esa accion.
+- Confirmar que no existe flujo de revelar contacto, compartir contacto ni revocar contacto.
 - Revisar pantallas de detalle, perfil, chat y avistamientos para confirmar que no muestren datos sensibles fuera de contexto.
 - Validar que previews de chat o notificaciones locales no incluyan telefono, email, coordenadas exactas ni contenido privado completo.
 - Revisar textos de privacidad para confirmar que no prometan encriptacion, verificacion, autorizacion real o tiempo real.
@@ -95,7 +95,7 @@ En concreto, el cambio dejo `android:allowBackup` desactivado, mantuvo reglas ex
 
 - La app solo solicita permisos necesarios para lo que realmente funciona hoy.
 - El backup automatico de Android queda desactivado y los archivos de reglas excluyen los dominios sensibles definidos.
-- Los datos de contacto se mantienen ocultos hasta una accion explicita de revelado.
+- Los datos personales de contacto no se muestran ni se administran mediante acciones de revelado.
 - No se muestran coordenadas exactas ni datos privados en pantallas publicas o previews.
 - Los textos de privacidad son claros y no exageran las capacidades actuales: no prometen cifrado propio, autorizacion productiva, verificacion real ni tiempo real.
 - Las funciones simuladas de foto, ubicacion, chat y notificacion no piden permisos runtime.
@@ -115,7 +115,7 @@ Este cambio incorporo autenticacion real para FindYourPet usando Firebase Authen
 
 El alcance incluye registro e inicio de sesion con email/password, inicio de sesion con Google, cierre de sesion, estados de carga/error recuperables y bloqueo de la experiencia principal cuando no hay una sesion autenticada. Tambien se agrego la creacion y carga de perfiles en `users/{uid}` para que la pantalla de perfil no muestre datos viejos o ajenos despues de cerrar sesion.
 
-Ademas, las publicaciones, avistamientos, chats y acciones controladas por dueno quedan asociadas al `uid` autenticado. Firestore pasa a ser la fuente de verdad para datos productivos autenticados, mientras que Room queda limitado a datos demo/cache y no puede otorgar permisos reales de propietario. El cambio tambien agrego reglas de Firestore con denegacion por defecto, acceso propio a `users/{uid}`, propiedad inmutable en publicaciones y restricciones para chats, avistamientos y contacto compartido.
+Ademas, las publicaciones, avistamientos, chats y acciones controladas por dueno quedan asociadas al `uid` autenticado. Firestore pasa a ser la fuente de verdad para datos productivos autenticados, mientras que Room queda limitado a datos demo/cache y no puede otorgar permisos reales de propietario. Las reglas de Firestore mantienen denegacion por defecto, acceso propio a `users/{uid}`, propiedad inmutable en publicaciones y restricciones para chats, avistamientos y campos/grants de contacto retirados.
 
 ### Mejora lograda
 
@@ -124,7 +124,7 @@ Ademas, las publicaciones, avistamientos, chats y acciones controladas por dueno
 - Las acciones de dueno dejan de depender de ids hardcodeados o datos locales no confiables.
 - El cierre de sesion limpia el estado autenticado y evita mostrar perfil o datos sensibles obsoletos.
 - Las publicaciones productivas se crean con `ownerId` igual al `uid` del usuario autenticado.
-- Las reglas de Firestore protegen perfiles, publicaciones, avistamientos, chats, mensajes y cambios de contacto.
+- Las reglas de Firestore protegen perfiles, publicaciones, avistamientos, chats, mensajes y niegan campos/grants de contacto retirados.
 - Room queda documentado y tratado como demo/cache, sin autoridad para conceder permisos productivos.
 - La configuracion Firebase queda documentada sin commitear `google-services.json`.
 
@@ -141,8 +141,8 @@ Ademas, las publicaciones, avistamientos, chats y acciones controladas por dueno
 - Abrir una publicacion como otro usuario y validar que no aparezcan acciones de editar, cerrar/reabrir o compartir contacto.
 - Intentar una escritura directa en Firestore como no dueno y confirmar que las reglas la rechacen.
 - Abrir un chat como dueno y reportante, y validar que solo participantes puedan leer o enviar mensajes.
-- Activar contacto compartido como dueno y confirmar que la actualizacion se permita.
-- Intentar activar contacto compartido como no dueno y confirmar que las reglas lo rechacen.
+- Verificar que el chat no muestre telefono, email, direccion ni controles de revelar/compartir/revocar contacto.
+- Intentar escribir `contactGrants`, `isContactSharedByOwner`, `ownerPhone`, `ownerEmail` u `ownerAddress` y confirmar que las reglas lo rechacen.
 - Confirmar que las publicaciones seed de Room sigan siendo demo/cache y no den controles de dueno a un usuario autenticado salvo importacion explicita con su `uid`.
 - Ejecutar `gradlew.bat testDebugUnitTest` y `gradlew.bat assembleDebug` antes de cerrar el cambio.
 
@@ -152,7 +152,7 @@ Ademas, las publicaciones, avistamientos, chats y acciones controladas por dueno
 - El registro, login, Google Sign-In y logout tienen estados recuperables de carga/error.
 - El perfil autenticado se crea o carga desde `users/{uid}` y no queda visible despues de cerrar sesion.
 - Las acciones de dueno se basan en `currentUid == ownerId` y no en strings hardcodeados.
-- Un usuario no dueno no puede editar, cerrar/reabrir, borrar ni cambiar contacto compartido de una publicacion ajena.
+- Un usuario no dueno no puede editar, cerrar/reabrir, borrar ni escribir campos/grants de contacto en una publicacion o chat ajenos.
 - Firestore es la fuente de verdad para perfiles y datos productivos autenticados introducidos por este cambio.
 - Room no concede permisos productivos y los datos demo solo pasan a produccion con asignacion explicita del `uid` autenticado.
 - Las reglas de Firestore niegan por defecto y cubren usuarios, publicaciones, avistamientos, chats, mensajes y campos de contacto.
