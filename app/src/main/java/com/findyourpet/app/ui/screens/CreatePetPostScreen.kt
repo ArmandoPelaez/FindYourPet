@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,14 +25,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Publish
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -77,10 +77,7 @@ fun CreatePetPostScreen(
     val context = LocalContext.current
 
     var petName by remember { mutableStateOf("") }
-    var selectedSpecies by remember { mutableStateOf("Mascota") }
-    var breed by remember { mutableStateOf("") }
-    var color by remember { mutableStateOf("") }
-    var features by remember { mutableStateOf("") }
+    var recognitionDetails by remember { mutableStateOf("") }
     var lastSeenLocation by remember { mutableStateOf("") }
     var latitude by remember { mutableStateOf(0.0) }
     var longitude by remember { mutableStateOf(0.0) }
@@ -156,67 +153,100 @@ fun CreatePetPostScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = TealSecondary.copy(alpha = 0.12f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.Lock,
-                        contentDescription = null,
-                        tint = TealSecondary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text("Contacto por chat interno", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TealSecondary)
-                        Text(
-                            text = "La ficha no publica telefono, email ni direccion. Las personas se comunican mediante el chat de FindYourPet.",
-                            fontSize = 11.sp,
-                            lineHeight = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            Text(text = "Fotografia principal", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-
-            Box(
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(16.dp))
+                    .clickable {
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
             ) {
-                if (photoUri.isBlank()) {
-                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxSize()) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text("Sin foto seleccionada", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (photoUri.isBlank()) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Filled.CameraAlt,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(42.dp)
+                                )
+                                Icon(
+                                    imageVector = Icons.Filled.PhotoLibrary,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(42.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Toca para agregar foto",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        galleryLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    }
+                                ) {
+                                    Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Galeria")
+                                }
+                                OutlinedButton(onClick = { launchCamera() }) {
+                                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Camara")
+                                }
+                            }
+                        }
+                    } else {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context).data(photoUri).crossfade(true).build(),
+                            contentDescription = "Foto de la mascota",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    galleryLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
+                            ) {
+                                Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Cambiar")
+                            }
+                            OutlinedButton(onClick = { launchCamera() }) {
+                                Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Camara")
+                            }
                         }
                     }
-                } else {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context).data(photoUri).crossfade(true).build(),
-                        contentDescription = "Foto de la mascota",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
-                    onClick = { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Galeria")
-                }
-                OutlinedButton(onClick = { launchCamera() }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Filled.CameraAlt, contentDescription = null)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Camara")
                 }
             }
 
@@ -225,35 +255,18 @@ fun CreatePetPostScreen(
             OutlinedTextField(
                 value = petName,
                 onValueChange = { petName = it },
-                label = { Text("Nombre de la mascota (Ej. Toby, Mia)") },
+                placeholder = { Text("Nombre de la mascota (Ej. Toby, Mia)") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = breed,
-                    onValueChange = { breed = it },
-                    label = { Text("Raza (Ej. Poodle)") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = color,
-                    onValueChange = { color = it },
-                    label = { Text("Color principal") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-            }
-
             OutlinedTextField(
-                value = features,
-                onValueChange = { features = it },
-                label = { Text("Caracteristicas distintivas (manchas, collar, cicatriz...)") },
+                value = recognitionDetails,
+                onValueChange = { recognitionDetails = it },
+                placeholder = {
+                    Text("Mas detalles utiles para reconocerla (ej. color, senas particulares, collar, temperamento)")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),
@@ -271,7 +284,7 @@ fun CreatePetPostScreen(
                     latitude = 0.0
                     longitude = 0.0
                 },
-                label = { Text("Ultima ubicacion vista (Barrio, Ciudad, Calle)") },
+                placeholder = { Text("Ultima ubicacion vista (Barrio, Ciudad o referencia)") },
                 leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = CoralPrimary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
@@ -287,10 +300,10 @@ fun CreatePetPostScreen(
                     isSubmitting = true
                     viewModel.createNewPetPost(
                         petName = petName,
-                        species = selectedSpecies,
-                        breed = breed.ifBlank { "Mestizo" },
-                        color = color.ifBlank { "Variado" },
-                        features = features.ifBlank { "Sin caracteristicas registradas" },
+                        species = "Mascota",
+                        breed = "Mestizo",
+                        color = "Variado",
+                        features = recognitionDetails.ifBlank { "Sin caracteristicas registradas" },
                         photoUri = photoUri,
                         lastSeenLocation = lastSeenLocation,
                         latitude = latitude,
