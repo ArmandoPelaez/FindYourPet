@@ -153,10 +153,10 @@ class ReleaseReadinessStaticTest {
   fun homeTopBar_doesNotDuplicateBottomPrimaryActions() {
     val homeSource = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
 
-    assertTrue(homeSource.contains("BottomPrimaryActionBanner("))
-    assertTrue(homeSource.contains("onProfileClick = onNavigateToProfile"))
-    assertTrue(homeSource.contains("onCreatePostClick = onNavigateToCreate"))
-    assertTrue(homeSource.contains("onChatClick = onNavigateToChatList"))
+    assertTrue(!homeSource.contains("BottomPrimaryActionBanner("))
+    assertTrue(!homeSource.contains("onNavigateToProfile"))
+    assertTrue(!homeSource.contains("onNavigateToCreate"))
+    assertTrue(!homeSource.contains("onNavigateToChatList"))
     assertTrue(homeSource.contains("contentDescription = \"Notificaciones\""))
     assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToChatList)"))
     assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToProfile)"))

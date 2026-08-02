@@ -23,10 +23,11 @@ class BottomPrimaryActionBannerComposeTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   @Test
-  fun bottomPrimaryActionBanner_displaysThreeAccessibleActions() {
+  fun bottomPrimaryActionBanner_displaysAccessibleActions() {
     composeTestRule.setContent {
       MascotasPerdidasTheme {
         BottomPrimaryActionBanner(
+          onHomeClick = {},
           onProfileClick = {},
           onCreatePostClick = {},
           onChatClick = {}
@@ -35,9 +36,11 @@ class BottomPrimaryActionBannerComposeTest {
     }
 
     composeTestRule.onNodeWithContentDescription("Acciones principales").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Crear publicacion").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+    composeTestRule.onAllNodesWithContentDescription("Inicio").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Perfil").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Crear publicacion").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Chats Privados").assertCountEquals(1)
@@ -48,10 +51,12 @@ class BottomPrimaryActionBannerComposeTest {
     var profileClicks = 0
     var createPostClicks = 0
     var chatClicks = 0
+    var homeClicks = 0
 
     composeTestRule.setContent {
       MascotasPerdidasTheme {
         BottomPrimaryActionBanner(
+          onHomeClick = { homeClicks++ },
           onProfileClick = { profileClicks++ },
           onCreatePostClick = { createPostClicks++ },
           onChatClick = { chatClicks++ }
@@ -59,10 +64,12 @@ class BottomPrimaryActionBannerComposeTest {
       }
     }
 
+    composeTestRule.onNodeWithContentDescription("Inicio").performClick()
     composeTestRule.onNodeWithContentDescription("Perfil").performClick()
     composeTestRule.onNodeWithContentDescription("Crear publicacion").performClick()
     composeTestRule.onNodeWithContentDescription("Chats Privados").performClick()
 
+    assertEquals(1, homeClicks)
     assertEquals(1, profileClicks)
     assertEquals(1, createPostClicks)
     assertEquals(1, chatClicks)
