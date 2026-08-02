@@ -45,14 +45,20 @@ class HomeFeedPresentationTest {
     }
 
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
-    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(1)
-    composeTestRule.onNodeWithText("Color").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Marron").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Color").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Marron").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Señas").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Especie").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Raza").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Perro").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Información reportada").assertCountEquals(1)
-    composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(1)
+    composeTestRule.onNodeWithText(
+      "Visto por ultima vez cerca del Parque Central.",
+      substring = true
+    ).assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Compartir").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Reportar avistamiento de REX").assertCountEquals(1)
@@ -76,7 +82,9 @@ class HomeFeedPresentationTest {
   }
 
   @Test
-  fun petPostCard_compactPhoneViewport_keepsBreedChipWithoutRemovedAttributes() {
+  fun petPostCard_compactPhoneViewport_keepsTitlelessLocationReadableWithoutRemovedAttributes() {
+    val longLocation = "Avenida Siempre Viva y Pasaje de los Aromos, frente a la plaza principal"
+
     composeTestRule.setContent {
       MascotasPerdidasTheme {
         Box(
@@ -85,7 +93,7 @@ class HomeFeedPresentationTest {
             .height(740.dp)
         ) {
           PetPostCard(
-            post = samplePost(),
+            post = samplePost(lastSeenLocation = longLocation),
             canReportSighting = true,
             onAlertClick = {}
           )
@@ -93,10 +101,13 @@ class HomeFeedPresentationTest {
       }
     }
 
-    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(1)
+    composeTestRule.onNodeWithText(longLocation).assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Especie").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Raza").assertCountEquals(0)
-    composeTestRule.onAllNodesWithText("Color").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Color").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Señas").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(0)
   }
 
   @Test
@@ -109,12 +120,18 @@ class HomeFeedPresentationTest {
     val shareText = buildPetPostShareText(post)
 
     assertTrue(shareText.contains("REX"))
-    assertTrue(shareText.contains("Boxer"))
-    assertTrue(shareText.contains("Marron"))
-    assertTrue(shareText.contains("Parque Central"))
+    assertTrue(shareText.contains("Cerca del Parque Central"))
+    assertFalse(shareText.contains("Boxer"))
+    assertFalse(shareText.contains("Marron"))
+    assertFalse(shareText.contains("Visto por ultima vez cerca del Parque Central"))
+    assertFalse(shareText.contains("collar azul"))
     assertFalse(shareText.contains("Especie"))
     assertFalse(shareText.contains("Perro"))
     assertFalse(shareText.lines().any { it.startsWith("Especie:") })
+    assertFalse(shareText.lines().any { it.startsWith("Raza:") })
+    assertFalse(shareText.lines().any { it.startsWith("Color:") })
+    assertFalse(shareText.lines().any { it.startsWith("Señas:") })
+    assertFalse(shareText.lines().any { it.startsWith("Señas particulares:") })
     assertFalse(shareText.contains("3415551234"))
     assertFalse(shareText.contains("owner@example.com"))
     assertFalse(shareText.contains("Calle Privada"))
@@ -150,7 +167,8 @@ class HomeFeedPresentationTest {
   private fun samplePost(
     status: String = "PERDIDO",
     latitude: Double = -32.95,
-    longitude: Double = -60.66
+    longitude: Double = -60.66,
+    lastSeenLocation: String = "Cerca del Parque Central"
   ) = PetPostEntity(
     id = "post_1",
     petName = "REX",
@@ -161,7 +179,7 @@ class HomeFeedPresentationTest {
     status = status,
     photoUri = "https://example.com/rex.jpg",
     dateLost = 1785207600000L,
-    lastSeenLocation = "Cerca del Parque Central",
+    lastSeenLocation = lastSeenLocation,
     latitude = latitude,
     longitude = longitude,
     rewardAmount = "Sin recompensa",
