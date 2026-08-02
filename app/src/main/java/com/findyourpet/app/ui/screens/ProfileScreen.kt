@@ -27,7 +27,7 @@ import com.findyourpet.app.ui.viewmodel.PetViewModel
 @Composable
 fun ProfileScreen(
     viewModel: PetViewModel,
-    onBackClick: () -> Unit
+    onBackClick: (() -> Unit)? = null
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val allPosts by viewModel.allPosts.collectAsState()
@@ -40,8 +40,11 @@ fun ProfileScreen(
             TopAppBar(
                 title = { Text("Mi Perfil y Colaboración", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                    val navigateBack = onBackClick
+                    if (navigateBack != null) {
+                        IconButton(onClick = navigateBack) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                        }
                     }
                 },
                 actions = {

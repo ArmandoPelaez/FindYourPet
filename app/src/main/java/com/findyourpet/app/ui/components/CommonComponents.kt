@@ -65,6 +65,7 @@ data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val 
 
 @Composable
 fun BottomPrimaryActionBanner(
+    onHomeClick: () -> Unit,
     onProfileClick: () -> Unit,
     onCreatePostClick: () -> Unit,
     onChatClick: () -> Unit,
@@ -89,6 +90,18 @@ fun BottomPrimaryActionBanner(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            IconButton(
+                onClick = onHomeClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Home,
+                    contentDescription = "Inicio",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
             IconButton(
                 onClick = onProfileClick,
                 modifier = Modifier.size(48.dp)

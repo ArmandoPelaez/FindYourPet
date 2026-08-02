@@ -202,7 +202,7 @@ class StaticProjectGuardrailsTest {
     assertTrue(!mainActivityText.contains("navigate(\"detail/"))
     assertTrue(!homeText.contains("Ver Ficha"))
     assertTrue(homeText.contains("Información reportada"))
-    assertTrue(homeText.contains("Ubicación en la que se perdió"))
+    assertTrue(!homeText.contains("Ubicación en la que se perdió"))
   }
 
   @Test
@@ -213,7 +213,12 @@ class StaticProjectGuardrailsTest {
     assertTrue(!homeText.contains("pagerState.currentPage + 1"))
     assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
     assertTrue(!homeText.contains("label = \"Tipo\""))
-    assertTrue(homeText.contains("label = \"Color\""))
+    assertTrue(!homeText.contains("label = \"Color\""))
+    assertTrue(!homeText.contains("label = \"Señas\""))
+    assertTrue(!homeText.contains("PetAttributeGrid"))
+    assertTrue(!homeText.contains("InfoPill"))
+    assertTrue(!homeText.contains("post.breed"))
+    assertTrue(homeText.contains("post.lastSeenLocation"))
   }
 
   @Test

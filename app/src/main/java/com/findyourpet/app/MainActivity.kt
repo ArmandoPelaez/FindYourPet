@@ -5,18 +5,27 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.findyourpet.app.data.auth.AuthUiState
+import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.screens.AuthScreen
 import com.findyourpet.app.ui.screens.ChatDetailScreen
 import com.findyourpet.app.ui.screens.ChatListScreen
@@ -44,87 +53,140 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private const val ROUTE_HOME = "home"
+private const val ROUTE_CREATE = "create"
+private const val ROUTE_PROFILE = "profile"
+private const val ROUTE_CHATS = "chats"
+private const val ROUTE_NOTIFICATIONS = "notifications"
+private const val ROUTE_ALERT = "alert/{postId}"
+private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
+
+private val PRIMARY_DESTINATION_ROUTES = setOf(ROUTE_HOME, ROUTE_PROFILE, ROUTE_CHATS)
+
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
     val authState by viewModel.authState.collectAsState()
-    val navController = rememberNavController()
 
-    if (authState !is AuthUiState.SignedIn) {
+    val signedInState = authState as? AuthUiState.SignedIn
+    if (signedInState == null) {
         AuthScreen(viewModel = viewModel)
         return
     }
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToCreate = { navController.navigate("create") },
-                onNavigateToAlert = { postId -> navController.navigate("alert/$postId") },
-                onNavigateToNotifications = { navController.navigate("notifications") },
-                onNavigateToChatList = { navController.navigate("chats") },
-                onNavigateToProfile = { navController.navigate("profile") }
-            )
-        }
+    key(signedInState.user.uid) {
+        SignedInPetAppNavigation(viewModel = viewModel)
+    }
+}
 
-        composable("create") {
-            CreatePetPostScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onPostCreated = { navController.popBackStack() }
-            )
-        }
+@Composable
+private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
+    val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
-        composable(
-            route = "alert/{postId}",
-            arguments = listOf(navArgument("postId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val postId = backStackEntry.arguments?.getString("postId") ?: ""
-            SightingAlertScreen(
-                viewModel = viewModel,
-                postId = postId,
-                onBackClick = { navController.popBackStack() },
-                onAlertSent = { chatId ->
-                    navController.popBackStack()
-                    navController.navigate("chat/$chatId")
-                }
-            )
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
+        bottomBar = {
+            if (currentRoute in PRIMARY_DESTINATION_ROUTES) {
+                BottomPrimaryActionBanner(
+                    onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) },
+                    onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) },
+                    onCreatePostClick = { navController.navigateToCreatePost() },
+                    onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) },
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
         }
+    ) { shellPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = ROUTE_HOME,
+            modifier = Modifier.padding(shellPadding)
+        ) {
+            composable(ROUTE_HOME) {
+                HomeScreen(
+                    viewModel = viewModel,
+                    onNavigateToAlert = { postId -> navController.navigate(alertRoute(postId)) },
+                    onNavigateToNotifications = { navController.navigate(ROUTE_NOTIFICATIONS) }
+                )
+            }
 
-        composable(
-            route = "chat/{chatId}",
-            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-            ChatDetailScreen(
-                viewModel = viewModel,
-                chatId = chatId,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+            composable(ROUTE_CREATE) {
+                CreatePetPostScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onPostCreated = { navController.popBackStack() }
+                )
+            }
 
-        composable("chats") {
-            ChatListScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onChatSelect = { chatId -> navController.navigate("chat/$chatId") }
-            )
-        }
+            composable(
+                route = ROUTE_ALERT,
+                arguments = listOf(navArgument("postId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val postId = backStackEntry.arguments?.getString("postId") ?: ""
+                SightingAlertScreen(
+                    viewModel = viewModel,
+                    postId = postId,
+                    onBackClick = { navController.popBackStack() },
+                    onAlertSent = { chatId ->
+                        navController.popBackStack()
+                        navController.navigate(chatDetailRoute(chatId))
+                    }
+                )
+            }
 
-        composable("notifications") {
-            NotificationsScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onNotificationClick = { targetId ->
-                    navController.navigate("chat/$targetId")
-                }
-            )
-        }
+            composable(
+                route = ROUTE_CHAT_DETAIL,
+                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                ChatDetailScreen(
+                    viewModel = viewModel,
+                    chatId = chatId,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
 
-        composable("profile") {
-            ProfileScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() }
-            )
+            composable(ROUTE_CHATS) {
+                ChatListScreen(
+                    viewModel = viewModel,
+                    onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
+                )
+            }
+
+            composable(ROUTE_NOTIFICATIONS) {
+                NotificationsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onNotificationClick = { targetId ->
+                        navController.navigate(chatDetailRoute(targetId))
+                    }
+                )
+            }
+
+            composable(ROUTE_PROFILE) {
+                ProfileScreen(viewModel = viewModel)
+            }
         }
     }
 }
+
+private fun NavHostController.navigateToPrimaryDestination(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+private fun NavHostController.navigateToCreatePost() {
+    navigate(ROUTE_CREATE) {
+        launchSingleTop = true
+    }
+}
+
+private fun alertRoute(postId: String) = "alert/$postId"
+
+private fun chatDetailRoute(chatId: String) = "chat/$chatId"

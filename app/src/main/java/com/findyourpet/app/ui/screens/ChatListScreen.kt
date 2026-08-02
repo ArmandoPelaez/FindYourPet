@@ -35,7 +35,7 @@ import java.util.Locale
 @Composable
 fun ChatListScreen(
     viewModel: PetViewModel,
-    onBackClick: () -> Unit,
+    onBackClick: (() -> Unit)? = null,
     onChatSelect: (String) -> Unit
 ) {
     val chatSessions by viewModel.userChatSessions.collectAsState()
@@ -47,8 +47,11 @@ fun ChatListScreen(
             TopAppBar(
                 title = { Text("Conversaciones", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                    val navigateBack = onBackClick
+                    if (navigateBack != null) {
+                        IconButton(onClick = navigateBack) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                        }
                     }
                 }
             )
