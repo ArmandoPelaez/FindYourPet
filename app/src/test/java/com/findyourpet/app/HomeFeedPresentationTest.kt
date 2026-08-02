@@ -53,6 +53,10 @@ class HomeFeedPresentationTest {
     composeTestRule.onAllNodesWithText("Raza").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Perro").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Información reportada").assertCountEquals(1)
+    composeTestRule.onNodeWithText(
+      "Visto por ultima vez cerca del Parque Central.",
+      substring = true
+    ).assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Reportar avistamiento de REX").assertCountEquals(1)
