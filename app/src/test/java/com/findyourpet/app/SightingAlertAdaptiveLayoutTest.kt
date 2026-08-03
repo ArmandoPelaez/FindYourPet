@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
-import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.ui.screens.SightingAlertAdaptiveContent
 import com.findyourpet.app.ui.screens.SightingSubmitActionBar
@@ -39,18 +38,27 @@ class SightingAlertAdaptiveLayoutTest {
     renderAdaptiveContent(width = 360, height = 720)
 
     composeTestRule.onNodeWithTag("sighting-layout-compact").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("sighting-media-header").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("sighting-info-card").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Reportando avistamiento de: REX").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("sighting-photo-upload-surface").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("sighting-photo-empty-state", useUnmergedTree = true).assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-gallery-action").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(1)
+    composeTestRule.onNodeWithText("Ubicacion del avistamiento").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Usar ubicacion actual").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("sighting-media-header").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-info-card").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Reportando avistamiento de: REX").assertCountEquals(0)
   }
 
   @Test
-  fun adaptiveContent_usesExpandedTwoColumnAtTabletWidth() {
+  fun adaptiveContent_usesExpandedReportFirstLayoutAtTabletWidth() {
     renderAdaptiveContent(width = 840, height = 720)
 
     composeTestRule.onAllNodesWithTag("sighting-layout-expanded").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("sighting-media-column").assertCountEquals(1)
     composeTestRule.onAllNodesWithTag("sighting-detail-column").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-photo-upload-surface").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-media-column").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-media-header").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-info-card").assertCountEquals(0)
   }
 
   @Test
@@ -58,7 +66,44 @@ class SightingAlertAdaptiveLayoutTest {
     renderAdaptiveContent(width = 840, height = 460)
 
     composeTestRule.onAllNodesWithTag("sighting-layout-centered").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("sighting-media-header").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-photo-upload-surface").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-media-header").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-info-card").assertCountEquals(0)
+  }
+
+  @Test
+  fun adaptiveContent_keepsOptionalPhotoActionsTappable() {
+    var galleryClicks = 0
+    var cameraClicks = 0
+
+    renderAdaptiveContent(
+      width = 360,
+      height = 720,
+      onGalleryClick = { galleryClicks++ },
+      onCameraClick = { cameraClicks++ }
+    )
+
+    composeTestRule.onNodeWithTag("sighting-photo-upload-surface").performClick()
+    composeTestRule.onNodeWithTag("sighting-gallery-action").performClick()
+    composeTestRule.onNodeWithTag("sighting-camera-action").performClick()
+
+    assertEquals(2, galleryClicks)
+    assertEquals(1, cameraClicks)
+  }
+
+  @Test
+  fun adaptiveContent_showsSelectedPhotoPreviewWithReplacementActions() {
+    renderAdaptiveContent(
+      width = 360,
+      height = 720,
+      selectedPhotoUri = "content://sighting/photo.jpg"
+    )
+
+    composeTestRule.onNodeWithTag("sighting-photo-upload-surface").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("sighting-attachment-photo", useUnmergedTree = true).assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Cambiar").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-photo-empty-state", useUnmergedTree = true).assertCountEquals(0)
   }
 
   @Test
@@ -93,20 +138,25 @@ class SightingAlertAdaptiveLayoutTest {
     composeTestRule.onAllNodesWithText("-58.3816").assertCountEquals(0)
   }
 
-  private fun renderAdaptiveContent(width: Int, height: Int) {
+  private fun renderAdaptiveContent(
+    width: Int,
+    height: Int,
+    selectedPhotoUri: String = "",
+    onGalleryClick: () -> Unit = {},
+    onCameraClick: () -> Unit = {}
+  ) {
     composeTestRule.setContent {
       MascotasPerdidasTheme {
         Box(modifier = Modifier.width(width.dp).height(height.dp)) {
           SightingAlertAdaptiveContent(
-            pet = samplePost(),
-            selectedPhotoUri = "",
+            selectedPhotoUri = selectedPhotoUri,
             locationName = "Parque Central",
             locationSource = LocationSource.MANUAL_COARSE,
             notes = "Lo vi caminando hacia una calle lateral.",
             authMessage = null,
             formMessage = null,
-            onGalleryClick = {},
-            onCameraClick = {},
+            onGalleryClick = onGalleryClick,
+            onCameraClick = onCameraClick,
             onLocationClick = {},
             onLocationNameChange = {},
             onNotesChange = {},
@@ -118,22 +168,4 @@ class SightingAlertAdaptiveLayoutTest {
       }
     }
   }
-
-  private fun samplePost() = PetPostEntity(
-    id = "post_1",
-    petName = "REX",
-    species = "Perro",
-    breed = "Boxer",
-    color = "Marron",
-    features = "Es asustadizo y llevaba collar azul.",
-    status = "PERDIDO",
-    photoUri = "https://example.com/rex.jpg",
-    dateLost = 1785207600000L,
-    lastSeenLocation = "Cerca del Parque Central",
-    latitude = -34.6037,
-    longitude = -58.3816,
-    rewardAmount = "Sin recompensa",
-    ownerId = "owner_1",
-    ownerName = "Persona Responsable"
-  )
 }
