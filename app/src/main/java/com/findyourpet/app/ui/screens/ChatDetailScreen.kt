@@ -113,48 +113,6 @@ fun ChatDetailScreen(
             SyncStatusBanner(state = chatSessionState)
             SyncStatusBanner(state = messagesState)
 
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                shape = RoundedCornerShape(0.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Shield,
-                                contentDescription = null,
-                                tint = CoralPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "Chat interno",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "FindYourPet no solicita ni comparte telefono, email o direccion. Si decides escribir datos personales en mensajes, esa decision es tu responsabilidad.",
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
             // Chat Messages List
             LazyColumn(
                 state = listState,
@@ -243,60 +201,7 @@ fun ChatMessageItem(
     }
 
     if (message.isSystemMessage) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.NotificationsActive,
-                        contentDescription = null,
-                        tint = AlertRed,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "MENSAJE DEL SISTEMA",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = AlertRed
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = message.text,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-
-                if (message.photoUri != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    AsyncImage(
-                        model = message.photoUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-
-                Text(
-                    text = formattedTime,
-                    fontSize = 9.sp,
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 4.dp)
-                )
-            }
-        }
+        //no mostrar nada
     } else {
         Box(
             modifier = Modifier

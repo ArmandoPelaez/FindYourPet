@@ -172,14 +172,16 @@ fun ChatSessionCard(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Text(
-                    text = session.lastMessage,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
+                if (session.lastMessage.isNotBlank()) {
+                    Text(
+                        text = session.lastMessage,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 

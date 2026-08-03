@@ -3,6 +3,7 @@ package com.findyourpet.app
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
@@ -168,7 +169,8 @@ class StaticProjectGuardrailsTest {
     assertTrue(!viewModelText.contains("activeContactGrant"))
     assertTrue(!viewModelText.contains("toggleContactSharing"))
     assertTrue(!componentText.contains("ProtectedContactCard"))
-    assertTrue(chatText.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
+    assertFalse(chatText.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
+    assertFalse(chatText.contains("esa decision es tu responsabilidad"))
     assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
     assertTrue(!homeText.contains("post.ownerPhone"))
     assertTrue(!homeText.contains("post.ownerEmail"))

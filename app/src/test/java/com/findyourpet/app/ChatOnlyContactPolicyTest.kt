@@ -30,11 +30,11 @@ class ChatOnlyContactPolicyTest {
   }
 
   @Test
-  fun chatDetailShowsBoundedUserResponsibilityCopy() {
+  fun chatDetailDoesNotShowBoundedUserResponsibilityCopy() {
     val chatDetail = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/ChatDetailScreen.kt").readText()
 
-    assertTrue(chatDetail.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
-    assertTrue(chatDetail.contains("esa decision es tu responsabilidad"))
+    assertFalse(chatDetail.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
+    assertFalse(chatDetail.contains("esa decision es tu responsabilidad"))
   }
 
   private fun repoRoot(): File {
