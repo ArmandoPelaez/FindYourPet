@@ -3,6 +3,7 @@
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -13,43 +14,47 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = ElegantPurplePrimary,
+    onPrimary = OnCoralPrimary,
     primaryContainer = ElegantPurpleContainer,
-    onPrimary = Color(0xFF381E72),
     onPrimaryContainer = OnElegantPurpleContainer,
     secondary = TealSecondary,
-    secondaryContainer = TealSecondaryContainer,
     onSecondary = OnTealSecondary,
+    secondaryContainer = TealSecondaryContainer,
     background = DarkBackground,
+    onBackground = Color(0xFFF2F2F2),
     surface = DarkSurface,
+    onSurface = Color(0xFFF2F2F2),
     surfaceVariant = DarkSurfaceVariant,
-    onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5),
-    onSurfaceVariant = Color(0xFFCAC4D0),
+    onSurfaceVariant = Color(0xFFCFCFCF),
     error = AlertRed,
-    errorContainer = AlertRedContainer
+    onError = Color(0xFFFFFFFF),
+    errorContainer = AlertRedContainer,
+    onErrorContainer = Color(0xFFFFE6E6)
 )
 
-private val LightColorScheme = darkColorScheme(
+private val LightColorScheme = lightColorScheme(
     primary = ElegantPurplePrimary,
+    onPrimary = OnCoralPrimary,
     primaryContainer = ElegantPurpleContainer,
-    onPrimary = Color(0xFF381E72),
     onPrimaryContainer = OnElegantPurpleContainer,
     secondary = TealSecondary,
-    secondaryContainer = TealSecondaryContainer,
     onSecondary = OnTealSecondary,
-    background = DarkBackground,
-    surface = DarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
-    onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5),
-    onSurfaceVariant = Color(0xFFCAC4D0),
+    secondaryContainer = TealSecondaryContainer,
+    background = Color(0xFFF7F2ED),
+    onBackground = Color(0xFF1D1B20),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1D1B20),
+    surfaceVariant = Color(0xFFF1EAE4),
+    onSurfaceVariant = Color(0xFF4A453E),
     error = AlertRed,
-    errorContainer = AlertRedContainer
+    onError = Color(0xFFFFFFFF),
+    errorContainer = AlertRedContainer,
+    onErrorContainer = Color(0xFF4E1717)
 )
 
 @Composable
 fun MascotasPerdidasTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -64,7 +69,14 @@ fun MascotasPerdidasTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = AppTypography,
+        shapes = Shapes(
+            extraSmall = AppShapes.chip,
+            small = AppShapes.chip,
+            medium = AppShapes.content,
+            large = AppShapes.emptyState,
+            extraLarge = AppShapes.card,
+        ),
         content = content
     )
 }

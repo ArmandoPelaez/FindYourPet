@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -13,14 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.ReunitedGreen
-import com.findyourpet.app.ui.theme.TealSecondary
+import com.findyourpet.app.ui.components.AppButton
+import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.EmptyState
+import com.findyourpet.app.ui.components.SyncStatusBanner
+import com.findyourpet.app.ui.theme.AppOpacity
+import com.findyourpet.app.ui.theme.AppShapes
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,9 +34,11 @@ fun ProfileScreen(
     val myPosts = allPosts.filter { it.ownerId == currentUser.id }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Mi Perfil y Colaboración", fontWeight = FontWeight.Bold) },
+                windowInsets = WindowInsets.safeDrawing,
+                title = { Text("Mi Perfil y Colaboración") },
                 navigationIcon = {
                     val navigateBack = onBackClick
                     if (navigateBack != null) {
@@ -58,81 +58,79 @@ fun ProfileScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding)
+                .imePadding(),
+            contentPadding = PaddingValues(AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             // User Card
             item {
-                com.findyourpet.app.ui.components.SyncStatusBanner(state = postFeedState)
+                SyncStatusBanner(state = postFeedState)
             }
 
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = AppShapes.emptyState,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier.padding(AppSpacing.cardPadding),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Surface(
-                            color = CoralPrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             shape = CircleShape,
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.size(AppSpacing.avatarLarge)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Filled.Person,
                                     contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(38.dp)
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(AppSpacing.avatarIcon)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
 
                         Text(
                             text = currentUser.name,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 20.sp
+                            style = MaterialTheme.typography.titleLarge
                         )
 
                         Text(
                             text = "Miembro Colaborador",
-                            fontSize = 12.sp,
-                            color = TealSecondary,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary,
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
 
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Outlined.Email,
                                     contentDescription = null,
-                                    tint = CoralPrimary,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(AppSpacing.iconProfile)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(AppSpacing.sm))
                                 Text(
                                     text = "Email de cuenta: ",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    style = MaterialTheme.typography.labelMedium
                                 )
                                 Text(
                                     text = currentUser.email,
-                                    fontSize = 13.sp
+                                    style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         }
@@ -144,32 +142,30 @@ fun ProfileScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = TealSecondary.copy(alpha = 0.12f))
+                    shape = AppShapes.content,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = AppOpacity.syncSurface))
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(AppSpacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Shield,
                             contentDescription = null,
-                            tint = TealSecondary,
-                            modifier = Modifier.size(32.dp)
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(AppSpacing.xl)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(AppSpacing.fieldGap))
                         Column {
                             Text(
                                 text = "Comunidad colaborativa",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = TealSecondary
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.secondary
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(AppSpacing.microGap))
                             Text(
                                 text = "El contacto entre dueno y reportero ocurre por chat interno. El email de cuenta no se muestra en fichas, chats ni notificaciones como metodo de contacto.",
-                                fontSize = 11.sp,
-                                lineHeight = 15.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -181,55 +177,52 @@ fun ProfileScreen(
             item {
                 Text(
                     text = "🐾 Mis Mascotas Publicadas (${myPosts.size})",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(top = 8.dp)
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = AppSpacing.sm)
                 )
             }
 
             if (myPosts.isEmpty()) {
                 item {
-                    Text(
-                        text = "No has publicado fichas con este usuario.",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.outline
+                    EmptyState(
+                        title = "Sin publicaciones",
+                        message = "No has publicado fichas con este usuario.",
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             } else {
                 items(myPosts, key = { it.id }) { pet ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = AppShapes.content
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier.padding(AppSpacing.compactCardPadding),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = pet.petName,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
                                     text = "Estado: ${pet.status}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
 
-                            Button(
+                            AppButton(
                                 onClick = {
                                     val newStatus = if (pet.status == "REUNIDO") "PERDIDO" else "REUNIDO"
                                     viewModel.updatePetStatus(pet.id, newStatus)
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (pet.status == "REUNIDO") MaterialTheme.colorScheme.surfaceVariant else ReunitedGreen
-                                )
+                                variant = if (pet.status == "REUNIDO") AppButtonVariant.Tonal else AppButtonVariant.Success,
+                                contentDescription = if (pet.status == "REUNIDO") "Reabrir publicación de ${pet.petName}" else "Marcar reunido ${pet.petName}"
                             ) {
                                 Text(
                                     text = if (pet.status == "REUNIDO") "Reabrir" else "¡Marcar Reunido!",
-                                    fontSize = 11.sp
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }

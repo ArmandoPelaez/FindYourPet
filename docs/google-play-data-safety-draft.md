@@ -21,6 +21,7 @@ Este borrador alinea la declaracion de Google Play con `app/src/main/AndroidMani
 - `android.permission.CAMERA`: requerido solo cuando el usuario toma una foto.
 - `android.permission.ACCESS_COARSE_LOCATION`: requerido solo cuando el usuario usa ubicacion aproximada.
 - `android.permission.ACCESS_FINE_LOCATION`: requerido solo cuando el usuario acepta ubicacion precisa.
+- `android.permission.POST_NOTIFICATIONS`: requerido para mostrar avisos locales de avistamientos y mensajes; si se deniega, la app continua sin esos avisos.
 
 ## Guardrails para completar Play Console
 

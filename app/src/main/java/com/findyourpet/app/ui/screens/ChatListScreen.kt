@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -14,18 +13,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.ui.components.EmptyState
 import com.findyourpet.app.ui.components.SyncStatusBanner
-import com.findyourpet.app.ui.theme.CoralPrimary
+import com.findyourpet.app.ui.theme.AppShapes
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -43,9 +40,11 @@ fun ChatListScreen(
     val context = LocalContext.current
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Conversaciones", fontWeight = FontWeight.Bold) },
+                windowInsets = WindowInsets.safeDrawing,
+                title = { Text("Conversaciones") },
                 navigationIcon = {
                     val navigateBack = onBackClick
                     if (navigateBack != null) {
@@ -61,6 +60,7 @@ fun ChatListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         ) {
             SyncStatusBanner(state = chatSessionsState)
             if (chatSessions.isEmpty()) {
@@ -68,33 +68,19 @@ fun ChatListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ChatBubbleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(56.dp),
-                            tint = MaterialTheme.colorScheme.outline
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Sin conversaciones activas",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = if (chatSessionsState.isLoading) "Cargando conversaciones." else "Cuando envies o recibas una alerta de avistamiento, se abrira una conversacion aqui.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    EmptyState(
+                        title = "Sin conversaciones activas",
+                        message = if (chatSessionsState.isLoading) "Cargando conversaciones." else "Cuando envies o recibas una alerta de avistamiento, se abrira una conversacion aqui.",
+                        icon = Icons.Outlined.ChatBubbleOutline,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(AppSpacing.lg),
+                    )
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(AppSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.listGap)
                 ) {
                     items(chatSessions, key = { it.id }) { session ->
                         ChatSessionCard(
@@ -124,11 +110,11 @@ fun ChatSessionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.content,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(AppSpacing.compactCardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
@@ -139,11 +125,11 @@ fun ChatSessionCard(
                 contentDescription = session.petName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(AppSpacing.avatarMedium)
                     .clip(CircleShape)
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(AppSpacing.fieldGap))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -153,51 +139,48 @@ fun ChatSessionCard(
                 ) {
                     Text(
                         text = "Mascota: ${session.petName}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        style = MaterialTheme.typography.titleSmall
                     )
                     Text(
                         text = formattedTime,
-                        fontSize = 10.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.microGap))
 
                 Text(
                     text = "Buscador: ${session.reporterName}",
-                    fontSize = 12.sp,
-                    color = CoralPrimary,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
                 if (session.lastMessage.isNotBlank()) {
                     Text(
                         text = session.lastMessage,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 2.dp)
+                        modifier = Modifier.padding(top = AppSpacing.microGap)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Chat,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(AppSpacing.iconExtraSmall)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
                     Text(
                         text = "Contacto por chat interno",
-                        fontSize = 10.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.Medium
                     )
                 }
             }

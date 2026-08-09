@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/ic_launcher_new"
-    android:insetLeft="18dp"
-    android:insetTop="18dp"
-    android:insetRight="18dp"
-    android:insetBottom="18dp" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        El recurso original es panoramico (2810x1504, relacion 1.87:1).
+        La caja 60x32 conserva esa relacion y evita deformar el logo.
+    -->
+    <item
+        android:drawable="@drawable/ic_launcher_new"
+        android:gravity="fill"
+        android:insetLeft="24dp"
+        android:insetRight="24dp"
+        android:insetTop="38dp"
+        android:insetBottom="38dp" />
+</layer-list>
