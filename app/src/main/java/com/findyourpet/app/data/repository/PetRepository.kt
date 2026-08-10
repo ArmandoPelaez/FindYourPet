@@ -313,19 +313,8 @@ class PetRepository(context: Context) {
             ownerId = resolvedOwnerId,
             reporterId = reporterId,
             reporterName = reporterName,
-            lastMessage = "Nuevo avistamiento reportado",
+            lastMessage = "",
             lastMessageTimestamp = timestamp
-        )
-        val systemMsg = ChatMessageEntity(
-            id = UUID.randomUUID().toString(),
-            chatId = chatId,
-            postId = postId,
-            senderId = reporterId,
-            senderName = reporterName,
-            text = "Nuevo avistamiento reportado. Abre el detalle para revisar la informacion autorizada.",
-            photoUri = uploadedPhoto.displayUrl.ifBlank { null },
-            timestamp = timestamp,
-            isSystemMessage = true
         )
         val notification = AppNotificationEntity(
             id = UUID.randomUUID().toString(),
@@ -340,7 +329,6 @@ class PetRepository(context: Context) {
         if (db == null) {
             petDao.insertSighting(sighting)
             petDao.insertChatSession(chatSession)
-            petDao.insertMessage(systemMsg)
             petDao.insertNotification(notification)
         } else {
             val chatRef = db.collection(BackendCollections.CHAT_SESSIONS).document(chatId)
@@ -358,10 +346,6 @@ class PetRepository(context: Context) {
                     )
                 )
                 batch.set(chatRef, chatSession.toDocument(), com.google.firebase.firestore.SetOptions.merge())
-                batch.set(
-                    chatRef.collection(BackendCollections.MESSAGES).document(systemMsg.id),
-                    systemMsg.toDocument()
-                )
                 batch.set(
                     db.collection(BackendCollections.USERS)
                         .document(resolvedOwnerId)
