@@ -1,6 +1,6 @@
 ---
 name: findyourpet-orchestrator
-description: Orquesta cambios OpenSpec para FindYourPet sin implementar código directamente.
+description: Orquesta cambios OpenSpec para FindYourPet a partir de un Scrum de Jira, preparando y sincronizando el repositorio antes de crear la rama y los artefactos del change, sin implementar código directamente.
 ---
 
 # Rol
@@ -32,81 +32,210 @@ FindYourPet es una app Android nativa con Kotlin, Jetpack Compose, Room, Firebas
 - FAILED
 - BLOCKED
 
-# Fuente De Verdad
+# Fuente de verdad y memoria operativa
 
-OpenSpec es la fuente de verdad para alcance, tareas y criterios.
-El orquestador no inventa tareas ni cambia alcance.
+OpenSpec es la fuente de verdad para alcance, decisiones, tareas y criterios de aceptación. El Scrum de Jira es la entrada funcional del cambio; no reemplaza los artefactos OpenSpec.
 
-Para cada change debe mantener un archivo de estado en:
+Para cada change mantener un archivo de estado en:
 
 `.codex/orchestration/<change>.md`
 
 Ese archivo registra:
-- estado actual
-- rama usada
-- comandos ejecutados
+
+- estado actual y fase del flujo
+- issue o referencia de Jira
+- Scrum recibido y decisiones de alcance
+- rama usada y comandos ejecutados
+- commits base local y remoto
 - evidencia por etapa
 - reporte del implementador
 - resultado de verificación
 - bloqueos o riesgos pendientes
+- estado de integración
+- `integration_status: PENDING|MERGED`
+- `integrated_commit:` cuando exista
+- `integration_evidence:` con PR, commit de merge o confirmación explícita del usuario
 
-# Ciclo De Ramas
+# Reglas no negociables
 
-El orquestador debe mantener una unica linea base de integracion: `origin/main`.
+- Ejecutar primero el preflight del repositorio. No leer ni convertir el Scrum en artefactos hasta verificar el estado local y la sincronización de `main`.
+- No crear commits automáticamente para limpiar el árbol. No usar `stash`, `reset`, `rebase`, `merge`, `push` ni borrar ramas sin autorización explícita.
+- No crear un change desde otra rama de trabajo.
+- Crear siempre la rama de trabajo desde `main` local ya sincronizada con `origin/main`, usando `ops/<change>`.
+- No inventar requisitos, tareas, criterios ni dependencias que no estén en Jira, en el repositorio o en la investigación técnica necesaria. Marcar las dudas y pedir aclaración.
+- No duplicar un change existente. Si ya existe el nombre, revisar su estado y pedir confirmación para continuarlo; no crear otra carpeta o rama equivalente.
+- No iniciar un nuevo change si existe otro change activo en estado `PASSED_PENDING_INTEGRATION`, `IMPLEMENTING`, `READY_FOR_VERIFICATION` o `VERIFYING`, salvo autorización explícita de trabajo paralelo.
+- No declarar `INTEGRATED` solo porque pasen los tests: debe existir evidencia de integración en `main`.
 
-Reglas obligatorias:
+# Flujo obligatorio completo
 
-- Nunca crear un change desde otra rama de trabajo.
-- Nunca crear un change si el arbol tiene cambios sin commit.
-- Antes de crear una rama, actualizar `origin/main` y sincronizar `main` local mediante fast-forward.
-- Verificar que `main` local y `origin/main` apunten al mismo commit.
-- Crear la rama siempre desde `origin/main` usando `ops/<change>`.
-- No iniciar un nuevo change si existe otro change activo en estado `PASSED_PENDING_INTEGRATION`, `IMPLEMENTING`, `READY_FOR_VERIFICATION` o `VERIFYING`, salvo autorizacion explicita de trabajo paralelo.
-- No hacer `push`, merge, rebase, stash, reset ni borrar ramas automaticamente sin autorizacion explicita.
-
-Secuencia obligatoria antes de crear una rama:
+Las siguientes etapas son la única secuencia autorizada. Las secciones posteriores describen el detalle de cada etapa y no deben repetirse en otro orden.
 
 ```text
-git status --porcelain
-git fetch origin --prune
+1. PREFLIGHT_REPOSITORY
+2. SYNC_MAIN_AND_REVIEW_UNMERGED_BRANCHES
+3. RECEIVE_AND_NORMALIZE_JIRA_SCRUM
+4. CREATE_CHANGE_BRANCH_FROM_MAIN
+5. GENERATE_OPENSPEC_ARTIFACTS
+6. VALIDATE_CHANGE_AND_HANDOFF
+7. IMPLEMENTING
+8. VERIFYING
+9. PASSED_PENDING_INTEGRATION / FAILED / BLOCKED
+10. INTEGRATED after authorized merge and main synchronization
+```
+
+## 1. Preflight inicial del repositorio
+
+Esta es siempre la primera acción del skill. Su objetivo es evitar perder cambios locales o trabajar sobre una base contaminada.
+
+Ejecutar:
+
+```text
+git status --short --branch
+git status --porcelain=v1
+```
+
+Comentario operativo: `git status --porcelain=v1` debe devolver exactamente vacío. Esto incluye cambios rastreados, archivos sin seguimiento y archivos preparados; no considerar la rama limpia si queda cualquier salida.
+
+Si el árbol no está limpio, detener el flujo y marcar `BLOCKED` con la lista de archivos y la evidencia. No cambiar de rama, no crear la rama de trabajo y no modificar esos archivos. Solicitar al usuario que confirme si desea comitear, descartar o apartar esos cambios.
+
+Si el árbol está limpio, registrar la salida, la rama actual y el estado `PREFLIGHT` en `.codex/orchestration/<change>.md` cuando ya exista un nombre de change. Si todavía no existe un nombre, conservar la evidencia en la respuesta operativa y crear el archivo de estado inmediatamente después de derivar el nombre desde Jira.
+
+## 2. Sincronizar `main` y revisar ramas no integradas
+
+Solo después de confirmar el árbol limpio, preparar la base de integración:
+
+```text
 git switch main
+git fetch origin --prune
 git pull --ff-only origin main
 git rev-parse main
 git rev-parse origin/main
-git switch -c ops/<change> origin/main
+git status --short --branch
+git branch --no-merged main
+git branch -r --no-merged origin/main
 ```
 
-Si el arbol no esta limpio, `git pull --ff-only` falla o los hashes de `main` y `origin/main` son diferentes, detener el preflight y marcar `BLOCKED` con la evidencia.
+Comentario operativo: `git pull --ff-only` permite actualizar `main` sin crear un merge implícito. Los dos comandos `rev-parse` deben devolver el mismo commit y `main` debe quedar limpia.
 
-El archivo `.codex/orchestration/<change>.md` debe registrar tambien:
+Comentario operativo: las listas `--no-merged` permiten detectar ramas locales o remotas que todavía no fueron incorporadas a `main`. Revisar cada rama candidata contra `.codex/orchestration/` y los changes OpenSpec. No borrar ni integrar ramas automáticamente.
+
+Si ocurre cualquiera de estas condiciones, detener y marcar `BLOCKED` con evidencia:
+
+- el cambio a `main` no es posible
+- `git fetch` falla
+- `git pull --ff-only origin main` falla por divergencia o commits locales
+- `main` y `origin/main` apuntan a commits distintos después de actualizar
+- `main` queda sucia
+- existe una rama de un change anterior que no está integrada y su estado es desconocido o activo
+
+Una rama no integrada que esté explícitamente documentada como trabajo activo requiere autorización de trabajo paralelo antes de continuar. No asumir que una rama vieja fue mergeada solo por su nombre.
+
+Registrar en `.codex/orchestration/<change>.md`:
 
 - `base_branch: main`
-- `base_commit:`
-- `remote_base_commit:`
-- `integration_status: PENDING|MERGED`
-- `integrated_commit:` cuando exista
-- `integration_evidence:` con PR, commit de merge o confirmacion explicita del usuario
+- `base_commit: <hash de main>`
+- `remote_base_commit: <hash de origin/main>`
+- salida de las listas de ramas no integradas
+- comandos, resultados y decisiones del sync
 
-# Preflight
+## 3. Recibir y normalizar el Scrum de Jira
 
-Para un cambio `<change>` ejecutar:
+Esta etapa comienza únicamente después de que el repositorio local y `origin/main` estén verificados. Recibir el Scrum desde el mensaje del usuario o desde una integración de Jira disponible; si no está disponible, pedir que el usuario lo proporcione y no inventar contenido.
 
-1. Crear `.codex/orchestration/<change>.md` si no existe.
-2. Si existe, leerlo y usarlo como memoria operativa.
-3. Registrar estado `PREFLIGHT`.
-4. `openspec list --json`
-5. `openspec status --change "<change>" --json`
-6. Verificar proposal/design/tasks/specs.
-7. `openspec validate "<change>" --strict`
-8. Ejecutar `git status --porcelain` y confirmar que el arbol esta limpio.
-9. Ejecutar `git fetch origin --prune`.
-10. Cambiar a `main` y ejecutar `git pull --ff-only origin main`.
-11. Comparar `git rev-parse main` contra `git rev-parse origin/main`.
-12. Revisar estados de otros changes en `.codex/orchestration/` y bloquear si existe un change activo pendiente de integracion.
-13. Crear o verificar la rama `ops/<change>` desde `origin/main`.
-14. Registrar comandos ejecutados, commits base, resultados y evidencia del preflight en `.codex/orchestration/<change>.md`.
+Extraer y registrar como mínimo:
 
-# Puerta De Integracion
+- clave y título del issue
+- descripción funcional
+- criterios de aceptación
+- prioridad y dependencias
+- restricciones técnicas o de diseño
+- adjuntos, enlaces o referencias relevantes
+- dudas, supuestos y puntos fuera de alcance
+
+Comentario operativo: el Scrum define el problema y el alcance inicial. Antes de generar archivos, contrastar lo recibido con el código, la configuración, las especificaciones existentes y `docs/design-system.md` si el cambio es visual. No implementar durante esta etapa.
+
+Derivar un nombre único en kebab-case para `<change>`. Ejecutar:
+
+```text
+openspec list --json
+```
+
+Revisar si ya existe el change, una carpeta de orquestación o una rama `ops/<change>` equivalente. Si existe, detener la creación de duplicados y pedir confirmación para continuar ese change o elegir otro nombre.
+
+## 4. Crear la rama desde `main`
+
+Solo cuando `main` y `origin/main` estén sincronizadas, el árbol siga limpio y no haya conflicto con otro change activo:
+
+```text
+git switch -c ops/<change> main
+git rev-parse HEAD
+```
+
+Comentario operativo: la rama se crea desde `main`, no desde la rama en la que comenzó la conversación. Como `main` fue comparada con `origin/main`, el `HEAD` de la nueva rama debe coincidir con `base_commit`.
+
+Crear o completar `.codex/orchestration/<change>.md` en la rama nueva y registrar el issue de Jira, la rama, los commits base, el estado `PREFLIGHT` y toda la evidencia previa.
+
+## 5. Generar los artefactos OpenSpec desde Jira
+
+Usar el Scrum normalizado como entrada del change. No crear los artefactos a mano con una estructura inventada: seguir el orden y las instrucciones que entregue el CLI.
+
+Ejecutar:
+
+```text
+openspec new change "<change>"
+openspec status --change "<change>" --json
+```
+
+Leer el `status` para obtener `applyRequires`, dependencias, `planningHome`, `changeRoot`, `artifactPaths` y el orden de creación. Para cada artefacto listo:
+
+```text
+openspec instructions <artifact-id> --change "<change>" --json
+```
+
+Crear cada archivo en `resolvedOutputPath`, respetando `template`, `instruction`, `context` y `rules`. Leer los artefactos dependientes antes de generar el siguiente y verificar que cada archivo exista. Continuar hasta que todos los artefactos requeridos por `applyRequires` estén completos.
+
+Como mínimo, cuando el esquema del proyecto los requiera, generar:
+
+- `proposal.md`: qué se cambia, por qué y qué queda fuera de alcance
+- `design.md`: decisiones, arquitectura, componentes afectados, riesgos y alternativas
+- `specs/**/spec.md`: requisitos y escenarios verificables derivados del Scrum
+- `tasks.md`: tareas concretas, ordenadas y trazables a los requisitos
+
+Comentario operativo: no copiar bloques internos de contexto o reglas del CLI dentro de los artefactos. Traducir el Scrum a requisitos verificables; no agregar trabajo ajeno al issue. Si hay una ambigüedad crítica, detener la generación y pedir aclaración.
+
+Después de cada artefacto, volver a ejecutar `openspec status --change "<change>" --json` y registrar el progreso. Al terminar, ejecutar:
+
+```text
+openspec status --change "<change>"
+openspec validate "<change>" --strict
+```
+
+Si ya existe un artefacto parcial de ese mismo change, leerlo y continuarlo; no sobrescribirlo ni crear una segunda versión sin autorización.
+
+## 6. Validar el change y entregar el handoff
+
+Actualizar `.codex/orchestration/<change>.md` con los artefactos generados, el resultado de `openspec validate`, las dudas resueltas y los riesgos pendientes.
+
+Si OpenSpec valida y el alcance está claro, cambiar a `READY_FOR_IMPLEMENTATION` y delegar:
+
+1. Usar `findyourpet-implementer` si hay capacidad de subagentes.
+2. Si no hay subagentes, emitir el handoff mínimo como fallback.
+3. No duplicar tareas, artefactos ni contexto OpenSpec en el handoff.
+
+Comentario operativo: el handoff debe apuntar al change y a los artefactos ya validados; no repetir el Scrum ni generar una lista paralela de tareas.
+
+Formato del handoff:
+
+```text
+Usa la skill findyourpet-implementer.
+
+Change: <change>
+Issue Jira: <clave>
+Implementa solo ese cambio OpenSpec.
+```
+
+# Puerta de integración
 
 Despues de completar la verificacion final, el change debe quedar en `PASSED_PENDING_INTEGRATION`, no directamente como integrado.
 
@@ -124,25 +253,7 @@ Para cerrar la integracion:
 
 La rama de trabajo solo puede eliminarse despues de confirmar la integracion y con autorizacion del usuario.
 
-# Delegación Al Implementador
-
-Cuando el cambio pase preflight:
-
-1. Actualizar `.codex/orchestration/<change>.md` a `READY_FOR_IMPLEMENTATION`.
-2. Delegar a `findyourpet-implementer` si hay capacidad de subagentes disponible.
-3. Si no hay subagentes disponibles, emitir el handoff mínimo como fallback.
-4. No duplicar tareas, artifacts ni contexto OpenSpec en el handoff.
-
-Formato del handoff:
-
-Usa la skill findyourpet-implementer.
-
-Handoff minimo:
-Change: `<change>`
-
-Implementa solo ese cambio OpenSpec.
-
-# Ciclo De Ejecución
+# Ciclo de ejecución posterior al handoff
 
 El orquestador debe intentar cerrar el change completo:
 
@@ -196,6 +307,11 @@ Si una validación falla:
 # Bloqueos
 
 Marcar BLOCKED cuando:
+- el repositorio inicial está sucio
+- no se puede cambiar a main o actualizarla mediante fast-forward
+- main y origin/main no quedan sincronizadas
+- existe una rama o change anterior no integrado cuyo estado no puede verificarse
+- falta el Scrum de Jira o una aclaración crítica de alcance
 - falta una credencial, secreto, cuenta externa o dispositivo
 - una tarea requiere Firebase/Google Play/emulador físico no disponible
 - OpenSpec es ambiguo o contradictorio
