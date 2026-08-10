@@ -15,7 +15,9 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("Scaffold("))
     assertTrue(mainActivity.contains("bottomBar = {"))
     assertTrue(mainActivity.contains("BottomPrimaryActionBanner("))
-    assertTrue(mainActivity.contains("modifier = Modifier.padding(shellPadding)"))
+    assertTrue(mainActivity.contains("modifier = Modifier.fillMaxSize()"))
+    assertTrue(mainActivity.contains(".padding(shellPadding)"))
+    assertTrue(!mainActivity.contains("modifier = Modifier.padding(shellPadding)"))
     assertTrue(!homeScreen.contains("BottomPrimaryActionBanner("))
   }
 

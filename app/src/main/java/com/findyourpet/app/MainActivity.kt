@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -101,7 +102,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
         NavHost(
             navController = navController,
             startDestination = ROUTE_HOME,
-            modifier = Modifier.padding(shellPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
             composable(ROUTE_HOME) {
                 HomeScreen(
@@ -112,11 +113,17 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(ROUTE_CREATE) {
-                CreatePetPostScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onPostCreated = { navController.popBackStack() }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    CreatePetPostScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() },
+                        onPostCreated = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(
@@ -124,14 +131,20 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 arguments = listOf(navArgument("postId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val postId = backStackEntry.arguments?.getString("postId") ?: ""
-                SightingAlertScreen(
-                    viewModel = viewModel,
-                    postId = postId,
-                    onBackClick = { navController.popBackStack() },
-                    onAlertSent = {
-                        navController.navigateToPrimaryDestination(ROUTE_HOME)
-                    }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    SightingAlertScreen(
+                        viewModel = viewModel,
+                        postId = postId,
+                        onBackClick = { navController.popBackStack() },
+                        onAlertSent = {
+                            navController.navigateToPrimaryDestination(ROUTE_HOME)
+                        }
+                    )
+                }
             }
 
             composable(
@@ -139,32 +152,56 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 arguments = listOf(navArgument("chatId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-                ChatDetailScreen(
-                    viewModel = viewModel,
-                    chatId = chatId,
-                    onBackClick = { navController.popBackStack() }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    ChatDetailScreen(
+                        viewModel = viewModel,
+                        chatId = chatId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(ROUTE_CHATS) {
-                ChatListScreen(
-                    viewModel = viewModel,
-                    onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    ChatListScreen(
+                        viewModel = viewModel,
+                        onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
+                    )
+                }
             }
 
             composable(ROUTE_NOTIFICATIONS) {
-                NotificationsScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onNotificationClick = { targetId ->
-                        navController.navigate(chatDetailRoute(targetId))
-                    }
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    NotificationsScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() },
+                        onNotificationClick = { targetId ->
+                            navController.navigate(chatDetailRoute(targetId))
+                        }
+                    )
+                }
             }
 
             composable(ROUTE_PROFILE) {
-                ProfileScreen(viewModel = viewModel)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(shellPadding)
+                ) {
+                    ProfileScreen(viewModel = viewModel)
+                }
             }
         }
     }

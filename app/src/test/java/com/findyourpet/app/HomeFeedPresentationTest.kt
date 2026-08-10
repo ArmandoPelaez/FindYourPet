@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.ui.screens.PetPostCard
@@ -104,6 +105,41 @@ class HomeFeedPresentationTest {
     composeTestRule.onAllNodesWithText("Color").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Señas").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(0)
+  }
+
+  @Test
+  fun petPostCard_compactPhoneViewport_canScrollFinalActionsIntoView() {
+    composeTestRule.setContent {
+      MascotasPerdidasTheme {
+        Box(
+          modifier = Modifier
+            .width(360.dp)
+            .height(640.dp)
+        ) {
+          PetPostCard(
+            post = samplePost(),
+            canReportSighting = true,
+            onAlertClick = {}
+          )
+        }
+      }
+    }
+
+    composeTestRule.onNodeWithText("Compartir")
+      .performScrollTo()
+      .assertIsDisplayed()
+  }
+
+  @Test
+  fun petPostCard_hasNoOuterFloatingCardSurface() {
+    val homeSource = File(repoRoot(), "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+    val cardSource = homeSource
+      .substringAfter("fun PetPostCard(")
+      .substringBefore("@Composable\nprivate fun PetIdentitySection")
+
+    assertFalse(cardSource.contains("AppElevation.card"))
+    assertFalse(cardSource.contains("shape = AppShapes.card"))
+    assertTrue(cardSource.contains("Column(\n        modifier = Modifier.fillMaxSize(),"))
   }
 
   @Test
