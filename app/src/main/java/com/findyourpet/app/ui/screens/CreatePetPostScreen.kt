@@ -6,10 +6,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Publish
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,17 +48,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.FormPhotoUploadSurface
+import com.findyourpet.app.ui.components.FormSectionTitle
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
@@ -196,70 +190,32 @@ fun CreatePetPostScreen(
                 .padding(AppSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            Surface(
-                shape = AppShapes.content,
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(AppSpacing.borderWidth, MaterialTheme.colorScheme.outline),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(AppSpacing.mediaHeight)
-                    .clip(AppShapes.content)
-                    .clickable { showPhotoOptions = true }
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (photoUri.isBlank()) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(AppSpacing.lg)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.CameraAlt,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(AppSpacing.iconLarge)
-                            )
-                            Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
-                            Text(
-                                text = "Toca para agregar foto",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(modifier = Modifier.height(AppSpacing.sm))
-                            Text(
-                                text = "Elige una foto desde galería o toma una nueva",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    } else {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context).data(photoUri).crossfade(true).build(),
-                            contentDescription = "Foto de la mascota",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+            FormPhotoUploadSurface(
+                selectedPhotoUri = photoUri,
+                emptyTitle = "Toca para agregar foto",
+                emptyDescription = "Elige una foto desde galería o toma una nueva",
+                photoContentDescription = "Foto de la mascota",
+                onSurfaceClick = { showPhotoOptions = true },
+                testTag = "create-post-photo-upload-surface",
+                selectedContent = {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.mediaOverlay),
+                        shape = AppShapes.chip,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(AppSpacing.mediaOverlayPadding)
+                    ) {
+                        Text(
+                            text = "Toca para cambiar la foto",
+                            modifier = Modifier.padding(horizontal = AppSpacing.compactCardPadding, vertical = AppSpacing.sm),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Surface(
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.mediaOverlay),
-                            shape = AppShapes.chip,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(AppSpacing.mediaOverlayPadding)
-                        ) {
-                            Text(
-                                text = "Toca para cambiar la foto",
-                                modifier = Modifier.padding(horizontal = AppSpacing.compactCardPadding, vertical = AppSpacing.sm),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
                     }
                 }
-            }
+            )
 
-            Text(text = "Datos de la Mascota", style = MaterialTheme.typography.titleSmall)
+            FormSectionTitle(text = "Datos de la Mascota")
 
             OutlinedTextField(
                 value = petName,
@@ -291,7 +247,7 @@ fun CreatePetPostScreen(
                 )
             )
 
-            Text(text = "Ubicacion", style = MaterialTheme.typography.titleSmall)
+            FormSectionTitle(text = "Ubicacion")
 
             OutlinedTextField(
                 value = lastSeenLocation,

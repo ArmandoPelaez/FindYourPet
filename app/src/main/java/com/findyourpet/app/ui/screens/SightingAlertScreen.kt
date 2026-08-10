@@ -6,14 +6,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +31,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,11 +38,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,14 +55,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.findyourpet.app.data.location.DeviceLocationProvider
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
@@ -72,7 +66,10 @@ import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.FormPhotoUploadSurface
+import com.findyourpet.app.ui.components.FormSectionTitle
 import com.findyourpet.app.ui.theme.AppElevation
+import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
@@ -118,7 +115,7 @@ fun SightingAlertScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = "Alerta de Avistamiento", color = MaterialTheme.colorScheme.error) },
+                    title = { Text(text = "Alerta de Avistamiento") },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -164,6 +161,7 @@ fun SightingAlertScreen(
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     var formMessage by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var showPhotoOptions by remember { mutableStateOf(false) }
     val authMessage by viewModel.authMessage.collectAsState()
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -230,6 +228,20 @@ fun SightingAlertScreen(
         }
     }
 
+    if (showPhotoOptions) {
+        SightingPhotoOptionsSheet(
+            onDismissRequest = { showPhotoOptions = false },
+            onGalleryClick = {
+                showPhotoOptions = false
+                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            },
+            onCameraClick = {
+                showPhotoOptions = false
+                launchCamera()
+            }
+        )
+    }
+
     fun requestCurrentLocation() {
         val permissions = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -286,7 +298,7 @@ fun SightingAlertScreen(
         topBar = {
             TopAppBar(
                 windowInsets = WindowInsets.safeDrawing,
-                title = { Text(text = "Alerta de Avistamiento", color = MaterialTheme.colorScheme.error) },
+                title = { Text(text = "Alerta de Avistamiento") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -315,6 +327,7 @@ fun SightingAlertScreen(
             formMessage = formMessage,
             onGalleryClick = { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
             onCameraClick = { launchCamera() },
+            onPhotoSurfaceClick = { showPhotoOptions = true },
             onLocationClick = { requestCurrentLocation() },
             onLocationNameChange = {
                 locationName = it
@@ -343,6 +356,7 @@ fun SightingAlertAdaptiveContent(
     formMessage: String?,
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
+    onPhotoSurfaceClick: () -> Unit = {},
     onLocationClick: () -> Unit,
     onLocationNameChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
@@ -389,8 +403,7 @@ fun SightingAlertAdaptiveContent(
                     notes = notes,
                     authMessage = authMessage,
                     formMessage = formMessage,
-                    onGalleryClick = onGalleryClick,
-                    onCameraClick = onCameraClick,
+                    onPhotoSurfaceClick = onPhotoSurfaceClick,
                     onLocationClick = onLocationClick,
                     onLocationNameChange = onLocationNameChange,
                     onNotesChange = onNotesChange
@@ -408,20 +421,39 @@ private fun ColumnScope.SightingAlertDetails(
     notes: String,
     authMessage: String?,
     formMessage: String?,
-    onGalleryClick: () -> Unit,
-    onCameraClick: () -> Unit,
+    onPhotoSurfaceClick: () -> Unit,
     onLocationClick: () -> Unit,
     onLocationNameChange: (String) -> Unit,
     onNotesChange: (String) -> Unit
 ) {
-    Text("Foto del avistamiento (opcional)", style = MaterialTheme.typography.titleSmall)
-    SightingPhotoUploadSurface(
+    FormSectionTitle("Foto del avistamiento (opcional)")
+    FormPhotoUploadSurface(
         selectedPhotoUri = selectedPhotoUri,
-        onGalleryClick = onGalleryClick,
-        onCameraClick = onCameraClick
+        emptyTitle = "Toca para agregar foto opcional",
+        photoContentDescription = "Foto del avistamiento",
+        onSurfaceClick = onPhotoSurfaceClick,
+        testTag = "sighting-photo-upload-surface",
+        emptyStateTestTag = "sighting-photo-empty-state",
+        selectedPhotoTestTag = "sighting-attachment-photo",
+        selectedContent = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.mediaOverlay),
+                shape = AppShapes.chip,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(AppSpacing.mediaOverlayPadding)
+            ) {
+                Text(
+                    text = "Toca para cambiar la foto",
+                    modifier = Modifier.padding(horizontal = AppSpacing.compactCardPadding, vertical = AppSpacing.sm),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     )
 
-    Text("Ubicacion del avistamiento", style = MaterialTheme.typography.titleSmall)
+    FormSectionTitle("Ubicacion del avistamiento")
     OutlinedTextField(
         value = locationName,
         onValueChange = onLocationNameChange,
@@ -442,7 +474,7 @@ private fun ColumnScope.SightingAlertDetails(
         Text(if (locationSource == LocationSource.DEVICE_GPS) "Ubicacion GPS capturada" else "Usar ubicacion actual")
     }
 
-    Text("Detalles adicionales", style = MaterialTheme.typography.titleSmall)
+    FormSectionTitle("Detalles adicionales")
     OutlinedTextField(
         value = notes,
         onValueChange = onNotesChange,
@@ -467,105 +499,40 @@ private fun ColumnScope.SightingAlertDetails(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SightingPhotoUploadSurface(
-    selectedPhotoUri: String,
+fun SightingPhotoOptionsSheet(
+    onDismissRequest: () -> Unit,
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    Surface(
-        shape = AppShapes.content,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(AppSpacing.borderWidth, MaterialTheme.colorScheme.outline),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(AppSpacing.mediaHeight)
-            .clip(AppShapes.content)
-            .clickable(onClick = onGalleryClick)
-            .testTag("sighting-photo-upload-surface")
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (selectedPhotoUri.isBlank()) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(AppSpacing.lg)
-                        .testTag("sighting-photo-empty-state")
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CameraAlt,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(AppSpacing.iconLarge)
-                    )
-                    Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
-                    Text(
-                        text = "Toca para agregar foto opcional",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.height(AppSpacing.sm))
-                    SightingPhotoActions(
-                        galleryLabel = "Galeria",
-                        cameraLabel = "Camara",
-                        onGalleryClick = onGalleryClick,
-                        onCameraClick = onCameraClick
-                    )
-                }
-            } else {
-                AsyncImage(
-                    model = ImageRequest.Builder(context).data(selectedPhotoUri).crossfade(true).build(),
-                    contentDescription = "Foto del avistamiento",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("sighting-attachment-photo")
-                )
-                SightingPhotoActions(
-                    galleryLabel = "Cambiar",
-                    cameraLabel = "Camara",
-                    onGalleryClick = onGalleryClick,
-                    onCameraClick = onCameraClick,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(AppSpacing.mediaOverlayPadding)
-                )
+        Column(
+            modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+        ) {
+            Text("Agregar foto", style = MaterialTheme.typography.titleMedium)
+            AppButton(
+                onClick = onGalleryClick,
+                modifier = Modifier.fillMaxWidth(),
+                variant = AppButtonVariant.Outlined,
+            ) {
+                Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                Text("Elegir de la galería")
             }
-        }
-    }
-}
-
-@Composable
-private fun SightingPhotoActions(
-    galleryLabel: String,
-    cameraLabel: String,
-    onGalleryClick: () -> Unit,
-    onCameraClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm), modifier = modifier) {
-        AppButton(
-            onClick = onGalleryClick,
-            modifier = Modifier.testTag("sighting-gallery-action"),
-            variant = AppButtonVariant.Outlined,
-            contentDescription = galleryLabel,
-        ) {
-            Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
-            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
-            Text(galleryLabel)
-        }
-        AppButton(
-            onClick = onCameraClick,
-            modifier = Modifier.testTag("sighting-camera-action"),
-            variant = AppButtonVariant.Outlined,
-            contentDescription = cameraLabel,
-        ) {
-            Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
-            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
-            Text(cameraLabel)
+            AppButton(
+                onClick = onCameraClick,
+                modifier = Modifier.fillMaxWidth(),
+                variant = AppButtonVariant.Outlined,
+            ) {
+                Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                Text("Tomar foto con la cámara")
+            }
         }
     }
 }
@@ -582,9 +549,9 @@ fun SightingSubmitActionBar(
             .fillMaxWidth()
             .navigationBarsPadding()
             .testTag("sighting-bottom-action-bar"),
-        tonalElevation = AppElevation.card,
-        shadowElevation = AppElevation.card + AppSpacing.sm,
-        color = MaterialTheme.colorScheme.surface
+        tonalElevation = AppElevation.subtle,
+        shadowElevation = AppElevation.subtle,
+        color = MaterialTheme.colorScheme.background
     ) {
         Box(
             modifier = Modifier
@@ -598,9 +565,8 @@ fun SightingSubmitActionBar(
                 modifier = Modifier
                     .widthIn(max = AppSpacing.submitMaxWidth)
                     .fillMaxWidth()
-                    .height(AppSpacing.submitButtonHeight)
                     .testTag("sighting-primary-action"),
-                variant = AppButtonVariant.Danger,
+                variant = AppButtonVariant.Primary,
                 contentDescription = "Enviar alerta",
             ) {
                 if (isSubmitting) {

@@ -25,3 +25,4 @@ my-upload-key.jks
 *.keystore
 .artifacts/task.artifact.md
 .artifacts/walkthrough.artifact.md
+.venv.disabled/

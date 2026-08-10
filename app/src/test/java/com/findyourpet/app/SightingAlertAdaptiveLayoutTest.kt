@@ -40,8 +40,8 @@ class SightingAlertAdaptiveLayoutTest {
     composeTestRule.onNodeWithTag("sighting-layout-compact").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sighting-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("sighting-photo-empty-state", useUnmergedTree = true).assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("sighting-gallery-action").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("sighting-gallery-action").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(0)
     composeTestRule.onNodeWithText("Ubicacion del avistamiento").assertIsDisplayed()
     composeTestRule.onNodeWithText("Usar ubicacion actual").assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("sighting-media-header").assertCountEquals(0)
@@ -72,23 +72,20 @@ class SightingAlertAdaptiveLayoutTest {
   }
 
   @Test
-  fun adaptiveContent_keepsOptionalPhotoActionsTappable() {
-    var galleryClicks = 0
-    var cameraClicks = 0
+  fun adaptiveContent_opensExternalPhotoSelectionFromSurface() {
+    var surfaceClicks = 0
 
     renderAdaptiveContent(
       width = 360,
       height = 720,
-      onGalleryClick = { galleryClicks++ },
-      onCameraClick = { cameraClicks++ }
+      onPhotoSurfaceClick = { surfaceClicks++ }
     )
 
     composeTestRule.onNodeWithTag("sighting-photo-upload-surface").performClick()
-    composeTestRule.onNodeWithTag("sighting-gallery-action").performClick()
-    composeTestRule.onNodeWithTag("sighting-camera-action").performClick()
 
-    assertEquals(2, galleryClicks)
-    assertEquals(1, cameraClicks)
+    assertEquals(1, surfaceClicks)
+    composeTestRule.onAllNodesWithTag("sighting-gallery-action").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(0)
   }
 
   @Test
@@ -101,8 +98,11 @@ class SightingAlertAdaptiveLayoutTest {
 
     composeTestRule.onNodeWithTag("sighting-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("sighting-attachment-photo", useUnmergedTree = true).assertCountEquals(1)
-    composeTestRule.onAllNodesWithText("Cambiar").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Toca para cambiar la foto").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Galeria").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("Camara").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-gallery-action").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("sighting-camera-action").assertCountEquals(0)
     composeTestRule.onAllNodesWithTag("sighting-photo-empty-state", useUnmergedTree = true).assertCountEquals(0)
   }
 
@@ -143,7 +143,8 @@ class SightingAlertAdaptiveLayoutTest {
     height: Int,
     selectedPhotoUri: String = "",
     onGalleryClick: () -> Unit = {},
-    onCameraClick: () -> Unit = {}
+    onCameraClick: () -> Unit = {},
+    onPhotoSurfaceClick: () -> Unit = {}
   ) {
     composeTestRule.setContent {
       MascotasPerdidasTheme {
@@ -157,6 +158,7 @@ class SightingAlertAdaptiveLayoutTest {
             formMessage = null,
             onGalleryClick = onGalleryClick,
             onCameraClick = onCameraClick,
+            onPhotoSurfaceClick = onPhotoSurfaceClick,
             onLocationClick = {},
             onLocationNameChange = {},
             onNotesChange = {},
