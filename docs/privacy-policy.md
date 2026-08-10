@@ -27,6 +27,7 @@ FindYourPet ayuda a publicar mascotas perdidas, reportar avistamientos y comunic
 - Internet: conectar la app con Firebase, Cloudinary y servicios asociados.
 - Camara: tomar fotos para publicaciones o avistamientos cuando el usuario elige esa accion.
 - Ubicacion aproximada y precisa: completar la referencia del avistamiento o publicacion cuando el usuario acepta usar su ubicacion actual.
+- Notificaciones: mostrar avisos locales de avistamientos y mensajes cuando el usuario concede el permiso.
 
 Si un permiso se deniega, la app debe permitir continuar con alternativas manuales cuando el flujo lo admita.
 

@@ -13,14 +13,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,19 +31,19 @@ import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Publish
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,20 +53,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
-import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.TealSecondary
+import com.findyourpet.app.ui.components.AppButton
+import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.theme.AppOpacity
+import com.findyourpet.app.ui.theme.AppShapes
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,6 +88,7 @@ fun CreatePetPostScreen(
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     var formMessage by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var showPhotoOptions by remember { mutableStateOf(false) }
     val authMessage by viewModel.authMessage.collectAsState()
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -133,10 +135,50 @@ fun CreatePetPostScreen(
         }
     }
 
+    if (showPhotoOptions) {
+        ModalBottomSheet(
+            onDismissRequest = { showPhotoOptions = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+            ) {
+                Text("Agregar foto", style = MaterialTheme.typography.titleMedium)
+                AppButton(
+                    onClick = {
+                        showPhotoOptions = false
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = AppButtonVariant.Outlined,
+                ) {
+                    Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
+                    Text("Elegir de la galería")
+                }
+                AppButton(
+                    onClick = {
+                        showPhotoOptions = false
+                        launchCamera()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = AppButtonVariant.Outlined,
+                ) {
+                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
+                    Text("Tomar foto con la cámara")
+                }
+            }
+        }
+    }
+
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text("Publicar Mascota Perdida", fontWeight = FontWeight.Bold) },
+                windowInsets = WindowInsets.safeDrawing,
+                title = { Text("Publicar Mascota Perdida") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -149,23 +191,20 @@ fun CreatePetPostScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.content,
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                border = BorderStroke(AppSpacing.borderWidth, MaterialTheme.colorScheme.outline),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable {
-                        galleryLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    }
+                    .height(AppSpacing.mediaHeight)
+                    .clip(AppShapes.content)
+                    .clickable { showPhotoOptions = true }
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (photoUri.isBlank()) {
@@ -174,47 +213,26 @@ fun CreatePetPostScreen(
                             verticalArrangement = Arrangement.Center,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp)
+                                .padding(AppSpacing.lg)
                         ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Filled.CameraAlt,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(42.dp)
-                                )
-                                Icon(
-                                    imageVector = Icons.Filled.PhotoLibrary,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(42.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Icon(
+                                imageVector = Icons.Filled.CameraAlt,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(AppSpacing.iconLarge)
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
                             Text(
                                 text = "Toca para agregar foto",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 15.sp
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.titleMedium
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(
-                                    onClick = {
-                                        galleryLauncher.launch(
-                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                        )
-                                    }
-                                ) {
-                                    Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Galeria")
-                                }
-                                OutlinedButton(onClick = { launchCamera() }) {
-                                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Camara")
-                                }
-                            }
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            Text(
+                                text = "Elige una foto desde galería o toma una nueva",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     } else {
                         AsyncImage(
@@ -223,58 +241,57 @@ fun CreatePetPostScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.mediaOverlay),
+                            shape = AppShapes.chip,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(12.dp)
+                                .padding(AppSpacing.mediaOverlayPadding)
                         ) {
-                            OutlinedButton(
-                                onClick = {
-                                    galleryLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                    )
-                                }
-                            ) {
-                                Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Cambiar")
-                            }
-                            OutlinedButton(onClick = { launchCamera() }) {
-                                Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Camara")
-                            }
+                            Text(
+                                text = "Toca para cambiar la foto",
+                                modifier = Modifier.padding(horizontal = AppSpacing.compactCardPadding, vertical = AppSpacing.sm),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
                         }
                     }
                 }
             }
 
-            Text(text = "Datos de la Mascota", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(text = "Datos de la Mascota", style = MaterialTheme.typography.titleSmall)
 
             OutlinedTextField(
                 value = petName,
                 onValueChange = { petName = it },
                 placeholder = { Text("Nombre de la mascota (Ej. Toby, Mia)") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = AppShapes.chip,
                 singleLine = true
             )
 
             OutlinedTextField(
                 value = recognitionDetails,
                 onValueChange = { recognitionDetails = it },
-                placeholder = {
-                    Text("Mas detalles utiles para reconocerla (ej. color, senas particulares, collar, temperamento)")
+                label = { Text("Detalles adicionales") },
+                supportingText = {
+                    Text("Mas detalles utiles para reconocerla. Ej. color, señas particulares, collar o temperamento")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp),
-                shape = RoundedCornerShape(12.dp),
-                maxLines = 4
+                    .height(AppSpacing.formFieldHeight),
+                shape = AppShapes.chip,
+                minLines = 3,
+                maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
             )
 
-            Text(text = "Ubicacion", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(text = "Ubicacion", style = MaterialTheme.typography.titleSmall)
 
             OutlinedTextField(
                 value = lastSeenLocation,
@@ -285,17 +302,17 @@ fun CreatePetPostScreen(
                     longitude = 0.0
                 },
                 placeholder = { Text("Ultima ubicacion vista (Barrio, Ciudad o referencia)") },
-                leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = CoralPrimary) },
+                leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.chip
             )
 
-            Button(
+            AppButton(
                 onClick = {
                     val selectedMediaSource = mediaSource
                     if (selectedMediaSource == null) {
                         formMessage = "Adjunta una foto real desde camara o galeria."
-                        return@Button
+                        return@AppButton
                     }
                     isSubmitting = true
                     viewModel.createNewPetPost(
@@ -322,30 +339,28 @@ fun CreatePetPostScreen(
                     )
                 },
                 enabled = petName.isNotBlank() && lastSeenLocation.isNotBlank() && photoUri.isNotBlank() && !isSubmitting,
-                colors = ButtonDefaults.buttonColors(containerColor = CoralPrimary),
-                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
+                    .fillMaxWidth(),
+                contentDescription = "Publicar ficha",
             ) {
                 if (isSubmitting) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(AppSpacing.progressIndicator))
                 } else {
                     Icon(Icons.Filled.Publish, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Publicar ficha", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
+                    Text(text = "Publicar ficha", style = MaterialTheme.typography.labelLarge)
                 }
             }
 
             authMessage?.let { message ->
-                Text(text = message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
             formMessage?.let { message ->
                 val isSuccess = message.contains("capturada")
                 Text(
                     text = message,
-                    color = if (isSuccess) TealSecondary else MaterialTheme.colorScheme.error,
-                    fontSize = 12.sp
+                    color = if (isSuccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }

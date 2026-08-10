@@ -24,9 +24,10 @@ class StaticProjectGuardrailsTest {
     assertEquals(
       listOf(
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.INTERNET"
+         "android.permission.ACCESS_FINE_LOCATION",
+         "android.permission.CAMERA",
+         "android.permission.INTERNET",
+         "android.permission.POST_NOTIFICATIONS"
       ),
       permissions
     )

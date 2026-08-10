@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -37,14 +37,11 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -61,14 +58,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -77,9 +70,11 @@ import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.media.CameraImageCapture
-import com.findyourpet.app.ui.theme.AlertRed
-import com.findyourpet.app.ui.theme.CoralPrimary
-import com.findyourpet.app.ui.theme.TealSecondary
+import com.findyourpet.app.ui.components.AppButton
+import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.theme.AppElevation
+import com.findyourpet.app.ui.theme.AppShapes
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import kotlinx.coroutines.launch
 
@@ -106,7 +101,7 @@ fun SightingAlertScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = "Alerta de Avistamiento", fontWeight = FontWeight.Bold, color = AlertRed) },
+                    title = { Text(text = "Alerta de Avistamiento", color = MaterialTheme.colorScheme.error) },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -119,23 +114,22 @@ fun SightingAlertScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
+                    .padding(AppSpacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "No puedes reportar avistamientos de tu propia publicacion.",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
                 Text(
                     text = "Puedes gestionar esta mascota desde su ficha y reportar avistamientos en publicaciones de otros usuarios.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 13.sp
+                    style = MaterialTheme.typography.bodyMedium
                 )
-                Spacer(modifier = Modifier.height(20.dp))
-                Button(onClick = onBackClick) {
+                Spacer(modifier = Modifier.height(AppSpacing.md + AppSpacing.xs))
+                AppButton(onClick = onBackClick) {
                     Text("Volver")
                 }
             }
@@ -273,7 +267,8 @@ fun SightingAlertScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Alerta de Avistamiento", fontWeight = FontWeight.Bold, color = AlertRed) },
+                windowInsets = WindowInsets.safeDrawing,
+                title = { Text(text = "Alerta de Avistamiento", color = MaterialTheme.colorScheme.error) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
@@ -311,6 +306,7 @@ fun SightingAlertScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         )
     }
 }
@@ -335,19 +331,19 @@ fun SightingAlertAdaptiveContent(
     BoxWithConstraints(modifier = modifier) {
         val availableWidth = availableWidthOverride ?: maxWidth
         val availableHeight = availableHeightOverride ?: maxHeight
-        val useExpanded = availableWidth >= 600.dp && availableHeight >= 520.dp
-        val useCenteredColumn = availableWidth >= 600.dp && !useExpanded
+        val useExpanded = availableWidth >= AppSpacing.adaptiveBreakpoint && availableHeight >= AppSpacing.expandedMinHeight
+        val useCenteredColumn = availableWidth >= AppSpacing.adaptiveBreakpoint && !useExpanded
         val layoutTag = when {
             useExpanded -> "sighting-layout-expanded"
             useCenteredColumn -> "sighting-layout-centered"
             else -> "sighting-layout-compact"
         }
         val horizontalPadding = when {
-            useExpanded -> 32.dp
-            useCenteredColumn -> 24.dp
-            else -> 16.dp
+            useExpanded -> AppSpacing.expandedInset
+            useCenteredColumn -> AppSpacing.centeredInset
+            else -> AppSpacing.compactInset
         }
-        val contentMaxWidth = if (useExpanded) 720.dp else 640.dp
+        val contentMaxWidth = if (useExpanded) AppSpacing.expandedContentMaxWidth else AppSpacing.contentMaxWidth
 
         Box(
             modifier = Modifier
@@ -357,12 +353,12 @@ fun SightingAlertAdaptiveContent(
         ) {
             Column(
                 modifier = Modifier
-                    .then(if (availableWidth >= 600.dp) Modifier.widthIn(max = contentMaxWidth) else Modifier)
+                    .then(if (availableWidth >= AppSpacing.adaptiveBreakpoint) Modifier.widthIn(max = contentMaxWidth) else Modifier)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = horizontalPadding, vertical = if (useExpanded) 24.dp else 16.dp)
+                    .padding(horizontal = horizontalPadding, vertical = if (useExpanded) AppSpacing.lg else AppSpacing.md)
                     .testTag("sighting-detail-column"),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.sectionGap)
             ) {
                 SightingAlertDetails(
                     selectedPhotoUri = selectedPhotoUri,
@@ -396,50 +392,55 @@ private fun ColumnScope.SightingAlertDetails(
     onLocationNameChange: (String) -> Unit,
     onNotesChange: (String) -> Unit
 ) {
-    Text("Foto del avistamiento (opcional)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+    Text("Foto del avistamiento (opcional)", style = MaterialTheme.typography.titleSmall)
     SightingPhotoUploadSurface(
         selectedPhotoUri = selectedPhotoUri,
         onGalleryClick = onGalleryClick,
         onCameraClick = onCameraClick
     )
 
-    Text("Ubicacion del avistamiento", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+    Text("Ubicacion del avistamiento", style = MaterialTheme.typography.titleSmall)
     OutlinedTextField(
         value = locationName,
         onValueChange = onLocationNameChange,
         label = { Text("Punto de referencia, barrio o calle") },
-        leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = CoralPrimary) },
+        leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        shape = AppShapes.chip
     )
 
-    OutlinedButton(onClick = onLocationClick, modifier = Modifier.fillMaxWidth()) {
-        Icon(Icons.Filled.MyLocation, contentDescription = null, tint = TealSecondary)
-        Spacer(modifier = Modifier.width(8.dp))
+    AppButton(
+        onClick = onLocationClick,
+        modifier = Modifier.fillMaxWidth(),
+        variant = AppButtonVariant.Outlined,
+        contentDescription = "Usar ubicación actual",
+    ) {
+        Icon(Icons.Filled.MyLocation, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         Text(if (locationSource == LocationSource.DEVICE_GPS) "Ubicacion GPS capturada" else "Usar ubicacion actual")
     }
 
-    Text("Detalles adicionales", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+    Text("Detalles adicionales", style = MaterialTheme.typography.titleSmall)
     OutlinedTextField(
         value = notes,
         onValueChange = onNotesChange,
         label = { Text("Describe el estado de la mascota o hacia donde iba") },
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 100.dp),
-        shape = RoundedCornerShape(12.dp),
+            .heightIn(min = AppSpacing.notesMinHeight),
+        shape = AppShapes.chip,
         maxLines = 5
     )
 
     authMessage?.let { message ->
-        Text(text = message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+        Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
     }
     formMessage?.let { message ->
         val isSuccess = message.contains("capturada")
         Text(
             text = message,
-            color = if (isSuccess) TealSecondary else MaterialTheme.colorScheme.error,
-            fontSize = 12.sp
+            color = if (isSuccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -452,13 +453,13 @@ private fun SightingPhotoUploadSurface(
 ) {
     val context = LocalContext.current
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.content,
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(AppSpacing.borderWidth, MaterialTheme.colorScheme.outline),
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(AppSpacing.mediaHeight)
+            .clip(AppShapes.content)
             .clickable(onClick = onGalleryClick)
             .testTag("sighting-photo-upload-surface")
     ) {
@@ -469,30 +470,22 @@ private fun SightingPhotoUploadSurface(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(AppSpacing.lg)
                         .testTag("sighting-photo-empty-state")
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.CameraAlt,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Filled.PhotoLibrary,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Icon(
+                        imageVector = Icons.Filled.CameraAlt,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppSpacing.iconLarge)
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
                     Text(
                         text = "Toca para agregar foto opcional",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 15.sp
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                     SightingPhotoActions(
                         galleryLabel = "Galeria",
                         cameraLabel = "Camara",
@@ -516,7 +509,7 @@ private fun SightingPhotoUploadSurface(
                     onCameraClick = onCameraClick,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(12.dp)
+                        .padding(AppSpacing.mediaOverlayPadding)
                 )
             }
         }
@@ -531,21 +524,25 @@ private fun SightingPhotoActions(
     onCameraClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
-        OutlinedButton(
+    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm), modifier = modifier) {
+        AppButton(
             onClick = onGalleryClick,
-            modifier = Modifier.testTag("sighting-gallery-action")
+            modifier = Modifier.testTag("sighting-gallery-action"),
+            variant = AppButtonVariant.Outlined,
+            contentDescription = galleryLabel,
         ) {
-            Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
+            Icon(Icons.Filled.Collections, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
             Text(galleryLabel)
         }
-        OutlinedButton(
+        AppButton(
             onClick = onCameraClick,
-            modifier = Modifier.testTag("sighting-camera-action")
+            modifier = Modifier.testTag("sighting-camera-action"),
+            variant = AppButtonVariant.Outlined,
+            contentDescription = cameraLabel,
         ) {
-            Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
+            Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(AppSpacing.iconMedium))
+            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
             Text(cameraLabel)
         }
     }
@@ -563,33 +560,33 @@ fun SightingSubmitActionBar(
             .fillMaxWidth()
             .navigationBarsPadding()
             .testTag("sighting-bottom-action-bar"),
-        tonalElevation = 6.dp,
-        shadowElevation = 8.dp,
+        tonalElevation = AppElevation.card,
+        shadowElevation = AppElevation.card + AppSpacing.sm,
         color = MaterialTheme.colorScheme.surface
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.fieldGap),
             contentAlignment = Alignment.Center
         ) {
-            Button(
+            AppButton(
                 onClick = onSubmit,
                 enabled = enabled,
-                colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
-                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .widthIn(max = 400.dp)
+                    .widthIn(max = AppSpacing.submitMaxWidth)
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("sighting-primary-action")
+                    .height(AppSpacing.submitButtonHeight)
+                    .testTag("sighting-primary-action"),
+                variant = AppButtonVariant.Danger,
+                contentDescription = "Enviar alerta",
             ) {
                 if (isSubmitting) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onError, modifier = Modifier.size(AppSpacing.progressIndicator))
                 } else {
-                    Icon(imageVector = Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(text = "ENVIAR ALERTA", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                    Icon(imageVector = Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(AppSpacing.submitIcon))
+                    Spacer(modifier = Modifier.width(AppSpacing.titleGap))
+                    Text(text = "ENVIAR ALERTA", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

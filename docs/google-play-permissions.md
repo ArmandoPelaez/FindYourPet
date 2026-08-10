@@ -12,6 +12,7 @@ En este documento, "permiso" refiere solo a permisos Android/runtime y controles
 | `android.permission.CAMERA` | Tomar foto de mascota o avistamiento | Boton de camara en crear publicacion o reportar avistamiento | Imagen capturada por el usuario | Permite adjuntar evidencia visual creada por el usuario | Estados concedido, denegado, denegado permanente y no disponible |
 | `android.permission.ACCESS_COARSE_LOCATION` | Usar ubicacion actual como referencia aproximada | Accion "usar mi ubicacion" en publicacion o avistamiento | Ubicacion aproximada del dispositivo | Ayuda a ubicar una zona de busqueda sin escritura manual | Estados concedido, denegado, denegado permanente y no disponible |
 | `android.permission.ACCESS_FINE_LOCATION` | Usar ubicacion actual con mayor precision cuando el usuario lo autoriza | Accion "usar mi ubicacion" en publicacion o avistamiento | Coordenadas del dispositivo | Mejora la referencia de un avistamiento o publicacion cuando el usuario acepta | Estados concedido, denegado, denegado permanente y no disponible |
+| `android.permission.POST_NOTIFICATIONS` | Recibir avisos de avistamientos y mensajes dentro de la app | La app intenta publicar una notificacion y el usuario concede el permiso | Notificaciones del dispositivo | Permite avisos oportunos sin exponer datos de contacto | Estados concedido, denegado y no disponible |
 
 ## Bloqueo de release
 
