@@ -27,7 +27,6 @@ import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.EmptyState
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
-import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
@@ -141,11 +140,9 @@ fun HomeScreen(
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = AppSpacing.pagerBottom),
-                    contentPadding = PaddingValues(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
-                    pageSpacing = AppSpacing.md
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(AppSpacing.none),
+                    pageSpacing = AppSpacing.none
                 ) { page ->
                     val post = posts[page]
                     PetPostCard(
@@ -175,11 +172,8 @@ fun PetPostCard(
     }
     val shareText = remember(post) { buildPetPostShareText(post) }
 
-    Card(
+    Column(
         modifier = Modifier.fillMaxSize(),
-        shape = AppShapes.card,
-        elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.card),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
