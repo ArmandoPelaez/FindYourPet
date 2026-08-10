@@ -40,6 +40,7 @@ class CreatePetPostScreenScreenshotTest {
     renderCreatePostScreen(width = 360, height = 640)
 
     composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la Mascota").assertIsDisplayed()
     assertNoCurrentLocationAction()
@@ -64,6 +65,7 @@ class CreatePetPostScreenScreenshotTest {
     renderCreatePostScreen(width = 411, height = 914)
 
     composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la Mascota").assertIsDisplayed()
     assertNoCurrentLocationAction()

@@ -167,7 +167,7 @@ class ReleaseReadinessStaticTest {
   fun createPostForm_omitsCurrentLocationAndRewardInputs() {
     val createPostSource = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/CreatePetPostScreen.kt").readText()
 
-    assertTrue(createPostSource.contains("Text(text = \"Ubicacion\""))
+    assertTrue(createPostSource.contains("FormSectionTitle(text = \"Ubicacion\")"))
     assertTrue(createPostSource.contains("rewardAmount = \"Sin recompensa\""))
     assertTrue(!createPostSource.contains("Usar ubicacion actual"))
     assertTrue(!createPostSource.contains("Ubicacion GPS capturada"))
