@@ -63,6 +63,25 @@ class FirestoreRulesStaticTest {
   }
 
   @Test
+  fun sightingAlertRulesValidateCrossReferencesAndSnapshotPrivacy() {
+    assertTrue(rulesText.contains("validSightingAlertCreate(chatId)"))
+    assertTrue(rulesText.contains("sightingAfter(request.resource.data.sightingId)"))
+    assertTrue(rulesText.contains("request.resource.data.type == 'sighting_alert'"))
+    assertTrue(rulesText.contains("validAlertSnapshot(request.resource.data)"))
+    assertTrue(rulesText.contains("'contactGrantIds'"))
+    assertTrue(rulesText.contains("'coordinates'"))
+    assertTrue(rulesText.contains("request.resource.data.senderId == request.resource.data.reporterId"))
+  }
+
+  @Test
+  fun sightingAlertReadsRemainParticipantOnlyAndImmutable() {
+    assertTrue(rulesText.contains("allow read: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data)"))
+    assertTrue(rulesText.contains("allow update, delete: if false"))
+    assertTrue(rulesText.contains("validChatSessionReferences(request.resource.data)"))
+    assertTrue(rulesText.contains("request.resource.data.reporterId == uid()"))
+  }
+
+  @Test
   fun contactGrantRulesAreChatScopedAndOwnerControlled() {
     assertTrue(rulesText.contains("match /contactGrants/{grantId}"))
     assertTrue(rulesText.contains("allow read, write: if false"))

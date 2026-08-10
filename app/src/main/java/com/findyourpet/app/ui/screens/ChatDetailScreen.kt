@@ -17,12 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
+import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
@@ -62,6 +64,10 @@ fun ChatDetailScreen(
 
     val session = chatSession
     val isOwner = session?.let { OwnershipPolicy.canManagePost(currentUser.id, it.ownerId) } == true
+    val isAuthorizedParticipant = session?.let {
+        OwnershipPolicy.isChatParticipant(currentUser.id, it.ownerId, it.reporterId)
+    } == true
+    val chatUnavailable = !chatSessionState.isLoading && (session == null || !isAuthorizedParticipant)
 
     Scaffold(
         topBar = {
@@ -113,74 +119,87 @@ fun ChatDetailScreen(
             SyncStatusBanner(state = chatSessionState)
             SyncStatusBanner(state = messagesState)
 
-            // Chat Messages List
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (messages.isEmpty()) {
-                    item {
-                        Text(
-                            text = if (messagesState.isLoading) "Cargando mensajes." else "Sin mensajes todavia.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(12.dp)
+            if (chatUnavailable) {
+                Box(
+                    modifier = Modifier.fillMaxSize().weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Esta conversacion no esta disponible.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(24.dp)
+                    )
+                }
+            } else {
+                // Chat Messages List
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (messages.isEmpty()) {
+                        item {
+                            Text(
+                                text = if (messagesState.isLoading) "Cargando mensajes." else "Sin mensajes todavia.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                    items(messages, key = { it.id }) { msg ->
+                        ChatMessageItem(
+                            message = msg,
+                            currentUserId = currentUser.id,
+                            context = context
                         )
                     }
                 }
-                items(messages, key = { it.id }) { msg ->
-                    ChatMessageItem(
-                        message = msg,
-                        currentUserId = currentUser.id,
-                        context = context
-                    )
-                }
-            }
 
-            // Chat Input Bar
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                // Chat Input Bar remains available after a sighting alert.
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 4.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
-                        value = textInput,
-                        onValueChange = { textInput = it },
-                        placeholder = { Text("Escribe un mensaje...") },
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        maxLines = 3,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        )
-                    )
-
-                    IconButton(
-                        onClick = {
-                            if (textInput.isNotBlank()) {
-                                viewModel.sendChatMessage(textInput)
-                                textInput = ""
-                            }
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(containerColor = CoralPrimary, contentColor = Color.White)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Send,
-                            contentDescription = "Enviar",
-                            modifier = Modifier.size(18.dp)
+                        OutlinedTextField(
+                            value = textInput,
+                            onValueChange = { textInput = it },
+                            placeholder = { Text("Escribe un mensaje...") },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            maxLines = 3,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            )
                         )
+
+                        IconButton(
+                            onClick = {
+                                if (textInput.isNotBlank()) {
+                                    viewModel.sendChatMessage(textInput)
+                                    textInput = ""
+                                }
+                            },
+                            colors = IconButtonDefaults.iconButtonColors(containerColor = CoralPrimary, contentColor = Color.White)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Send,
+                                contentDescription = "Enviar",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -200,9 +219,14 @@ fun ChatMessageItem(
         sdf.format(Date(message.timestamp))
     }
 
-    if (message.isSystemMessage) {
-        //no mostrar nada
+    if (message.type == SIGHTING_ALERT_MESSAGE_TYPE) {
+        SightingAlertMessageCard(
+            message = message,
+            currentUserId = currentUserId,
+            context = context
+        )
     } else {
+        val displayText = if (message.isSystemMessage) "Mensaje anterior" else message.text
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -234,7 +258,7 @@ fun ChatMessageItem(
                         }
 
                         Text(
-                            text = message.text,
+                            text = displayText,
                             fontSize = 13.sp,
                             color = if (isMyMessage) Color.White else MaterialTheme.colorScheme.onSurface,
                             lineHeight = 17.sp
@@ -263,6 +287,72 @@ fun ChatMessageItem(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SightingAlertMessageCard(
+    message: ChatMessageEntity,
+    currentUserId: String,
+    context: android.content.Context
+) {
+    val isMyMessage = message.senderId == currentUserId
+    val formattedTime = remember(message.snapshotTimestamp ?: message.timestamp) {
+        val sdf = SimpleDateFormat("dd MMM, hh:mm a", Locale("es", "ES"))
+        sdf.format(Date(message.snapshotTimestamp ?: message.timestamp))
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .testTag("sighting-alert-message"),
+        contentAlignment = if (isMyMessage) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
+        Card(
+            modifier = Modifier.widthIn(max = 340.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isMyMessage) CoralPrimary.copy(alpha = 0.12f)
+                else AlertRed.copy(alpha = 0.08f)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = AlertRed)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Alerta de avistamiento", fontWeight = FontWeight.Bold)
+                }
+                message.snapshotPetName?.takeIf { it.isNotBlank() }?.let {
+                    Text("Mascota: $it", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+                }
+                message.locationDisplay?.takeIf { it.isNotBlank() }?.let {
+                    Text("Ubicacion: $it", fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                }
+                message.generalDetails?.takeIf { it.isNotBlank() }?.let {
+                    Text(it, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+                }
+                message.photoAttachmentUri?.takeIf { it.isNotBlank() }?.let { photoUri ->
+                    AsyncImage(
+                        model = ImageRequest.Builder(context).data(photoUri).crossfade(true).build(),
+                        contentDescription = "Foto del avistamiento",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .testTag("sighting-alert-photo")
+                    )
+                }
+                Text(
+                    text = formattedTime,
+                    fontSize = 9.sp,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.align(Alignment.End).padding(top = 6.dp)
+                )
             }
         }
     }

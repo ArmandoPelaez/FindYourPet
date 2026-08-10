@@ -82,6 +82,7 @@ import com.findyourpet.app.ui.theme.CoralPrimary
 import com.findyourpet.app.ui.theme.TealSecondary
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,9 +96,12 @@ fun SightingAlertScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val submissionState by viewModel.sightingSubmissionState.collectAsState()
+    val idempotencyKey = remember(postId) { UUID.randomUUID().toString() }
 
     LaunchedEffect(postId) {
         viewModel.selectPost(postId)
+        viewModel.resetSightingSubmissionState()
     }
 
     val pet = post ?: return
@@ -258,6 +262,7 @@ fun SightingAlertScreen(
             ownerId = pet.ownerId,
             mediaSource = mediaSource,
             locationSource = locationSource,
+            idempotencyKey = idempotencyKey,
             onComplete = { chatId ->
                 isSubmitting = false
                 onAlertSent(chatId)
@@ -283,8 +288,8 @@ fun SightingAlertScreen(
         },
         bottomBar = {
             SightingSubmitActionBar(
-                isSubmitting = isSubmitting,
-                enabled = !isSubmitting && locationName.isNotBlank() && locationSource != LocationSource.NONE,
+                isSubmitting = isSubmitting || submissionState.status == com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUBMITTING,
+                enabled = !isSubmitting && submissionState.status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUBMITTING && locationName.isNotBlank() && locationSource != LocationSource.NONE,
                 onSubmit = { submitAlert() }
             )
         }

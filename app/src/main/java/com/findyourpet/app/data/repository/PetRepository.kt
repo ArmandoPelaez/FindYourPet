@@ -2,6 +2,7 @@ package com.findyourpet.app.data.repository
 
 import android.content.Context
 import android.net.Uri
+import androidx.room.withTransaction
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
@@ -12,6 +13,7 @@ import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.data.remote.BackendCollections
@@ -264,11 +266,15 @@ class PetRepository(context: Context) {
         notes: String,
         ownerId: String,
         mediaSource: MediaSource? = null,
-        locationSource: LocationSource = LocationSource.MANUAL_COARSE
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE,
+        idempotencyKey: String? = null
     ): String {
         val db = firestore
         val timestamp = System.currentTimeMillis()
-        val sightingId = UUID.randomUUID().toString()
+        val stableSubmissionKey = (idempotencyKey?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString())
+            .replace(Regex("[^A-Za-z0-9_-]"), "_")
+            .take(80)
+        val sightingId = "sighting_$stableSubmissionKey"
         val derivedPost = if (db != null) {
             requireNotNull(
                 db.collection(BackendCollections.PET_POSTS)
@@ -280,8 +286,13 @@ class PetRepository(context: Context) {
         } else {
             petDao.getPostById(postId).first()
         }
-        val resolvedOwnerId = derivedPost?.ownerId?.ifBlank { ownerId } ?: ownerId
+        requireNotNull(derivedPost) { "La publicacion no existe." }
+        val resolvedOwnerId = derivedPost.ownerId
         require(resolvedOwnerId.isNotBlank()) { "No se pudo identificar al dueno de la publicacion." }
+        require(ownerId == resolvedOwnerId) { "El dueno no coincide con la publicacion." }
+        require(reporterId.isNotBlank()) { "No se pudo identificar al reportero." }
+        require(locationName.isNotBlank()) { "Indica donde viste la mascota." }
+        require(notes.length <= 1000) { "Los detalles del avistamiento son demasiado extensos." }
         require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId)) {
             "No puedes reportar avistamientos de tu propia publicacion."
         }
@@ -302,34 +313,62 @@ class PetRepository(context: Context) {
             latitude = latitude,
             longitude = longitude,
             notes = notes,
-            timestamp = timestamp
+            timestamp = timestamp,
+            idempotencyKey = stableSubmissionKey
         )
         val chatId = BackendCollections.chatSessionId(postId, reporterId)
         val chatSession = ChatSessionEntity(
             id = chatId,
             postId = postId,
             petName = petName,
-            petPhotoUri = derivedPost?.photoUri ?: uploadedPhoto.displayUrl,
+            petPhotoUri = derivedPost.photoUri,
             ownerId = resolvedOwnerId,
             reporterId = reporterId,
             reporterName = reporterName,
-            lastMessage = "",
+            lastMessage = "Nuevo avistamiento",
             lastMessageTimestamp = timestamp
         )
+        val alertMessage = ChatMessageEntity(
+            id = "${sightingId}_alert",
+            chatId = chatId,
+            postId = postId,
+            senderId = reporterId,
+            senderName = reporterName,
+            text = "Nuevo avistamiento de ${petName.ifBlank { "mascota" }}",
+            photoUri = null,
+            timestamp = timestamp,
+            isSystemMessage = false,
+            type = SIGHTING_ALERT_MESSAGE_TYPE,
+            sightingId = sightingId,
+            ownerId = resolvedOwnerId,
+            reporterId = reporterId,
+            snapshotPetName = petName,
+            photoAttachmentUri = uploadedPhoto.displayUrl.takeIf { it.isNotBlank() },
+            locationDisplay = locationName,
+            generalDetails = notes.takeIf { it.isNotBlank() },
+            snapshotTimestamp = timestamp
+        )
         val notification = AppNotificationEntity(
-            id = UUID.randomUUID().toString(),
+            id = "${sightingId}_notification",
             recipientId = resolvedOwnerId,
-            title = "Avistamiento recibido",
-            message = "$reporterName reporto un posible avistamiento de $petName.",
+            title = "Nuevo avistamiento",
+            message = "Recibiste un nuevo avistamiento en tu publicacion.",
             type = "ALERT",
             targetId = chatId,
-            timestamp = timestamp
+            timestamp = timestamp,
+            chatId = chatId,
+            sightingId = sightingId,
+            postId = postId
         )
 
         if (db == null) {
-            petDao.insertSighting(sighting)
-            petDao.insertChatSession(chatSession)
-            petDao.insertNotification(notification)
+            database.withTransaction {
+                petDao.insertSighting(sighting)
+                petDao.insertChatSession(chatSession)
+                petDao.insertMessage(alertMessage)
+                petDao.updateChatLastMessage(chatId, "Nuevo avistamiento", timestamp)
+                petDao.insertNotification(notification)
+            }
         } else {
             val chatRef = db.collection(BackendCollections.CHAT_SESSIONS).document(chatId)
             db.runBatch { batch ->
@@ -346,6 +385,10 @@ class PetRepository(context: Context) {
                     )
                 )
                 batch.set(chatRef, chatSession.toDocument(), com.google.firebase.firestore.SetOptions.merge())
+                batch.set(
+                    chatRef.collection(BackendCollections.MESSAGES).document(alertMessage.id),
+                    alertMessage.toDocument()
+                )
                 batch.set(
                     db.collection(BackendCollections.USERS)
                         .document(resolvedOwnerId)
@@ -378,7 +421,8 @@ class PetRepository(context: Context) {
             text = text,
             photoUri = photoUri,
             timestamp = timestamp,
-            isSystemMessage = false
+            isSystemMessage = false,
+            type = "text"
         )
 
         if (db == null) {
@@ -402,7 +446,9 @@ class PetRepository(context: Context) {
             message = "Tienes un nuevo mensaje en una conversacion.",
             type = "CHAT",
             targetId = chatId,
-            timestamp = timestamp
+            timestamp = timestamp,
+            chatId = chatId,
+            postId = postId
         )
 
         db.runBatch { batch ->
@@ -554,10 +600,19 @@ class PetRepository(context: Context) {
                         postId = "post_1",
                         senderId = "finder_1",
                         senderName = "Sofia Vargas",
-                        text = "ALERTA DE AVISTAMIENTO\nFrente a la cafeteria central\nVi un Golden Retriever muy parecido con collar rojo.",
-                        photoUri = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
+                        text = "Nuevo avistamiento de Max",
+                        photoUri = null,
                         timestamp = now - (12 * 3600000L),
-                        isSystemMessage = true
+                        isSystemMessage = false,
+                        type = SIGHTING_ALERT_MESSAGE_TYPE,
+                        sightingId = "sighting_1",
+                        ownerId = "owner_1",
+                        reporterId = "finder_1",
+                        snapshotPetName = "Max",
+                        photoAttachmentUri = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
+                        locationDisplay = "Frente a la cafeteria central, Calle 3",
+                        generalDetails = "Vi a un perro parecido tomando agua junto a la entrada.",
+                        snapshotTimestamp = now - (12 * 3600000L)
                     ),
                     ChatMessageEntity(
                         id = "msg_2",
@@ -578,7 +633,7 @@ class PetRepository(context: Context) {
                     id = "notif_1",
                     recipientId = "owner_1",
                     title = "Avistamiento recibido",
-                    message = "Sofia Vargas reporto un posible avistamiento de Max.",
+                    message = "Recibiste un nuevo avistamiento en tu publicacion.",
                     type = "ALERT",
                     targetId = chatId,
                     timestamp = now - (12 * 3600000L),

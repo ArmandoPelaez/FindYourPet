@@ -85,7 +85,7 @@ fun NotificationsScreen(
                             notification = notif,
                             onClick = {
                                 viewModel.markNotificationAsRead(notif.id)
-                                onNotificationClick(notif.targetId)
+                                onNotificationClick(notif.chatId ?: notif.targetId)
                             }
                         )
                     }

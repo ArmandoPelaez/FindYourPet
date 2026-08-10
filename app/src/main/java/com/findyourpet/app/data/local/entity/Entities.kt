@@ -34,7 +34,8 @@ data class SightingAlertEntity(
     val latitude: Double,
     val longitude: Double,
     val notes: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val idempotencyKey: String = ""
 )
 
 @Entity(tableName = "chat_messages")
@@ -47,7 +48,16 @@ data class ChatMessageEntity(
     val text: String,
     val photoUri: String?,
     val timestamp: Long,
-    val isSystemMessage: Boolean = false
+    val isSystemMessage: Boolean = false,
+    val type: String = LEGACY_TEXT_MESSAGE_TYPE,
+    val sightingId: String? = null,
+    val ownerId: String? = null,
+    val reporterId: String? = null,
+    val snapshotPetName: String? = null,
+    val photoAttachmentUri: String? = null,
+    val locationDisplay: String? = null,
+    val generalDetails: String? = null,
+    val snapshotTimestamp: Long? = null
 )
 
 @Entity(tableName = "chat_sessions")
@@ -72,5 +82,11 @@ data class AppNotificationEntity(
     val type: String, // ALERT, CHAT
     val targetId: String,
     val timestamp: Long,
-    val isRead: Boolean = false
+    val isRead: Boolean = false,
+    val chatId: String? = null,
+    val sightingId: String? = null,
+    val postId: String? = null
 )
+
+const val LEGACY_TEXT_MESSAGE_TYPE = "text"
+const val SIGHTING_ALERT_MESSAGE_TYPE = "sighting_alert"

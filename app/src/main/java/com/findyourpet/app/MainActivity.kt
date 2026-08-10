@@ -128,9 +128,8 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                     viewModel = viewModel,
                     postId = postId,
                     onBackClick = { navController.popBackStack() },
-                    onAlertSent = { chatId ->
-                        navController.popBackStack()
-                        navController.navigate(chatDetailRoute(chatId))
+                    onAlertSent = {
+                        navController.navigateToPrimaryDestination(ROUTE_HOME)
                     }
                 )
             }
