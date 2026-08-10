@@ -171,6 +171,9 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
 }
 
 private fun NavHostController.navigateToPrimaryDestination(route: String) {
+    if (route == ROUTE_HOME && popBackStack(ROUTE_HOME, inclusive = false)) {
+        return
+    }
     navigate(route) {
         popUpTo(graph.findStartDestination().id) {
             saveState = true

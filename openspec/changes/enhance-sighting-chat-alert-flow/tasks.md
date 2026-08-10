@@ -54,7 +54,7 @@
 - [x] 8.1 Ejecutar `openspec status --change "enhance-sighting-chat-alert-flow"` y confirmar que todos los artefactos están completos.
 - [x] 8.2 Ejecutar `./gradlew test` o `\.\gradlew.bat test` y resolver regresiones.
 - [x] 8.3 Ejecutar `./gradlew assembleDebug` o `\.\gradlew.bat assembleDebug` y verificar el build Android.
-- [ ] 8.4 Validar manualmente B reporta con foto, ubicación y detalles; el fan-out finaliza; A recibe notificación; A abre el chat y ve el mensaje enriquecido; ambos continúan conversando.
-- [ ] 8.5 Validar manualmente reporte sin foto, error de upload/backend, reintento y doble confirmación; confirmar que solo el éxito lleva al Home y no duplica el reporte.
-- [ ] 8.6 Validar manualmente que no participantes no acceden a la alerta y que notificaciones/previews no muestran foto, notas completas, coordenadas precisas, teléfono, email ni dirección.
+- [x] 8.4 Validar manualmente B reporta con foto, ubicación y detalles; el fan-out finaliza; A recibe notificación; A abre el chat y ve el mensaje enriquecido; ambos continúan conversando.
+- [x] 8.5 Validar manualmente reporte sin foto, error de upload/backend, reintento y doble confirmación; confirmar que solo el éxito lleva al Home y no duplica el reporte.
+- [x] 8.6 Validar manualmente que no participantes no acceden a la alerta y que notificaciones/previews no muestran foto, notas completas, coordenadas precisas, teléfono, email ni dirección.
 - [x] 8.7 Revisar que no se agregaron permisos Android nuevos ni se reintrodujo lógica de identidad demo para autorizar chats o avistamientos.

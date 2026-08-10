@@ -53,7 +53,9 @@ class ChatSightingAlertComposeTest {
   fun chatKeepsNormalComposerAfterAlert() {
     val source = File(repoRoot(), "app/src/main/java/com/findyourpet/app/ui/screens/ChatDetailScreen.kt").readText()
     assertTrue(source.contains("Escribe un mensaje..."))
-    assertTrue(source.contains("viewModel.sendChatMessage(textInput)"))
+    assertTrue(source.contains("viewModel.sendChatMessage("))
+    assertTrue(source.contains("onComplete ="))
+    assertTrue(source.contains("onError ="))
   }
 
   private fun setMessage(photo: String?) {

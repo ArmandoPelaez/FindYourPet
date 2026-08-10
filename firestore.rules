@@ -219,6 +219,16 @@ service cloud.firestore {
         && sightingAfter(request.resource.data.sightingId).reporterId != sightingAfter(request.resource.data.sightingId).ownerId;
     }
 
+    function validChatNotificationCreate(data) {
+      return data.type == 'CHAT'
+        && data.chatId is string
+        && data.postId is string
+        && data.targetId == data.chatId
+        && data.postId == chatAfter(data.chatId).postId
+        && data.recipientId in chatAfter(data.chatId).participantIds
+        && data.recipientId != uid();
+    }
+
     function validMessageCreate(chatId, messageId) {
       return isChatParticipant(chatAfter(chatId))
         && request.resource.data.id == messageId
@@ -257,7 +267,8 @@ service cloud.firestore {
               && request.resource.data.recipientId == sightingAfter(request.resource.data.sightingId).ownerId
               && request.resource.data.postId == sightingAfter(request.resource.data.sightingId).postId
               && request.resource.data.chatId == request.resource.data.targetId
-            ));
+            )
+            || validChatNotificationCreate(request.resource.data));
         allow update: if isUser(userId)
           && request.resource.data.recipientId == resource.data.recipientId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);

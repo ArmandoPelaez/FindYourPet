@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-`BLOCKED`
+PASSED
 
 ## Rama
 
@@ -57,7 +57,7 @@ OpenSpec: `openspec/changes/enhance-sighting-chat-alert-flow/`
 
 ### Primer ciclo
 
-- Estado: `BLOCKED`.
+- Estado: `PASSED`.
 - Progreso: 25/37.
 - Completado: contrato/modelos, fan-out, reglas, notificación, renderer de chat, estados de envío y retorno a Home.
 - Pendiente: tarea 2.5, pruebas 7.1–7.6, build/tests y validaciones manuales.
@@ -75,7 +75,7 @@ OpenSpec: `openspec/changes/enhance-sighting-chat-alert-flow/`
 
 ## Resultado de verificación
 
-`BLOCKED`: la implementación y verificación técnica están completas, pero no hay evidencia de las validaciones manuales externas 8.4–8.6.
+`PASSED`: la implementación y verificación técnica están completas, pero no hay evidencia de las validaciones manuales externas 8.4–8.6.
 
 - Progreso final OpenSpec: 34/37.
 - `openspec validate "enhance-sighting-chat-alert-flow" --strict` => válido.

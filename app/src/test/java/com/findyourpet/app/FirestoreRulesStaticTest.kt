@@ -101,6 +101,15 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("hasNoSensitiveNotificationFields(request.resource.data)"))
   }
 
+  @Test
+  fun chatNotificationsValidateConversationRecipient() {
+    assertTrue(rulesText.contains("function validChatNotificationCreate(data)"))
+    assertTrue(rulesText.contains("data.type == 'CHAT'"))
+    assertTrue(rulesText.contains("data.targetId == data.chatId"))
+    assertTrue(rulesText.contains("data.recipientId != uid()"))
+    assertTrue(rulesText.contains("validChatNotificationCreate(request.resource.data)"))
+  }
+
   private fun repoRoot(): File {
     val userDir = requireNotNull(System.getProperty("user.dir"))
     return generateSequence(File(userDir).absoluteFile) { it.parentFile }

@@ -351,14 +351,30 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun sendChatMessage(text: String, photoUri: String? = null) {
-        val chatId = activeChatId.value ?: return
+    fun sendChatMessage(
+        text: String,
+        photoUri: String? = null,
+        onComplete: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val chatId = activeChatId.value ?: run {
+            onError("La conversacion no esta disponible.")
+            return
+        }
         val post = selectedPost.value
         val session = activeChatSession.value
-        val postId = post?.id ?: session?.postId ?: return
-        val user = currentAuthenticatedUser() ?: return
+        val postId = post?.id ?: session?.postId ?: run {
+            onError("La publicacion asociada no esta disponible.")
+            return
+        }
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de enviar mensajes.")
+            return
+        }
         if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
-            _authMessage.value = "Only chat participants can send messages."
+            val message = "Solo los participantes pueden enviar mensajes."
+            _authMessage.value = message
+            onError(message)
             return
         }
 
@@ -372,8 +388,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     text = text,
                     photoUri = photoUri
                 )
-            }.onFailure {
-                _authMessage.value = it.message ?: "No se pudo enviar el mensaje."
+            }.onSuccess {
+                onComplete()
+            }.onFailure { error ->
+                val message = backendWriteErrorMessage(error, "No se pudo enviar el mensaje.")
+                _authMessage.value = message
+                onError(message)
             }
         }
     }

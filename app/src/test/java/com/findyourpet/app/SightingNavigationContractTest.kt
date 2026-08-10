@@ -16,6 +16,8 @@ class SightingNavigationContractTest {
     assertTrue(viewModel.contains("if (_sightingSubmissionState.value.status == SightingSubmissionStatus.SUBMITTING) return"))
     assertTrue(screen.contains("remember(postId) { UUID.randomUUID().toString() }"))
     assertTrue(screen.contains("idempotencyKey = idempotencyKey"))
+    assertTrue(screen.contains("LaunchedEffect(submissionState.status)"))
+    assertTrue(screen.contains("SightingSubmissionStatus.SUCCESS"))
   }
 
   @Test
@@ -25,6 +27,9 @@ class SightingNavigationContractTest {
 
     assertTrue(mainActivity.contains("onAlertSent = {"))
     assertTrue(mainActivity.contains("navController.navigateToPrimaryDestination(ROUTE_HOME)"))
+    assertTrue(mainActivity.contains("popBackStack(ROUTE_HOME, inclusive = false)"))
+    assertTrue(screen.contains("finishAlert(chatId)"))
+    assertTrue(screen.contains("status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUCCESS"))
     assertTrue(screen.contains("onError = { message ->"))
     assertTrue(screen.contains("formMessage = message"))
   }

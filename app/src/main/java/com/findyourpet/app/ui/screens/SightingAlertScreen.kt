@@ -93,10 +93,23 @@ fun SightingAlertScreen(
     val scope = rememberCoroutineScope()
     val submissionState by viewModel.sightingSubmissionState.collectAsState()
     val idempotencyKey = remember(postId) { UUID.randomUUID().toString() }
+    var hasNavigatedHome by remember(postId) { mutableStateOf(false) }
+
+    fun finishAlert(chatId: String) {
+        if (hasNavigatedHome) return
+        hasNavigatedHome = true
+        onAlertSent(chatId)
+    }
 
     LaunchedEffect(postId) {
         viewModel.selectPost(postId)
         viewModel.resetSightingSubmissionState()
+    }
+
+    LaunchedEffect(submissionState.status) {
+        if (submissionState.status == com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUCCESS) {
+            finishAlert("")
+        }
     }
 
     val pet = post ?: return
@@ -259,7 +272,7 @@ fun SightingAlertScreen(
             idempotencyKey = idempotencyKey,
             onComplete = { chatId ->
                 isSubmitting = false
-                onAlertSent(chatId)
+                finishAlert(chatId)
             },
             onError = { message ->
                 isSubmitting = false
@@ -284,7 +297,11 @@ fun SightingAlertScreen(
         bottomBar = {
             SightingSubmitActionBar(
                 isSubmitting = isSubmitting || submissionState.status == com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUBMITTING,
-                enabled = !isSubmitting && submissionState.status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUBMITTING && locationName.isNotBlank() && locationSource != LocationSource.NONE,
+                enabled = !isSubmitting &&
+                    submissionState.status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUBMITTING &&
+                    submissionState.status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUCCESS &&
+                    locationName.isNotBlank() &&
+                    locationSource != LocationSource.NONE,
                 onSubmit = { submitAlert() }
             )
         }

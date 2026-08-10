@@ -1,6 +1,6 @@
 # remove-personal-data-sharing
 
-Estado actual: BLOCKED
+Estado actual: PASSED
 Rama usada: ops/remove-personal-data-sharing
 Ultima actualizacion: 2026-07-31
 

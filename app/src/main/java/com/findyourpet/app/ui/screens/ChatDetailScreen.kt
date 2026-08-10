@@ -53,6 +53,8 @@ fun ChatDetailScreen(
 
     val listState = rememberLazyListState()
     var textInput by remember { mutableStateOf("") }
+    var isSending by remember { mutableStateOf(false) }
+    var sendError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(chatId) {
         viewModel.selectChat(chatId)
@@ -169,43 +171,72 @@ fun ChatDetailScreen(
                         .fillMaxWidth()
                         .navigationBarsPadding()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = AppSpacing.narrowInset, vertical = AppSpacing.sm)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = textInput,
-                            onValueChange = { textInput = it },
-                            placeholder = { Text("Escribe un mensaje...") },
+                    Column {
+                        sendError?.let { error ->
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(
+                                    horizontal = AppSpacing.narrowInset,
+                                    vertical = AppSpacing.xs
+                                )
+                            )
+                        }
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = AppSpacing.textFieldInset),
-                            shape = AppShapes.circularInput,
-                            maxLines = 3,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.inputSurface),
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.inputSurface)
-                            )
-                        )
-                        IconButton(
-                            onClick = {
-                                if (textInput.isNotBlank()) {
-                                    viewModel.sendChatMessage(textInput)
-                                    textInput = ""
-                                }
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                                .padding(horizontal = AppSpacing.narrowInset, vertical = AppSpacing.sm)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Send,
-                                contentDescription = "Enviar",
-                                modifier = Modifier.size(AppSpacing.sendIcon)
+                            OutlinedTextField(
+                                value = textInput,
+                                onValueChange = {
+                                    textInput = it
+                                    sendError = null
+                                },
+                                placeholder = { Text("Escribe un mensaje...") },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = AppSpacing.textFieldInset),
+                                shape = AppShapes.circularInput,
+                                maxLines = 3,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.inputSurface),
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.inputSurface)
+                                )
                             )
+                            IconButton(
+                                enabled = textInput.isNotBlank() && !isSending,
+                                onClick = {
+                                    val messageToSend = textInput
+                                    if (messageToSend.isNotBlank() && !isSending) {
+                                        isSending = true
+                                        sendError = null
+                                        viewModel.sendChatMessage(
+                                            text = messageToSend,
+                                            onComplete = {
+                                                isSending = false
+                                                textInput = ""
+                                            },
+                                            onError = { error ->
+                                                isSending = false
+                                                sendError = error
+                                            }
+                                        )
+                                    }
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Send,
+                                    contentDescription = "Enviar",
+                                    modifier = Modifier.size(AppSpacing.sendIcon)
+                                )
+                            }
                         }
                     }
                 }
