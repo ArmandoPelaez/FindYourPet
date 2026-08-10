@@ -23,3 +23,5 @@ debug.keystore
 my-upload-key.jks
 *.jks
 *.keystore
+.artifacts/task.artifact.md
+.artifacts/walkthrough.artifact.md

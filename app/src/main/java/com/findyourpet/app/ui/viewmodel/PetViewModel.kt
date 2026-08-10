@@ -41,6 +41,13 @@ data class UserProfile(
     val email: String
 )
 
+enum class SightingSubmissionStatus { IDLE, SUBMITTING, SUCCESS, ERROR }
+
+data class SightingSubmissionState(
+    val status: SightingSubmissionStatus = SightingSubmissionStatus.IDLE,
+    val message: String? = null
+)
+
 class PetViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = PetRepository(application)
     private val authRepository = FirebaseAuthRepository.createOrNull(application) ?: UnavailableAuthRepository()
@@ -48,9 +55,11 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         if (authRepository is FirebaseAuthRepository) FirestoreUserProfileRepository() else UnavailableUserProfileRepository()
     private val activeProfile = MutableStateFlow<UserProfileDocument?>(null)
     private val _authMessage = MutableStateFlow<String?>(null)
+    private val _sightingSubmissionState = MutableStateFlow(SightingSubmissionState())
 
     val authState: StateFlow<AuthUiState> = authRepository.authState
     val authMessage: StateFlow<String?> = _authMessage
+    val sightingSubmissionState: StateFlow<SightingSubmissionState> = _sightingSubmissionState
     val isAuthenticated: StateFlow<Boolean> = authState
         .map(AuthSessionMapper::isAuthenticated)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthSessionMapper.isAuthenticated(authState.value))
@@ -269,6 +278,10 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         activeChatId.value = chatId
     }
 
+    fun resetSightingSubmissionState() {
+        _sightingSubmissionState.value = SightingSubmissionState()
+    }
+
     fun submitSightingAlert(
         postId: String,
         petName: String,
@@ -280,10 +293,16 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         ownerId: String,
         mediaSource: MediaSource? = null,
         locationSource: LocationSource,
+        idempotencyKey: String = UUID.randomUUID().toString(),
         onComplete: (String) -> Unit,
         onError: (String) -> Unit = {}
     ) {
+        if (_sightingSubmissionState.value.status == SightingSubmissionStatus.SUBMITTING) return
         val user = currentAuthenticatedUser() ?: run {
+            _sightingSubmissionState.value = SightingSubmissionState(
+                SightingSubmissionStatus.ERROR,
+                "Inicia sesion antes de reportar."
+            )
             onError("Inicia sesion antes de reportar.")
             return
         }
@@ -297,10 +316,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         )
         if (!validation.isValid) {
             val message = validation.message ?: "Completa los datos del avistamiento."
+            _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.ERROR, message)
             _authMessage.value = message
             onError(message)
             return
         }
+        _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.SUBMITTING)
         viewModelScope.launch {
             runCatching {
                 repository.submitSightingAlert(
@@ -315,26 +336,45 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     notes = notes,
                     ownerId = ownerId,
                     mediaSource = mediaSource,
-                    locationSource = locationSource
+                    locationSource = locationSource,
+                    idempotencyKey = idempotencyKey
                 )
             }.onSuccess { chatId ->
+                _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.SUCCESS)
                 activeChatId.value = chatId
                 onComplete(chatId)
             }.onFailure { error ->
                 val message = backendWriteErrorMessage(error, "No se pudo enviar el avistamiento.")
+                _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.ERROR, message)
                 onError(message)
             }
         }
     }
 
-    fun sendChatMessage(text: String, photoUri: String? = null) {
-        val chatId = activeChatId.value ?: return
+    fun sendChatMessage(
+        text: String,
+        photoUri: String? = null,
+        onComplete: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val chatId = activeChatId.value ?: run {
+            onError("La conversacion no esta disponible.")
+            return
+        }
         val post = selectedPost.value
         val session = activeChatSession.value
-        val postId = post?.id ?: session?.postId ?: return
-        val user = currentAuthenticatedUser() ?: return
+        val postId = post?.id ?: session?.postId ?: run {
+            onError("La publicacion asociada no esta disponible.")
+            return
+        }
+        val user = currentAuthenticatedUser() ?: run {
+            onError("Inicia sesion antes de enviar mensajes.")
+            return
+        }
         if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
-            _authMessage.value = "Only chat participants can send messages."
+            val message = "Solo los participantes pueden enviar mensajes."
+            _authMessage.value = message
+            onError(message)
             return
         }
 
@@ -348,8 +388,12 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     text = text,
                     photoUri = photoUri
                 )
-            }.onFailure {
-                _authMessage.value = it.message ?: "No se pudo enviar el mensaje."
+            }.onSuccess {
+                onComplete()
+            }.onFailure { error ->
+                val message = backendWriteErrorMessage(error, "No se pudo enviar el mensaje.")
+                _authMessage.value = message
+                onError(message)
             }
         }
     }

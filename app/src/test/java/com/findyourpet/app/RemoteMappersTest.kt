@@ -5,6 +5,7 @@ import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.findyourpet.app.data.remote.RemoteMappers.toChatMessageEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toChatSessionEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toDocument
@@ -170,6 +171,58 @@ class RemoteMappersTest {
   }
 
   @Test
+  fun sightingAlertMessageDocumentContainsAuthorizedSnapshotAndMapsBack() {
+    val message = ChatMessageEntity(
+      id = "alert_1",
+      chatId = "chat_1",
+      postId = "post_1",
+      senderId = "uid_reporter",
+      senderName = "Reporter",
+      text = "Nuevo avistamiento de Milo",
+      photoUri = null,
+      timestamp = 123L,
+      type = SIGHTING_ALERT_MESSAGE_TYPE,
+      sightingId = "sighting_1",
+      ownerId = "uid_owner",
+      reporterId = "uid_reporter",
+      snapshotPetName = "Milo",
+      photoAttachmentUri = "https://res.cloudinary.com/example/image/upload/sighting.jpg",
+      locationDisplay = "Parque Central",
+      generalDetails = "Lo vi junto a la entrada.",
+      snapshotTimestamp = 123L
+    )
+
+    val document = message.toDocument(createdAt = 100L)
+    @Suppress("UNCHECKED_CAST")
+    val snapshot = document["snapshot"] as Map<String, Any?>
+    val mapped = document.toChatMessageEntity("alert_1")
+
+    assertEquals(SIGHTING_ALERT_MESSAGE_TYPE, document["type"])
+    assertEquals("sighting_1", document["sightingId"])
+    assertEquals("uid_owner", document["ownerId"])
+    assertEquals("uid_reporter", document["reporterId"])
+    assertEquals("Parque Central", snapshot["locationDisplay"])
+    assertNull(snapshot["phone"])
+    assertNull(snapshot["latitude"])
+    assertEquals("Milo", mapped.snapshotPetName)
+    assertEquals("Lo vi junto a la entrada.", mapped.generalDetails)
+  }
+
+  @Test
+  fun legacyMessageWithoutNewFieldsFallsBackToText() {
+    val mapped = mapOf(
+      "id" to "legacy_1",
+      "chatId" to "chat_1",
+      "senderId" to "uid_reporter",
+      "text" to "Mensaje historico"
+    ).toChatMessageEntity("legacy_1")
+
+    assertEquals("text", mapped.type)
+    assertNull(mapped.sightingId)
+    assertNull(mapped.photoAttachmentUri)
+  }
+
+  @Test
   fun notificationDocumentIsRecipientScopedAndPreviewOnly() {
     val notification = AppNotificationEntity(
       id = "notification_1",
@@ -188,6 +241,31 @@ class RemoteMappersTest {
     assertEquals("uid_owner", mapped.recipientId)
     assertFalse(mapped.message.contains("+506"))
     assertFalse(mapped.message.contains("1.0, 2.0"))
+  }
+
+  @Test
+  fun sightingNotificationStoresOnlyRoutingReferences() {
+    val notification = AppNotificationEntity(
+      id = "notification_sighting",
+      recipientId = "uid_owner",
+      title = "Nuevo avistamiento",
+      message = "Recibiste un nuevo avistamiento en tu publicacion.",
+      type = "ALERT",
+      targetId = "chat_1",
+      timestamp = 123L,
+      chatId = "chat_1",
+      sightingId = "sighting_1",
+      postId = "post_1"
+    )
+
+    val document = notification.toDocument(createdAt = 100L)
+
+    assertEquals("chat_1", document["chatId"])
+    assertEquals("sighting_1", document["sightingId"])
+    assertEquals("post_1", document["postId"])
+    assertEquals("Recibiste un nuevo avistamiento en tu publicacion.", document["message"])
+    assertNull(document["photoUri"])
+    assertNull(document["latitude"])
   }
 
   @Test

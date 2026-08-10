@@ -42,6 +42,7 @@ data class SightingDocument(
     val preciseLocationConsented: Boolean = false,
     val notes: String = "",
     val timestamp: Long = 0L,
+    val idempotencyKey: String = "",
     val createdAt: Long = 0L
 )
 
@@ -70,6 +71,11 @@ data class ChatMessageDocument(
     val photoUri: String? = null,
     val timestamp: Long = 0L,
     val isSystemMessage: Boolean = false,
+    val type: String = "text",
+    val sightingId: String = "",
+    val ownerId: String = "",
+    val reporterId: String = "",
+    val snapshot: Map<String, Any?> = emptyMap(),
     val createdAt: Long = 0L
 )
 
@@ -82,5 +88,8 @@ data class AppNotificationDocument(
     val targetId: String = "",
     val timestamp: Long = 0L,
     val isRead: Boolean = false,
+    val chatId: String = "",
+    val sightingId: String = "",
+    val postId: String = "",
     val createdAt: Long = 0L
 )

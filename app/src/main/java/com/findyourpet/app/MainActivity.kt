@@ -15,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -35,6 +34,7 @@ import com.findyourpet.app.ui.screens.NotificationsScreen
 import com.findyourpet.app.ui.screens.ProfileScreen
 import com.findyourpet.app.ui.screens.SightingAlertScreen
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 
 class MainActivity : ComponentActivity() {
@@ -85,7 +85,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
     val currentRoute = currentBackStackEntry?.destination?.route
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
+        contentWindowInsets = WindowInsets(AppSpacing.none),
         bottomBar = {
             if (currentRoute in PRIMARY_DESTINATION_ROUTES) {
                 BottomPrimaryActionBanner(
@@ -93,7 +93,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                     onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) },
                     onCreatePostClick = { navController.navigateToCreatePost() },
                     onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) },
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = AppSpacing.bottomBarInset)
                 )
             }
         }
@@ -128,9 +128,8 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                     viewModel = viewModel,
                     postId = postId,
                     onBackClick = { navController.popBackStack() },
-                    onAlertSent = { chatId ->
-                        navController.popBackStack()
-                        navController.navigate(chatDetailRoute(chatId))
+                    onAlertSent = {
+                        navController.navigateToPrimaryDestination(ROUTE_HOME)
                     }
                 )
             }
@@ -172,6 +171,9 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
 }
 
 private fun NavHostController.navigateToPrimaryDestination(route: String) {
+    if (route == ROUTE_HOME && popBackStack(ROUTE_HOME, inclusive = false)) {
+        return
+    }
     navigate(route) {
         popUpTo(graph.findStartDestination().id) {
             saveState = true

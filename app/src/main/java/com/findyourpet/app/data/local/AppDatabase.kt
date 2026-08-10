@@ -21,7 +21,7 @@ import com.findyourpet.app.data.local.entity.SightingAlertEntity
         ChatSessionEntity::class,
         AppNotificationEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,7 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mascotas_perdidas_db"
-                ).addMigrations(MIGRATION_2_4, MIGRATION_3_4).build()
+                ).addMigrations(MIGRATION_2_4, MIGRATION_3_4, MIGRATION_4_5).build()
                 INSTANCE = instance
                 instance
             }
@@ -52,6 +52,24 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 dropRetiredContactSharingState(db)
+            }
+        }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sighting_alerts ADD COLUMN idempotencyKey TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN type TEXT NOT NULL DEFAULT 'text'")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN sightingId TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN ownerId TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN reporterId TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN snapshotPetName TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN photoAttachmentUri TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN locationDisplay TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN generalDetails TEXT")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN snapshotTimestamp INTEGER")
+                db.execSQL("ALTER TABLE app_notifications ADD COLUMN chatId TEXT")
+                db.execSQL("ALTER TABLE app_notifications ADD COLUMN sightingId TEXT")
+                db.execSQL("ALTER TABLE app_notifications ADD COLUMN postId TEXT")
             }
         }
 

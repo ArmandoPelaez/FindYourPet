@@ -2,7 +2,7 @@
 
 ## Estado
 
-- Estado actual: IMPLEMENTING
+- Estado actual: PASSED
 - Rama usada: ops/refine-sighting-alert-form-ui
 - Inicio: 2026-08-02
 

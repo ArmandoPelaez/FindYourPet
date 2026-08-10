@@ -6,7 +6,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,24 +14,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.domain.OwnershipPolicy
+import com.findyourpet.app.ui.components.AppButton
+import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.EmptyState
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
-import com.findyourpet.app.ui.theme.AlertRed
-import com.findyourpet.app.ui.theme.CoralPrimary
+import com.findyourpet.app.ui.theme.AppElevation
+import com.findyourpet.app.ui.theme.AppOpacity
+import com.findyourpet.app.ui.theme.AppShapes
+import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -56,34 +54,35 @@ fun HomeScreen(
     val unreadNotificationsCount = notifications.count { !it.isRead }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets.safeDrawing,
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            color = CoralPrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             shape = CircleShape,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(AppSpacing.headerLogo)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Filled.Pets,
                                     contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(AppSpacing.iconMedium)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(AppSpacing.titleGap))
                         Column {
                             Text(
                                 text = "Mascotas Perdidas",
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 18.sp
+                                style = MaterialTheme.typography.titleLarge
                             )
                             Text(
                                 text = "Red Segura de Búsqueda",
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -93,10 +92,10 @@ fun HomeScreen(
                     IconButton(onClick = onNavigateToNotifications) {
                         BadgedBox(
                             badge = {
-                                if (unreadNotificationsCount > 0) {
+                                        if (unreadNotificationsCount > 0) {
                                     Badge(
-                                        containerColor = AlertRed,
-                                        contentColor = Color.White
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
                                     ) {
                                         Text(text = "$unreadNotificationsCount")
                                     }
@@ -111,7 +110,8 @@ fun HomeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar)
                 )
             )
         }
@@ -120,6 +120,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         ) {
             SyncStatusBanner(state = feedState)
             if (posts.isEmpty()) {
@@ -127,39 +128,13 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Card(
+                    EmptyState(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Pets,
-                                contentDescription = null,
-                                modifier = Modifier.size(56.dp),
-                                tint = MaterialTheme.colorScheme.outline
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = if (feedState.isLoading) "Cargando publicaciones" else "No hay publicaciones de mascotas perdidas",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (feedState.errorMessage != null) "Revisa tu conexion o vuelve a intentarlo." else "Tus publicaciones propias aparecen en Perfil; aca veras fichas de otros usuarios.",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                            .padding(AppSpacing.lg),
+                        title = if (feedState.isLoading) "Cargando publicaciones" else "No hay publicaciones de mascotas perdidas",
+                        message = if (feedState.errorMessage != null) "Revisa tu conexion o vuelve a intentarlo." else "Tus publicaciones propias aparecen en Perfil; aca veras fichas de otros usuarios.",
+                    )
                 }
             } else {
                 val pagerState = rememberPagerState(pageCount = { posts.size })
@@ -168,9 +143,9 @@ fun HomeScreen(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 28.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    pageSpacing = 16.dp
+                        .padding(bottom = AppSpacing.pagerBottom),
+                    contentPadding = PaddingValues(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+                    pageSpacing = AppSpacing.md
                 ) { page ->
                     val post = posts[page]
                     PetPostCard(
@@ -202,8 +177,8 @@ fun PetPostCard(
 
     Card(
         modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(26.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = AppShapes.card,
+        elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.card),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -214,7 +189,7 @@ fun PetPostCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 260.dp, max = 320.dp)
+                    .heightIn(min = AppSpacing.cardImageMinHeight, max = AppSpacing.cardImageMaxHeight)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -230,7 +205,7 @@ fun PetPostCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .padding(14.dp)
+                        .padding(AppSpacing.imageOverlay)
                 ) {
                     PetStatusChip(
                         status = post.status,
@@ -242,71 +217,66 @@ fun PetPostCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 18.dp)
+                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.cardContentVertical)
             ) {
                 PetIdentitySection(post = post)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
 
                 Text(
                     text = "Información reportada",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = AppShapes.content,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.subtleSurface)
                     )
                 ) {
                     Text(
                         text = post.features,
-                        fontSize = 15.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 21.sp,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(AppSpacing.md)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.cardContentVertical))
 
                 Text(
                     text = formattedDate,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.cardContentVertical))
 
                 if (post.status != "REUNIDO" && canReportSighting) {
-                    Button(
+                    AppButton(
                         onClick = onAlertClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = AlertRed),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                            .semantics { contentDescription = "Reportar avistamiento de ${post.petName}" },
-                        shape = RoundedCornerShape(18.dp)
+                            .fillMaxWidth(),
+                        variant = AppButtonVariant.Danger,
+                        contentDescription = "Reportar avistamiento de ${post.petName}",
                     ) {
                         Icon(
                             imageVector = Icons.Filled.NotificationsActive,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppSpacing.iconMedium)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(AppSpacing.sm))
                         Text(
                             text = "¡Lo he visto!",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 16.sp
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.actionGap))
                 }
 
-                OutlinedButton(
+                AppButton(
                     onClick = {
                         val sendIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
@@ -317,28 +287,23 @@ fun PetPostCard(
                         )
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .semantics { contentDescription = "Compartir publicacion de ${post.petName}" },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = CoralPrimary
-                    )
+                        .fillMaxWidth(),
+                    variant = AppButtonVariant.Outlined,
+                    contentDescription = "Compartir publicacion de ${post.petName}",
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Share,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(AppSpacing.iconMedium)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(
                         text = "Compartir",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
 
-                Spacer(modifier = Modifier.height(88.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.actionBottom))
             }
         }
     }
@@ -351,14 +316,13 @@ private fun PetIdentitySection(post: PetPostEntity) {
     ) {
         Text(
             text = post.petName,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 28.sp,
+            style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -366,15 +330,14 @@ private fun PetIdentitySection(post: PetPostEntity) {
             Icon(
                 imageVector = Icons.Outlined.LocationOn,
                 contentDescription = null,
-                tint = CoralPrimary,
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(AppSpacing.iconMedium)
             )
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(AppSpacing.locationGap))
             Text(
                 text = post.lastSeenLocation,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
