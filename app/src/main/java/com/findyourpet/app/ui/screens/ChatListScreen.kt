@@ -65,7 +65,9 @@ fun ChatListScreen(
             SyncStatusBanner(state = chatSessionsState)
             if (chatSessions.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = AppSpacing.actionBottom),
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyState(
@@ -79,7 +81,12 @@ fun ChatListScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(AppSpacing.md),
+                    contentPadding = PaddingValues(
+                        start = AppSpacing.md,
+                        top = AppSpacing.md,
+                        end = AppSpacing.md,
+                        bottom = AppSpacing.actionBottom,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.listGap)
                 ) {
                     items(chatSessions, key = { it.id }) { session ->

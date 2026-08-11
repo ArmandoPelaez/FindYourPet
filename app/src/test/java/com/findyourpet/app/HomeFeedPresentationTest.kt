@@ -139,7 +139,8 @@ class HomeFeedPresentationTest {
 
     assertFalse(cardSource.contains("AppElevation.card"))
     assertFalse(cardSource.contains("shape = AppShapes.card"))
-    assertTrue(cardSource.contains("Column(\n        modifier = Modifier.fillMaxSize(),"))
+    assertTrue(cardSource.contains("modifier = Modifier.fillMaxSize()"))
+    assertTrue(cardSource.contains("verticalScroll(rememberScrollState())"))
   }
 
   @Test

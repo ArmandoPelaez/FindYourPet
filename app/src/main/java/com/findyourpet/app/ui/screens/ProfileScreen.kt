@@ -60,7 +60,12 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding(),
-            contentPadding = PaddingValues(AppSpacing.md),
+            contentPadding = PaddingValues(
+                start = AppSpacing.md,
+                top = AppSpacing.md,
+                end = AppSpacing.md,
+                bottom = AppSpacing.actionBottom,
+            ),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             // User Card

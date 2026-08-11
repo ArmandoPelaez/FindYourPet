@@ -82,6 +82,21 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(chatListScreen.contains("if (navigateBack != null)"))
   }
 
+  @Test
+  fun primaryScrollableDestinationsCanRenderBehindFixedBanner() {
+    val mainActivity = mainActivitySource()
+    val profileScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ProfileScreen.kt")
+    val chatListScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ChatListScreen.kt")
+
+    assertTrue(mainActivity.contains("contentWindowInsets = WindowInsets(AppSpacing.none)"))
+    assertTrue(mainActivity.contains("BottomPrimaryActionBanner("))
+    assertTrue(mainActivity.contains("currentRoute in PRIMARY_DESTINATION_ROUTES"))
+    assertTrue(mainActivity.contains("composable(ROUTE_PROFILE) {\n                ProfileScreen(viewModel = viewModel)\n            }"))
+    assertTrue(mainActivity.contains("composable(ROUTE_CHATS) {\n                ChatListScreen("))
+    assertTrue(profileScreen.contains("bottom = AppSpacing.actionBottom"))
+    assertTrue(chatListScreen.contains("bottom = AppSpacing.actionBottom"))
+  }
+
   private fun mainActivitySource() = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
 
   private fun source(relativePath: String) = File(root, relativePath).readText()
