@@ -66,6 +66,10 @@ Ese archivo registra:
 - No duplicar un change existente. Si ya existe el nombre, revisar su estado y pedir confirmación para continuarlo; no crear otra carpeta o rama equivalente.
 - No iniciar un nuevo change si existe otro change activo en estado `PASSED_PENDING_INTEGRATION`, `IMPLEMENTING`, `READY_FOR_VERIFICATION` o `VERIFYING`, salvo autorización explícita de trabajo paralelo.
 - No declarar `INTEGRATED` solo porque pasen los tests: debe existir evidencia de integración en `main`.
+- La implementación debe ejecutarse en un subagente cuando `multi_agent_v1__spawn_agent` esté disponible.
+- Un handoff escrito en la respuesta no constituye evidencia de delegación ni reemplaza la llamada a `spawn_agent`.
+- Si `spawn_agent` no está disponible o falla antes de crear un agente, cambiar a `MANUAL_HANDOFF` e invocar explícitamente `findyourpet-implementer` en modo secuencial.
+- En modo `MANUAL_HANDOFF`, el agente principal cambia de rol al implementador; no puede continuar ejecutando tareas del orquestador en paralelo ni implementar código sin cargar la skill implementadora.
 
 # Flujo obligatorio completo
 
@@ -213,27 +217,42 @@ openspec validate "<change>" --strict
 
 Si ya existe un artefacto parcial de ese mismo change, leerlo y continuarlo; no sobrescribirlo ni crear una segunda versión sin autorización.
 
-## 6. Validar el change y entregar el handoff
+## 6. Validar el change y delegar obligatoriamente
 
 Actualizar `.codex/orchestration/<change>.md` con los artefactos generados, el resultado de `openspec validate`, las dudas resueltas y los riesgos pendientes.
 
-Si OpenSpec valida y el alcance está claro, cambiar a `READY_FOR_IMPLEMENTATION` y delegar:
+Si OpenSpec valida y el alcance está claro, cambiar a `READY_FOR_IMPLEMENTATION` y comprobar la capacidad de delegación en el registro de herramientas.
 
-1. Usar `findyourpet-implementer` si hay capacidad de subagentes.
-2. Si no hay subagentes, emitir el handoff mínimo como fallback.
-3. No duplicar tareas, artefactos ni contexto OpenSpec en el handoff.
+### Puerta obligatoria de subagente
 
-Comentario operativo: el handoff debe apuntar al change y a los artefactos ya validados; no repetir el Scrum ni generar una lista paralela de tareas.
+1. Buscar `multi_agent_v1__spawn_agent` en las herramientas disponibles.
+2. Si la herramienta no está disponible, registrar `delegation_status: MANUAL_HANDOFF`, `handoff_mode: MANUAL` y continuar mediante la skill `findyourpet-implementer`.
+3. Si está disponible, ejecutar obligatoriamente `multi_agent_v1__spawn_agent` con el handoff mínimo, `delegation_required: true` y `handoff_mode: SUBAGENT`.
+4. Registrar inmediatamente en `.codex/orchestration/<change>.md`:
+   - `delegation_status: SPAWNED|MANUAL_HANDOFF`
+   - `handoff_mode: SUBAGENT|MANUAL`
+   - `agent_id: <id devuelto por spawn_agent o vacío en modo manual>`
+   - `agent_role: findyourpet-implementer`
+   - `delegation_error:` vacío
+5. Si la llamada a `spawn_agent` falla antes de crear un agente o no devuelve un `agent_id`, registrar `delegation_status: MANUAL_HANDOFF`, `handoff_mode: MANUAL` y conservar el error en `delegation_error`.
+6. Cambiar el estado operativo a `IMPLEMENTING` solo después de `agent_id` válido o de haber invocado explícitamente `findyourpet-implementer` en modo manual.
+7. En modo `SUBAGENT`, no ejecutar implementación local; usar `multi_agent_v1__wait_agent` sobre el `agent_id` y no pasar a `VERIFYING` sin el reporte final.
+8. En modo `MANUAL`, no emitir solamente el texto del handoff: cargar la skill `findyourpet-implementer`, pasarle el payload y ejecutar su flujo completo antes de volver al rol orquestador.
+9. Si el implementador termina con `READY_FOR_VERIFICATION`, continuar con la verificación del orquestador. Si termina con `BLOCKED`, conservar la evidencia y detener el flujo.
 
-Formato del handoff:
+El siguiente contenido es un payload para `spawn_agent`; no se envía como respuesta de cierre al usuario:
 
 ```text
 Usa la skill findyourpet-implementer.
 
 Change: <change>
 Issue Jira: <clave>
+delegation_required: true
+handoff_mode: SUBAGENT|MANUAL
 Implementa solo ese cambio OpenSpec.
 ```
+
+No duplicar tareas, artefactos ni contexto OpenSpec en el payload.
 
 # Puerta de integración
 
@@ -266,6 +285,7 @@ El orquestador debe intentar cerrar el change completo:
 7. INTEGRATED despues de confirmar el merge a `main` y sincronizar `main` con `origin/main`
 
 Después del reporte del implementador:
+- confirmar que existe `agent_id` y que `delegation_status` es `SPAWNED` o `COMPLETED`
 - ejecutar `openspec instructions apply --change "<change>" --json`
 - revisar tareas completas/restantes
 - revisar diff
@@ -307,6 +327,9 @@ Si una validación falla:
 # Bloqueos
 
 Marcar BLOCKED cuando:
+- `spawn_agent` no está disponible, falla o no devuelve un `agent_id` válido y tampoco se pudo invocar el modo `MANUAL_HANDOFF`
+- el handoff no fue ejecutado ni por un subagente ni mediante la skill implementadora en modo manual
+- el subagente no entrega reporte y no puede determinarse su estado
 - el repositorio inicial está sucio
 - no se puede cambiar a main o actualizarla mediante fast-forward
 - main y origin/main no quedan sincronizadas

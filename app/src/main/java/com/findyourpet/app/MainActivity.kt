@@ -166,16 +166,10 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(ROUTE_CHATS) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    ChatListScreen(
-                        viewModel = viewModel,
-                        onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
-                    )
-                }
+                ChatListScreen(
+                    viewModel = viewModel,
+                    onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
+                )
             }
 
             composable(ROUTE_NOTIFICATIONS) {
@@ -195,13 +189,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(ROUTE_PROFILE) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    ProfileScreen(viewModel = viewModel)
-                }
+                ProfileScreen(viewModel = viewModel)
             }
         }
     }

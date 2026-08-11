@@ -18,10 +18,26 @@ El handoff solo identifica el change o entrega un paquete de reparación.
 Si el handoff contradice OpenSpec, frenar e informar BLOCKED.
 No inventar tareas, criterios ni alcance.
 
+# Contrato De Delegación
+
+Cuando el handoff incluya `delegation_required: true`, el orquestador debe haber seleccionado uno de estos modos:
+
+- `handoff_mode: SUBAGENT`: el orquestador creó este subagente con `multi_agent_v1__spawn_agent`.
+- `handoff_mode: MANUAL`: no había capacidad de subagentes o la creación falló, y el agente principal invoca esta skill de forma secuencial.
+
+- El handoff textual por sí solo no inicia esta skill; debe existir una invocación explícita de esta skill.
+- Esta skill no debe buscar ni invocar `spawn_agent`: esas herramientas pueden no estar expuestas dentro del subagente implementador.
+- Si el handoff de un orquestador no incluye `delegation_required: true`, informar `BLOCKED` con causa `HANDOFF_INCOMPLETE` y no editar código.
+- Si el handoff no incluye `handoff_mode: SUBAGENT|MANUAL`, informar `BLOCKED` con causa `HANDOFF_INCOMPLETE` y no editar código.
+- El subagente debe devolver el reporte estructurado de cierre con estado, progreso, archivos, comandos y riesgos.
+- El orquestador es responsable de registrar el `agent_id`, esperar el reporte y ejecutar la verificación posterior.
+
 # Entradas Soportadas
 
 Modo implementación inicial:
 Change: `<change>`
+delegation_required: `true|false`
+handoff_mode: `SUBAGENT|MANUAL`
 
 Modo reparación:
 Change: `<change>`
@@ -34,21 +50,22 @@ Archivos sospechados: `<si aplica>`
 1. Leer el handoff recibido.
 2. Identificar `Change: <change>`.
 3. Determinar si el handoff es implementación inicial o reparación concreta.
-4. Ejecutar `openspec status --change "<change>" --json`.
-5. Revisar `schemaName`, `actionContext` y restricciones de edición.
-6. Ejecutar `openspec instructions apply --change "<change>" --json`.
-7. Si el estado es `blocked`, informar BLOCKED.
-8. Si el estado es `all_done`, no implementar; informar READY_FOR_VERIFICATION.
-9. Leer todos los `contextFiles`.
-10. Si existe `.codex/orchestration/<change>.md`, leerlo como contexto operativo, no como fuente de verdad.
-11. Revisar `git status --short` e identificar cambios preexistentes.
-12. Implementar solo tareas pendientes o la reparación indicada, siempre dentro del alcance OpenSpec.
-13. Marcar tareas como completadas solo con evidencia.
-14. No marcar tareas manuales/externas como completas sin validación real.
-15. Volver a ejecutar `openspec instructions apply --change "<change>" --json` para confirmar progreso.
-16. Revisar el diff propio contra el alcance OpenSpec.
-17. Ejecutar validaciones aplicables.
-18. Informar `READY_FOR_VERIFICATION` o `BLOCKED`, nunca `PASSED` ni `FAILED`.
+4. Si el handoff proviene del orquestador y no incluye `delegation_required: true` o `handoff_mode: SUBAGENT|MANUAL`, informar `BLOCKED` con `HANDOFF_INCOMPLETE` y detenerse.
+5. Ejecutar `openspec status --change "<change>" --json`.
+6. Revisar `schemaName`, `actionContext` y restricciones de edición.
+7. Ejecutar `openspec instructions apply --change "<change>" --json`.
+8. Si el estado es `blocked`, informar BLOCKED.
+9. Si el estado es `all_done`, no implementar; informar READY_FOR_VERIFICATION.
+10. Leer todos los `contextFiles`.
+11. Si existe `.codex/orchestration/<change>.md`, leerlo como contexto operativo, no como fuente de verdad.
+12. Revisar `git status --short` e identificar cambios preexistentes.
+13. Implementar solo tareas pendientes o la reparación indicada, siempre dentro del alcance OpenSpec.
+14. Marcar tareas como completadas solo con evidencia.
+15. No marcar tareas manuales/externas como completas sin validación real.
+16. Volver a ejecutar `openspec instructions apply --change "<change>" --json` para confirmar progreso.
+17. Revisar el diff propio contra el alcance OpenSpec.
+18. Ejecutar validaciones aplicables.
+19. Informar `READY_FOR_VERIFICATION` o `BLOCKED`, nunca `PASSED` ni `FAILED`.
 
 # Loop De Implementación
 
@@ -178,3 +195,11 @@ Riesgos o bloqueos:
 Usar `READY_FOR_VERIFICATION` solo si no quedan tareas implementables pendientes sin justificar, las validaciones aplicables fueron ejecutadas o justificadas, y el diff propio está dentro del alcance OpenSpec.
 
 Usar `BLOCKED` si no se puede avanzar o validar con seguridad. Incluir evidencia concreta y el próximo dato/decisión necesaria.
+
+Si el bloqueo es por un handoff incompleto, incluir:
+
+- `HANDOFF_INCOMPLETE`
+- `delegation_required:` recibido o ausente
+- `handoff_mode:` recibido o ausente
+- `agent_id:` si fue incluido por el orquestador
+- confirmación de que no se modificó código como sustituto
