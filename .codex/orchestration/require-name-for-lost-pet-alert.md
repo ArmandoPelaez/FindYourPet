@@ -1,11 +1,11 @@
 # Orchestration State: require-name-for-lost-pet-alert
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 parallel_work_authorized: true
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: INTEGRATED
+integrated_commit:0e5a6de5cf3efbbbd7112d0a3e591b4720b1b7fa
+integration_evidence:https://github.com/ArmandoPelaez/FindYourPet/pull/29
 
 ## Jira
 
