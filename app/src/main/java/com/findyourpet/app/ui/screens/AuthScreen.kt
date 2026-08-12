@@ -55,6 +55,8 @@ import com.findyourpet.app.R
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.FormFieldLabel
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
@@ -163,7 +165,8 @@ fun AuthScreen(viewModel: PetViewModel) {
                         OutlinedTextField(
                             value = displayName,
                             onValueChange = { displayName = it },
-                            label = { Text("Nombre") },
+                            label = { FormFieldLabel("Nombre") },
+                            textStyle = AppFormTypography.input,
                             singleLine = true,
                             leadingIcon = {
                                 Icon(Icons.Outlined.AccountCircle, contentDescription = null)
@@ -176,7 +179,8 @@ fun AuthScreen(viewModel: PetViewModel) {
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email") },
+                        label = { FormFieldLabel("Email") },
+                        textStyle = AppFormTypography.input,
                         singleLine = true,
                         leadingIcon = {
                             Icon(Icons.Outlined.Email, contentDescription = null)
@@ -188,7 +192,8 @@ fun AuthScreen(viewModel: PetViewModel) {
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Contraseña") },
+                        label = { FormFieldLabel("Contraseña") },
+                        textStyle = AppFormTypography.input,
                         singleLine = true,
                         leadingIcon = {
                             Icon(Icons.Outlined.Lock, contentDescription = null)

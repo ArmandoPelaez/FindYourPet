@@ -25,8 +25,10 @@ import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.findyourpet.app.domain.OwnershipPolicy
+import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.components.SyncStatusBanner
 import com.findyourpet.app.ui.theme.AlertRed
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
@@ -195,7 +197,8 @@ fun ChatDetailScreen(
                                     textInput = it
                                     sendError = null
                                 },
-                                placeholder = { Text("Escribe un mensaje...") },
+                                placeholder = { FormFieldPlaceholder("Escribe un mensaje...") },
+                                textStyle = AppFormTypography.input,
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(horizontal = AppSpacing.textFieldInset),

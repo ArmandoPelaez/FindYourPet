@@ -23,7 +23,7 @@ class UnifiedFormPresentationStaticTest {
     assertTrue(shared.contains("AppSpacing.mediaHeight"))
     assertFalse(shared.contains("Color("))
     assertFalse(shared.contains(".dp"))
-    assertFalse(shared.contains(".sp"))
+    assertFalse(Regex("\\b\\d+\\.sp\\b").containsMatchIn(shared))
   }
 
   @Test

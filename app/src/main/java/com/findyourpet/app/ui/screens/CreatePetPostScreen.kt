@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,12 +22,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Publish
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -55,8 +58,11 @@ import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.FormFieldLabel
+import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.components.FormPhotoUploadSurface
 import com.findyourpet.app.ui.components.FormSectionTitle
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
@@ -215,21 +221,50 @@ fun CreatePetPostScreen(
                 }
             )
 
-            FormSectionTitle(text = "Datos de la Mascota")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape,
+                    modifier = Modifier.size(AppSpacing.headerLogo)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Filled.Pets,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(AppSpacing.iconMedium)
+                        )
+                    }
+                }
+                FormSectionTitle(text = "Datos de la mascota")
+            }
 
-            OutlinedTextField(
-                value = petName,
-                onValueChange = { petName = it },
-                placeholder = { Text("Nombre de la mascota (Ej. Toby, Mia)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = AppShapes.chip,
-                singleLine = true
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                FormFieldLabel(text = "Nombre", required = true)
+                OutlinedTextField(
+                    value = petName,
+                    onValueChange = {
+                        petName = it
+                        if (it.isNotBlank() && formMessage == "Campo obligatorio") {
+                            formMessage = null
+                        }
+                    },
+                    placeholder = { FormFieldPlaceholder("Ej. Toby, Mia") },
+                    textStyle = AppFormTypography.input,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AppShapes.chip,
+                    singleLine = true
+                )
+            }
 
             OutlinedTextField(
                 value = recognitionDetails,
                 onValueChange = { recognitionDetails = it },
-                label = { Text("Detalles adicionales") },
+                label = { FormFieldLabel("Detalles adicionales") },
+                textStyle = AppFormTypography.input,
                 supportingText = {
                     Text("Mas detalles utiles para reconocerla. Ej. color, señas particulares, collar o temperamento")
                 },
@@ -257,7 +292,8 @@ fun CreatePetPostScreen(
                     latitude = 0.0
                     longitude = 0.0
                 },
-                placeholder = { Text("Ultima ubicacion vista (Barrio, Ciudad o referencia)") },
+                placeholder = { FormFieldPlaceholder("Ultima ubicacion vista (Barrio, Ciudad o referencia)") },
+                textStyle = AppFormTypography.input,
                 leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.chip
@@ -265,6 +301,11 @@ fun CreatePetPostScreen(
 
             AppButton(
                 onClick = {
+                    val petNameError = requiredPetNameMessage(petName)
+                    if (petNameError != null) {
+                        formMessage = petNameError
+                        return@AppButton
+                    }
                     val selectedMediaSource = mediaSource
                     if (selectedMediaSource == null) {
                         formMessage = "Adjunta una foto real desde camara o galeria."
@@ -294,7 +335,7 @@ fun CreatePetPostScreen(
                         }
                     )
                 },
-                enabled = petName.isNotBlank() && lastSeenLocation.isNotBlank() && photoUri.isNotBlank() && !isSubmitting,
+                enabled = lastSeenLocation.isNotBlank() && photoUri.isNotBlank() && !isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth(),
                 contentDescription = "Publicar ficha",
@@ -322,3 +363,6 @@ fun CreatePetPostScreen(
         }
     }
 }
+
+internal fun requiredPetNameMessage(petName: String): String? =
+    if (petName.isBlank()) "Campo obligatorio" else null
