@@ -78,6 +78,7 @@ fun CreatePetPostScreen(
     val context = LocalContext.current
 
     var petName by remember { mutableStateOf("") }
+    var characteristics by remember { mutableStateOf("") }
     var recognitionDetails by remember { mutableStateOf("") }
     var lastSeenLocation by remember { mutableStateOf("") }
     var latitude by remember { mutableStateOf(0.0) }
@@ -260,6 +261,27 @@ fun CreatePetPostScreen(
                 )
             }
 
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                FormFieldLabel("Características", required = false)
+                OutlinedTextField(
+                    value = characteristics,
+                    onValueChange = { characteristics = it },
+                    placeholder = { FormFieldPlaceholder("Ej: color,raza,tamaño") },
+                    textStyle = AppFormTypography.input,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AppSpacing.formFieldHeight),
+                    shape = AppShapes.chip,
+                    minLines = 3,
+                    maxLines = 4,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+
             OutlinedTextField(
                 value = recognitionDetails,
                 onValueChange = { recognitionDetails = it },
@@ -318,6 +340,7 @@ fun CreatePetPostScreen(
                         breed = "Mestizo",
                         color = "Variado",
                         features = recognitionDetails.ifBlank { "Sin caracteristicas registradas" },
+                        characteristics = characteristics,
                         photoUri = photoUri,
                         lastSeenLocation = lastSeenLocation,
                         latitude = latitude,

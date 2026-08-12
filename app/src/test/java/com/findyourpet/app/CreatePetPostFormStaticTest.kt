@@ -15,6 +15,8 @@ class CreatePetPostFormStaticTest {
       "Icons.Filled.Pets",
       "FormFieldLabel(text = \"Nombre\", required = true)",
       "FormFieldPlaceholder(\"Ej. Toby, Mia\")",
+      "FormFieldLabel(\"Características\", required = false)",
+      "FormFieldPlaceholder(\"Ej: color,raza,tamaño\")",
       "Mas detalles utiles para reconocerla",
       "Ubicacion",
       "Ultima ubicacion vista",
@@ -42,6 +44,17 @@ class CreatePetPostFormStaticTest {
     assertTrue(source.contains("breed = \"Mestizo\""))
     assertTrue(source.contains("color = \"Variado\""))
     assertTrue(source.contains("features = recognitionDetails.ifBlank"))
+    assertTrue(source.contains("characteristics = characteristics"))
+
+    val characteristicsLabelStart = source.indexOf("FormFieldLabel(\"Características\", required = false)")
+    val additionalDetailsLabelStart = source.indexOf("FormFieldLabel(\"Detalles adicionales\")")
+    assertTrue(characteristicsLabelStart >= 0)
+    assertTrue(characteristicsLabelStart < additionalDetailsLabelStart)
+    val characteristicsField = source.substring(characteristicsLabelStart, additionalDetailsLabelStart)
+    assertTrue(!characteristicsField.contains("required = true"))
+    assertTrue(!characteristicsField.contains("leadingIcon"))
+    assertTrue(characteristicsField.contains("FormFieldPlaceholder(\"Ej: color,raza,tamaño\")"))
+    assertTrue(!characteristicsField.contains("label = { FormFieldLabel"))
   }
 
   @Test

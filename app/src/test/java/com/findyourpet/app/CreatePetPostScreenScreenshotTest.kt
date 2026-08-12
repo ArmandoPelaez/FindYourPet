@@ -44,6 +44,9 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
     composeTestRule.onNodeWithText("Nombre").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Características").assertCountEquals(1)
+    composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Detalles adicionales").assertCountEquals(1)
     composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
@@ -71,6 +74,9 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
     composeTestRule.onNodeWithText("Nombre").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Características").assertCountEquals(1)
+    composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Detalles adicionales").assertCountEquals(1)
     composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(

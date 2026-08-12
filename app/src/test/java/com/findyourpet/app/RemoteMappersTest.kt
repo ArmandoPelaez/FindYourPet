@@ -46,6 +46,31 @@ class RemoteMappersTest {
 
     assertEquals("PERDIDO", mapped.status)
     assertEquals("uid_owner", mapped.ownerId)
+    assertEquals("", mapped.characteristics)
+  }
+
+  @Test
+  fun petPostCharacteristicsRoundTripsAsIndependentRemoteField() {
+    val post = samplePost(ownerId = "uid_owner").copy(characteristics = "Negro, mediano, 4 años")
+
+    val document = post.toDocument(createdAt = 100L)
+    val mapped = document.toPetPostEntity("post_characteristics")
+
+    assertEquals("Negro, mediano, 4 años", document["characteristics"])
+    assertEquals("Negro, mediano, 4 años", mapped.characteristics)
+    assertEquals(post.features, document["features"])
+  }
+
+  @Test
+  fun legacyPetPostWithoutCharacteristicsMapsToEmptyValue() {
+    val mapped = mapOf(
+      "id" to "post_legacy",
+      "petName" to "Milo",
+      "features" to "Collar rojo"
+    ).toPetPostEntity("post_legacy")
+
+    assertEquals("Collar rojo", mapped.features)
+    assertEquals("", mapped.characteristics)
   }
 
   @Test
@@ -317,6 +342,7 @@ class RemoteMappersTest {
       breed = "Mestizo",
       color = "Cafe",
       features = "Collar rojo",
+      characteristics = "Cafe, mediano",
       status = "PERDIDO",
       photoUri = "photo",
       dateLost = 123L,

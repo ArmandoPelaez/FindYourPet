@@ -7,6 +7,7 @@ data class PetPostDocument(
     val breed: String = "",
     val color: String = "",
     val features: String = "",
+    val characteristics: String = "",
     val status: String = "",
     val photoUri: String = "",
     val mediaProvider: String = "",
