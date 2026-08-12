@@ -11,8 +11,10 @@ class CreatePetPostFormStaticTest {
   fun simplifiedForm_showsEssentialFlowAndHidesSplitAttributeInputs() {
     listOf(
       "Toca para agregar foto",
-      "Datos de la Mascota",
-      "Nombre de la mascota (Ej. Toby, Mia)",
+      "Datos de la mascota",
+      "Icons.Filled.Pets",
+      "FormFieldLabel(text = \"Nombre\", required = true)",
+      "FormFieldPlaceholder(\"Ej. Toby, Mia\")",
       "Mas detalles utiles para reconocerla",
       "Ubicacion",
       "Ultima ubicacion vista",
@@ -20,6 +22,9 @@ class CreatePetPostFormStaticTest {
     ).forEach { marker ->
       assertTrue("Missing simplified create-post marker: $marker", source.contains(marker))
     }
+    assertTrue(source.contains("FormSectionTitle(text = \"Datos de la mascota\")"))
+    assertTrue(source.contains("modifier = Modifier.size(AppSpacing.iconMedium)"))
+    assertTrue(!source.contains("Nombre de la mascota (Ej. Toby, Mia)"))
 
     listOf(
       "Fotografia principal",
@@ -62,12 +67,22 @@ class CreatePetPostFormStaticTest {
 
     assertTrue(
       normalized.contains(
-        "enabled = petName.isNotBlank() && lastSeenLocation.isNotBlank() && " +
-          "photoUri.isNotBlank() && !isSubmitting"
+        "enabled = lastSeenLocation.isNotBlank() && photoUri.isNotBlank() && !isSubmitting"
       )
     )
     assertTrue(source.contains("if (selectedMediaSource == null)"))
     assertTrue(source.contains("Adjunta una foto real desde camara o galeria."))
+  }
+
+  @Test
+  fun missingPetName_isRejectedBeforePublicationPath() {
+    val normalized = source.replace(Regex("\\s+"), " ")
+
+    assertTrue(normalized.contains("val petNameError = requiredPetNameMessage(petName)"))
+    assertTrue(normalized.contains("if (petNameError != null) { formMessage = petNameError return@AppButton }"))
+    assertTrue(source.contains("if (petName.isBlank()) \"Campo obligatorio\" else null"))
+    assertTrue(source.indexOf("requiredPetNameMessage(petName)") < source.indexOf("viewModel.createNewPetPost"))
+    assertTrue(source.contains("formMessage = null"))
   }
 
   private fun createPostSource(): String {

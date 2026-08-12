@@ -37,12 +37,14 @@ class CreatePetPostScreenScreenshotTest {
   @Test
   @Config(qualifiers = RobolectricDeviceQualifiers.SmallPhone, sdk = [36])
   fun createPostScreen_compactPhone_hasStableTopAndScrolledVisuals() {
-    renderCreatePostScreen(width = 360, height = 640)
+    renderCreatePostScreen(width = 360, height = 640, darkTheme = false)
 
     composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
     composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Datos de la Mascota").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Nombre").assertIsDisplayed()
+    composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-compact-top.png"
@@ -62,12 +64,14 @@ class CreatePetPostScreenScreenshotTest {
   @Test
   @Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [36])
   fun createPostScreen_tallPhone_hasStableTopAndScrolledVisuals() {
-    renderCreatePostScreen(width = 411, height = 914)
+    renderCreatePostScreen(width = 411, height = 914, darkTheme = true)
 
     composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
     composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Datos de la Mascota").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Nombre").assertIsDisplayed()
+    composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-tall-top.png"
@@ -84,11 +88,11 @@ class CreatePetPostScreenScreenshotTest {
     )
   }
 
-  private fun renderCreatePostScreen(width: Int, height: Int) {
+  private fun renderCreatePostScreen(width: Int, height: Int, darkTheme: Boolean) {
     val viewModel = PetViewModel(ApplicationProvider.getApplicationContext<Application>())
 
     composeTestRule.setContent {
-      MascotasPerdidasTheme {
+      MascotasPerdidasTheme(darkTheme = darkTheme) {
         Box(
           modifier = Modifier
             .width(width.dp)

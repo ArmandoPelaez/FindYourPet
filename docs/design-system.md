@@ -42,6 +42,21 @@ Usar:
 
 - MaterialTheme.typography
 - AppTypography
+- AppFormTypography
+
+### Tipografia de campos de formulario
+
+Todas las pantallas que utilicen campos de entrada deben respetar estos tokens:
+
+| Elemento | Tamano | Peso | Familia | Color |
+|---|---:|---|---|---|
+| Label | 14sp | Medium | Poppins | `MaterialTheme.colorScheme.onSurface` |
+| Placeholder | 14sp | Normal | Poppins | `MaterialTheme.colorScheme.onSurfaceVariant` |
+| Texto ingresado | 16sp | Normal | Poppins | `MaterialTheme.colorScheme.onSurface` |
+
+En Compose se deben usar `AppFormTypography.label`, `AppFormTypography.placeholder` y
+`AppFormTypography.input`, junto con `FormFieldLabel` y `FormFieldPlaceholder` cuando corresponda.
+No se deben declarar estilos tipograficos independientes dentro de cada pantalla.
 
 ## Espaciado
 

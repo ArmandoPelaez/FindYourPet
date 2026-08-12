@@ -66,9 +66,11 @@ import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.FormFieldLabel
 import com.findyourpet.app.ui.components.FormPhotoUploadSurface
 import com.findyourpet.app.ui.components.FormSectionTitle
 import com.findyourpet.app.ui.theme.AppElevation
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
@@ -457,7 +459,8 @@ private fun ColumnScope.SightingAlertDetails(
     OutlinedTextField(
         value = locationName,
         onValueChange = onLocationNameChange,
-        label = { Text("Punto de referencia, barrio o calle") },
+        label = { FormFieldLabel("Punto de referencia, barrio o calle") },
+        textStyle = AppFormTypography.input,
         leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         modifier = Modifier.fillMaxWidth(),
         shape = AppShapes.chip
@@ -478,7 +481,8 @@ private fun ColumnScope.SightingAlertDetails(
     OutlinedTextField(
         value = notes,
         onValueChange = onNotesChange,
-        label = { Text("Describe el estado de la mascota o hacia donde iba") },
+        label = { FormFieldLabel("Describe el estado de la mascota o hacia donde iba") },
+        textStyle = AppFormTypography.input,
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = AppSpacing.notesMinHeight),

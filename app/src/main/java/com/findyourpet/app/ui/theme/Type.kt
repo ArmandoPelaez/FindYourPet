@@ -121,3 +121,10 @@ val AppTypography =
             letterSpacing = 0.5.sp,
         ),
     )
+
+/** Typography tokens for form fields across the application. */
+object AppFormTypography {
+    val label: TextStyle = AppTypography.titleSmall
+    val placeholder: TextStyle = AppTypography.bodyMedium
+    val input: TextStyle = AppTypography.bodyLarge
+}

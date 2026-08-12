@@ -3,6 +3,7 @@ package com.findyourpet.app
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.findyourpet.app.ui.theme.AppFontFamily
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppTypography
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -37,5 +38,18 @@ class TypographyConsistencyTest {
   fun everyTypographyRoleUsesAFontWeightBundledByTheApp() {
     val bundledWeights = setOf(FontWeight.Normal, FontWeight.Medium, FontWeight.Bold)
     assertTrue(styles.all { it.fontWeight in bundledWeights })
+  }
+
+  @Test
+  fun formTypographyMatchesTheProductFormContract() {
+    assertTrue(AppFormTypography.label.fontFamily == AppFontFamily)
+    assertTrue(AppFormTypography.label.fontSize.value == 14f)
+    assertTrue(AppFormTypography.label.fontWeight == FontWeight.Medium)
+    assertTrue(AppFormTypography.placeholder.fontFamily == AppFontFamily)
+    assertTrue(AppFormTypography.placeholder.fontSize.value == 14f)
+    assertTrue(AppFormTypography.placeholder.fontWeight == FontWeight.Normal)
+    assertTrue(AppFormTypography.input.fontFamily == AppFontFamily)
+    assertTrue(AppFormTypography.input.fontSize.value == 16f)
+    assertTrue(AppFormTypography.input.fontWeight == FontWeight.Normal)
   }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 
@@ -40,6 +42,41 @@ fun FormSectionTitle(
         text = text,
         modifier = modifier,
         style = MaterialTheme.typography.titleSmall
+    )
+}
+
+@Composable
+fun FormFieldLabel(
+    text: String,
+    required: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.microGap)
+    ) {
+        Text(
+            text = text,
+            style = AppFormTypography.label,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (required) {
+            Text(
+                text = "*",
+                style = AppFormTypography.label,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun FormFieldPlaceholder(text: String) {
+    Text(
+        text = text,
+        style = AppFormTypography.placeholder,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
