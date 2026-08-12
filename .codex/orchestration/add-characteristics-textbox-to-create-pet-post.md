@@ -1,10 +1,10 @@
 # Orchestration State: add-characteristics-textbox-to-create-pet-post
 
-state: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
 phase: VERIFYING
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 80923a8827bb36f639d0c5f661faa88d3b3f3964
+integration_evidence: origin/main merge commit 80923a8; PR #30
 parallel_work_authorized: true
 
 ## Jira
@@ -90,6 +90,15 @@ parallel_work_authorized: true
 
 ## Result
 
-- Change status: `PASSED_PENDING_INTEGRATION`.
-- Branch pending authorized integration: `ops/add-characteristics-textbox-to-create-pet-post`.
-- No commit or merge was created automatically.
+- Change status before integration: `PASSED_PENDING_INTEGRATION`.
+- Integrated branch: `ops/add-characteristics-textbox-to-create-pet-post`.
+- The merge was performed remotely in PR #30; no local merge was created.
+
+## Integration
+
+- Remote integration confirmed by merge commit `80923a8827bb36f639d0c5f661faa88d3b3f3964` on `origin/main` (PR #30).
+- `git fetch origin --prune`: OK.
+- `git switch main`: OK.
+- `git pull --ff-only origin main`: fast-forward `5746f02` → `80923a8`.
+- `git rev-parse main` = `git rev-parse origin/main` = `80923a8827bb36f639d0c5f661faa88d3b3f3964`.
+- Final working tree: clean.
