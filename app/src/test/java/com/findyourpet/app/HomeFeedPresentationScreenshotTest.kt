@@ -44,7 +44,7 @@ class HomeFeedPresentationScreenshotTest {
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("Compartir").assertIsDisplayed()
+    composeTestRule.onNodeWithText("¡Lo he visto!").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-compact-light-scrolled.png"
     )
@@ -70,7 +70,7 @@ class HomeFeedPresentationScreenshotTest {
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("Compartir").assertIsDisplayed()
+    composeTestRule.onNodeWithText("¡Lo he visto!").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-tall-dark-scrolled.png"
     )

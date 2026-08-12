@@ -1,6 +1,5 @@
 ﻿package com.findyourpet.app.ui.screens
 
-import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -170,7 +169,6 @@ fun PetPostCard(
         val sdf = SimpleDateFormat("dd MMM, yyyy", Locale("es", "ES"))
         sdf.format(Date(post.dateLost))
     }
-    val shareText = remember(post) { buildPetPostShareText(post) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -267,34 +265,6 @@ fun PetPostCard(
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    Spacer(modifier = Modifier.height(AppSpacing.actionGap))
-                }
-
-                AppButton(
-                    onClick = {
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                        }
-                        context.startActivity(
-                            Intent.createChooser(sendIntent, "Compartir publicacion")
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    variant = AppButtonVariant.Outlined,
-                    contentDescription = "Compartir publicacion de ${post.petName}",
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = null,
-                        modifier = Modifier.size(AppSpacing.iconMedium)
-                    )
-                    Spacer(modifier = Modifier.width(AppSpacing.sm))
-                    Text(
-                        text = "Compartir",
-                        style = MaterialTheme.typography.labelLarge
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(AppSpacing.actionBottom))
@@ -338,12 +308,4 @@ private fun PetIdentitySection(post: PetPostEntity) {
             )
         }
     }
-}
-
-fun buildPetPostShareText(post: PetPostEntity): String {
-    return listOf(
-        "Mascota perdida: ${post.petName}",
-        "Ultima ubicacion vista: ${post.lastSeenLocation}",
-        "Si la viste, usa FindYourPet para reportar el avistamiento."
-    ).joinToString(separator = "\n")
 }

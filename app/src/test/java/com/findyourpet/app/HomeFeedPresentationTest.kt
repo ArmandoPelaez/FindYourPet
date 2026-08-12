@@ -9,13 +9,11 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.ui.screens.PetPostCard
-import com.findyourpet.app.ui.screens.buildPetPostShareText
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
 import java.io.File
 import org.junit.Assert.assertFalse
@@ -57,9 +55,9 @@ class HomeFeedPresentationTest {
     composeTestRule.onAllNodesWithText("Información reportada").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Ubicación en la que se perdió").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(1)
-    composeTestRule.onAllNodesWithText("Compartir").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Reportar avistamiento de REX").assertCountEquals(1)
-    composeTestRule.onAllNodesWithContentDescription("Compartir publicacion de REX").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Compartir").assertCountEquals(0)
+    composeTestRule.onAllNodesWithContentDescription("Compartir publicacion de REX").assertCountEquals(0)
   }
 
   @Test
@@ -75,7 +73,8 @@ class HomeFeedPresentationTest {
     }
 
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(0)
-    composeTestRule.onAllNodesWithText("Compartir").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Compartir").assertCountEquals(0)
+    composeTestRule.onAllNodesWithContentDescription("Compartir publicacion de REX").assertCountEquals(0)
   }
 
   @Test
@@ -125,7 +124,7 @@ class HomeFeedPresentationTest {
       }
     }
 
-    composeTestRule.onNodeWithText("Compartir")
+    composeTestRule.onNodeWithText("¡Lo he visto!")
       .performScrollTo()
       .assertIsDisplayed()
   }
@@ -144,32 +143,27 @@ class HomeFeedPresentationTest {
   }
 
   @Test
-  fun shareText_usesOnlyPublicPostSummary() {
-    val post = samplePost(
-      latitude = -34.6037,
-      longitude = -58.3816
+  fun petPostCard_doesNotExposeShareControlOrImplementation() {
+    val appSource = File(repoRoot(), "app/src/main")
+    val forbiddenMarkers = listOf(
+      "ACTION_SEND",
+      "createChooser",
+      "buildPetPostShareText",
+      "Icons.Outlined.Share",
+      "Compartir publicacion",
+      "text = \"Compartir\""
     )
 
-    val shareText = buildPetPostShareText(post)
+    val matches = appSource.walkTopDown()
+      .filter { it.isFile && it.extension == "kt" }
+      .flatMap { file ->
+        val source = file.readText()
+        forbiddenMarkers.filter { marker -> marker in source }
+          .map { marker -> "${file.relativeTo(repoRoot()).path}: $marker" }
+      }
+      .toList()
 
-    assertTrue(shareText.contains("REX"))
-    assertTrue(shareText.contains("Cerca del Parque Central"))
-    assertFalse(shareText.contains("Boxer"))
-    assertFalse(shareText.contains("Marron"))
-    assertFalse(shareText.contains("Visto por ultima vez cerca del Parque Central"))
-    assertFalse(shareText.contains("collar azul"))
-    assertFalse(shareText.contains("Especie"))
-    assertFalse(shareText.contains("Perro"))
-    assertFalse(shareText.lines().any { it.startsWith("Especie:") })
-    assertFalse(shareText.lines().any { it.startsWith("Raza:") })
-    assertFalse(shareText.lines().any { it.startsWith("Color:") })
-    assertFalse(shareText.lines().any { it.startsWith("Señas:") })
-    assertFalse(shareText.lines().any { it.startsWith("Señas particulares:") })
-    assertFalse(shareText.contains("3415551234"))
-    assertFalse(shareText.contains("owner@example.com"))
-    assertFalse(shareText.contains("Calle Privada"))
-    assertFalse(shareText.contains("-34.6037"))
-    assertFalse(shareText.contains("-58.3816"))
+    assertTrue("Share implementation must be absent from production Kotlin: $matches", matches.isEmpty())
   }
 
   @Test
