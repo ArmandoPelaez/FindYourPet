@@ -182,7 +182,7 @@ fun BottomPrimaryActionBanner(
             .navigationBarsPadding()
             .semantics { contentDescription = "Acciones principales" },
         shape = AppShapes.card,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.banner),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.bottomNavigation),
         tonalElevation = AppElevation.card,
         shadowElevation = AppElevation.card + AppSpacing.xs
     ) {

@@ -106,6 +106,7 @@ object AppOpacity {
     const val topBar = 0.92f
     const val subtleSurface = 0.45f
     const val banner = 0.96f
+    const val bottomNavigation = 0.88f
     const val syncSurface = 0.12f
     const val unreadSurface = 0.12f
     const val mediaOverlay = 0.78f
