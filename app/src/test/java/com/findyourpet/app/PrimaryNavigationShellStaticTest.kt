@@ -99,7 +99,7 @@ class PrimaryNavigationShellStaticTest {
 
   private fun mainActivitySource() = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
 
-  private fun source(relativePath: String) = File(root, relativePath).readText()
+  private fun source(relativePath: String) = File(root, relativePath).readText().replace("\r\n", "\n")
 
   private fun repoRoot(): File {
     val userDir = requireNotNull(System.getProperty("user.dir"))
