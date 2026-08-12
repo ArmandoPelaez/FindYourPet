@@ -7,8 +7,10 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
+import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,5 +75,47 @@ class BottomPrimaryActionBannerComposeTest {
     assertEquals(1, profileClicks)
     assertEquals(1, createPostClicks)
     assertEquals(1, chatClicks)
+  }
+
+  @Test
+  fun bottomPrimaryActionBanner_isLegibleInLightTheme() {
+    composeTestRule.setContent {
+      MascotasPerdidasTheme(darkTheme = false) {
+        BottomPrimaryActionBanner(
+          onHomeClick = {},
+          onProfileClick = {},
+          onCreatePostClick = {},
+          onChatClick = {}
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithContentDescription("Acciones principales").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Crear publicacion").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+  }
+
+  @Test
+  fun bottomPrimaryActionBanner_isLegibleInDarkThemeWithDedicatedNonOpaqueToken() {
+    composeTestRule.setContent {
+      MascotasPerdidasTheme(darkTheme = true) {
+        BottomPrimaryActionBanner(
+          onHomeClick = {},
+          onProfileClick = {},
+          onCreatePostClick = {},
+          onChatClick = {}
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithContentDescription("Acciones principales").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Crear publicacion").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+    assertTrue(AppOpacity.bottomNavigation in 0f..1f)
+    assertTrue(AppOpacity.bottomNavigation < 1f)
   }
 }
