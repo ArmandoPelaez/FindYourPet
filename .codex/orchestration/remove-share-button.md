@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-PASSED_PENDING_INTEGRATION
+INTEGRATED
 
 ## Issue Jira
 
