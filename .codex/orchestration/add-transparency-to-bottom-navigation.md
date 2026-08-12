@@ -1,10 +1,10 @@
 # Orchestration State: add-transparency-to-bottom-navigation
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+state: INTEGRATED
+phase: INTEGRATED
+integration_status: INTEGRATED
+integrated_commit: de41384b9de865fcbe5533bbc24c22d17a5cbbff
+integration_evidence: PR mergeado y main sincronizada con origin/main
 
 ## Jira
 
