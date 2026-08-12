@@ -11,6 +11,7 @@ data class PetPostEntity(
     val breed: String,
     val color: String,
     val features: String,
+    val characteristics: String = "",
     val status: String, // PERDIDO, AVISTADO, REUNIDO
     val photoUri: String,
     val dateLost: Long,

@@ -21,7 +21,7 @@ import com.findyourpet.app.data.local.entity.SightingAlertEntity
         ChatSessionEntity::class,
         AppNotificationEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,7 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mascotas_perdidas_db"
-                ).addMigrations(MIGRATION_2_4, MIGRATION_3_4, MIGRATION_4_5).build()
+                ).addMigrations(MIGRATION_2_4, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
                 INSTANCE = instance
                 instance
             }
@@ -70,6 +70,12 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE app_notifications ADD COLUMN chatId TEXT")
                 db.execSQL("ALTER TABLE app_notifications ADD COLUMN sightingId TEXT")
                 db.execSQL("ALTER TABLE app_notifications ADD COLUMN postId TEXT")
+            }
+        }
+
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pet_posts ADD COLUMN characteristics TEXT NOT NULL DEFAULT ''")
             }
         }
 
