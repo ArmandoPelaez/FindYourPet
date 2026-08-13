@@ -2,7 +2,7 @@
 
 ## Estado Actual
 
-PASSED
+INTEGRATED
 
 ## Rama
 
@@ -152,3 +152,9 @@ PASSED.
 ## Bloqueos O Riesgos Pendientes
 
 - Ninguno abierto.
+
+## Integración
+
+- `integration_status: MERGED`
+- `integrated_commit: 44b5609e9433709e3c1690c36d1d09ac2ff6e06d`
+- `integration_evidence: commit publicado en main; main y origin/main sincronizadas; OpenSpec, testDebugUnitTest y assembleDebug verificados.`
