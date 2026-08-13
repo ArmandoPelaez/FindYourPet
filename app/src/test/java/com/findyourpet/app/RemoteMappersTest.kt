@@ -62,6 +62,23 @@ class RemoteMappersTest {
   }
 
   @Test
+  fun petPostParticularMarksRoundTripsWithoutOverwritingExistingDetails() {
+    val post = samplePost(ownerId = "uid_owner").copy(
+      features = "Detalles generales",
+      characteristics = "Cafe, mediano",
+      particularMarks = "Collar azul y cicatriz en la pata"
+    )
+
+    val document = post.toDocument(createdAt = 100L)
+    val mapped = document.toPetPostEntity("post_particular_marks")
+
+    assertEquals("Collar azul y cicatriz en la pata", document["particularMarks"])
+    assertEquals("Collar azul y cicatriz en la pata", mapped.particularMarks)
+    assertEquals("Cafe, mediano", mapped.characteristics)
+    assertEquals("Detalles generales", mapped.features)
+  }
+
+  @Test
   fun legacyPetPostWithoutCharacteristicsMapsToEmptyValue() {
     val mapped = mapOf(
       "id" to "post_legacy",
@@ -71,6 +88,21 @@ class RemoteMappersTest {
 
     assertEquals("Collar rojo", mapped.features)
     assertEquals("", mapped.characteristics)
+    assertEquals("", mapped.particularMarks)
+  }
+
+  @Test
+  fun legacyPetPostWithoutParticularMarksMapsToEmptyValue() {
+    val mapped = mapOf(
+      "id" to "post_legacy_marks",
+      "petName" to "Milo",
+      "features" to "Detalles generales",
+      "characteristics" to "Cafe, mediano"
+    ).toPetPostEntity("post_legacy_marks")
+
+    assertEquals("Cafe, mediano", mapped.characteristics)
+    assertEquals("Detalles generales", mapped.features)
+    assertEquals("", mapped.particularMarks)
   }
 
   @Test
@@ -343,6 +375,7 @@ class RemoteMappersTest {
       color = "Cafe",
       features = "Collar rojo",
       characteristics = "Cafe, mediano",
+      particularMarks = "Collar azul",
       status = "PERDIDO",
       photoUri = "photo",
       dateLost = 123L,
