@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-PASSED_PENDING_INTEGRATION
+INTEGRATED
 
 ## Issue Jira
 
@@ -120,6 +120,6 @@ Eliminar la información redundante solicitada al reportar una mascota perdida, 
 
 ## Integración
 
-- `integration_status: PENDING`
-- `integrated_commit:`
-- `integration_evidence:` pendiente de merge autorizado a `main` y sincronización posterior con `origin/main`.
+- `integration_status: MERGED`
+- `integrated_commit: 18da6c9e217a180a81fb6159a65970db337ee949`
+- `integration_evidence: PR #34 mergeado en origin/main; commit de implementación 5cbdfef integrado; main local sincronizada con origin/main mediante fast-forward.`
