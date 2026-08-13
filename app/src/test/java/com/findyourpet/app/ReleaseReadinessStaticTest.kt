@@ -164,15 +164,19 @@ class ReleaseReadinessStaticTest {
   }
 
   @Test
-  fun createPostForm_omitsCurrentLocationAndRewardInputs() {
+  fun createPostForm_exposesGuidedLocationAndKeepsRewardDefault() {
     val createPostSource = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/CreatePetPostScreen.kt").readText()
+    val locationDialogSource = File(root, "app/src/main/java/com/findyourpet/app/ui/components/LocationSelectionDialogs.kt").readText()
 
-    assertTrue(createPostSource.contains("FormSectionTitle(text = \"Ubicacion\")"))
+    assertTrue(createPostSource.contains("FormFieldLabel(\"¿Dónde fue vista por última vez?\", required = true)"))
     assertTrue(createPostSource.contains("rewardAmount = \"Sin recompensa\""))
-    assertTrue(!createPostSource.contains("Usar ubicacion actual"))
-    assertTrue(!createPostSource.contains("Ubicacion GPS capturada"))
+    assertTrue(locationDialogSource.contains("Usar mi ubicación actual"))
+    assertTrue(locationDialogSource.contains("Elegir en el mapa"))
+    assertTrue(locationDialogSource.contains("Escribir una referencia"))
+    assertTrue(!locationDialogSource.contains("Buscar dirección"))
+    assertTrue(!locationDialogSource.contains("Places"))
     assertTrue(!createPostSource.contains("Recompensa ofrecida"))
-    assertTrue(!createPostSource.contains("requestCurrentLocation"))
+    assertTrue(createPostSource.contains("requestCurrentLocation"))
   }
 
   private fun repoRoot(): File {

@@ -32,8 +32,8 @@ class RemoteMappersTest {
     assertNull(document["ownerEmail"])
     assertNull(document["ownerAddress"])
     assertNull(document["isContactRevealedToAll"])
-    assertNull(document["latitude"])
-    assertNull(document["longitude"])
+    assertEquals(post.latitude, document["latitude"])
+    assertEquals(post.longitude, document["longitude"])
   }
 
   @Test

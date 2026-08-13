@@ -50,9 +50,7 @@ service cloud.firestore {
         'ownerEmail',
         'ownerAddress',
         'ownerLatitude',
-        'ownerLongitude',
-        'latitude',
-        'longitude'
+        'ownerLongitude'
       ]);
     }
 
@@ -63,9 +61,7 @@ service cloud.firestore {
         'ownerEmail',
         'ownerAddress',
         'ownerLatitude',
-        'ownerLongitude',
-        'latitude',
-        'longitude'
+        'ownerLongitude'
       ]);
     }
 
@@ -121,6 +117,20 @@ service cloud.firestore {
 
     function validLocationSource(data) {
       return data.locationSource in ['DEVICE_GPS', 'MANUAL_COARSE', 'NONE', ''];
+    }
+
+    function validPetPostLocation(data) {
+      return data.latitude is number
+        && data.longitude is number
+        && data.latitude >= -90
+        && data.latitude <= 90
+        && data.longitude >= -180
+        && data.longitude <= 180;
+    }
+
+    function validOptionalPetPostLocation(data) {
+      return !data.keys().hasAny(['latitude', 'longitude'])
+        || validPetPostLocation(data);
     }
 
     function preciseSightingLocationIsConsented(data) {
@@ -285,12 +295,14 @@ service cloud.firestore {
         && request.resource.data.status in ['PERDIDO', 'AVISTADO', 'REUNIDO']
         && validCloudinaryMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
+        && validPetPostLocation(request.resource.data)
         && hasNoPublicContactFields(request.resource.data);
       allow update: if isPostOwner()
         && keepsOwnerId()
         && request.resource.data.id == resource.data.id
         && validCloudinaryMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
+        && validOptionalPetPostLocation(request.resource.data)
         && !publicContactFieldsChanged();
       allow delete: if isPostOwner();
     }

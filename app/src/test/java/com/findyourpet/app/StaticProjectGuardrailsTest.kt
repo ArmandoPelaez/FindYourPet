@@ -41,6 +41,9 @@ class StaticProjectGuardrailsTest {
     assertEquals("false", application.getAttributeNS(androidNamespace, "allowBackup"))
     assertEquals("@xml/backup_rules", application.getAttributeNS(androidNamespace, "fullBackupContent"))
     assertEquals("@xml/data_extraction_rules", application.getAttributeNS(androidNamespace, "dataExtractionRules"))
+    val legacyHttpLibrary = application.getElementsByTagName("uses-library").item(0) as Element
+    assertEquals("org.apache.http.legacy", legacyHttpLibrary.getAttributeNS(androidNamespace, "name"))
+    assertEquals("false", legacyHttpLibrary.getAttributeNS(androidNamespace, "required"))
   }
 
   @Test
@@ -76,7 +79,6 @@ class StaticProjectGuardrailsTest {
 
     val forbiddenPatterns = listOf(
       Regex("""id\("com\.google\.android\.libraries\.mapsplatform\.secrets-gradle-plugin"\)"""),
-      Regex("""libs\.plugins\.secrets"""),
       Regex("""libs\.firebase\.ai"""),
       Regex("""libs\.firebase\.appcheck"""),
       Regex("""libs\.retrofit"""),

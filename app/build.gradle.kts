@@ -5,11 +5,17 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
+  alias(libs.plugins.secrets)
 }
 
 if (file("google-services.json").isFile) {
   pluginManager.apply("com.google.gms.google-services")
   pluginManager.apply("com.google.firebase.crashlytics")
+}
+
+secrets {
+  propertiesFileName = "secrets.properties"
+  defaultPropertiesFileName = "local.defaults.properties"
 }
 
 android {
@@ -22,6 +28,7 @@ android {
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
+    manifestPlaceholders["MAPS_API_KEY"] = "DEFAULT_API_KEY"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"mqt4dzrt\"")
@@ -96,6 +103,8 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.play.services.location)
+  implementation(libs.play.services.maps)
+  implementation(libs.maps.compose)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

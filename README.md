@@ -77,6 +77,7 @@ Reglas base:
 - **Backend:** Firebase Authentication + Cloud Firestore.
 - **Imagenes:** Cloudinary Android SDK con upload preset unsigned.
 - **Ubicacion:** Google Play Services Location.
+- **Mapa:** Google Maps SDK for Android y Maps Compose; ver `docs/google-maps-setup.md`.
 - **Crash reporting:** Firebase Crashlytics, aplicado cuando existe configuracion Firebase local.
 - **Build:** Gradle Kotlin DSL, Gradle Wrapper.
 - **Tests:** JUnit, Robolectric, Compose UI tests y Roborazzi.

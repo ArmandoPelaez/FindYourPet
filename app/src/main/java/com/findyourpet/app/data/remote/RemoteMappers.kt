@@ -37,6 +37,8 @@ object RemoteMappers {
             "mediaSource" to mediaSource,
             "dateLost" to dateLost,
             "lastSeenLocation" to lastSeenLocation,
+            "latitude" to latitude,
+            "longitude" to longitude,
             "locationSource" to locationSource,
             "publicLocationName" to lastSeenLocation,
             "rewardAmount" to rewardAmount,

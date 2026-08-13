@@ -44,6 +44,9 @@ La ubicacion precisa no es publica por defecto y solo se usa cuando el usuario a
 - Firebase Crashlytics: diagnostico de errores de la app.
 - Cloudinary: carga y entrega de imagenes.
 - Google Play Services Location: captura de ubicacion si el usuario lo autoriza.
+- Google Maps SDK for Android: muestra el mapa cuando la persona elige y confirma un punto.
+
+Las selecciones de mapa son una alternativa iniciada por la persona usuaria y se clasifican como ubicacion manual aproximada. La clave de Google Maps se restringe por aplicacion y API; no se guarda una clave real en el repositorio. Si Maps no esta disponible, se ofrece una referencia manual.
 
 ## Retencion y eliminacion
 
