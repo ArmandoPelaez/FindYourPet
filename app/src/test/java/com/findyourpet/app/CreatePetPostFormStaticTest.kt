@@ -45,16 +45,29 @@ class CreatePetPostFormStaticTest {
     assertTrue(source.contains("color = \"Variado\""))
     assertTrue(source.contains("features = recognitionDetails.ifBlank"))
     assertTrue(source.contains("characteristics = characteristics"))
+    assertTrue(source.contains("particularMarks = particularMarks"))
 
     val characteristicsLabelStart = source.indexOf("FormFieldLabel(\"Características\", required = false)")
+    val particularMarksLabelStart = source.indexOf("FormFieldLabel(\"Señas particulares\", required = false)")
     val additionalDetailsLabelStart = source.indexOf("FormFieldLabel(\"Detalles adicionales\")")
     assertTrue(characteristicsLabelStart >= 0)
+    assertTrue(particularMarksLabelStart >= 0)
     assertTrue(characteristicsLabelStart < additionalDetailsLabelStart)
+    assertTrue(characteristicsLabelStart < particularMarksLabelStart)
+    assertTrue(particularMarksLabelStart < additionalDetailsLabelStart)
     val characteristicsField = source.substring(characteristicsLabelStart, additionalDetailsLabelStart)
     assertTrue(!characteristicsField.contains("required = true"))
     assertTrue(!characteristicsField.contains("leadingIcon"))
     assertTrue(characteristicsField.contains("FormFieldPlaceholder(\"Ej: color,raza,tamaño\")"))
     assertTrue(!characteristicsField.contains("label = { FormFieldLabel"))
+
+    val particularMarksField = source.substring(particularMarksLabelStart, additionalDetailsLabelStart)
+    assertTrue(!particularMarksField.contains("required = true"))
+    assertTrue(!particularMarksField.contains("leadingIcon"))
+    assertTrue(!particularMarksField.contains("Icons."))
+    assertTrue(particularMarksField.contains("AppFormTypography.input"))
+    assertTrue(particularMarksField.contains("AppShapes.chip"))
+    assertTrue(particularMarksField.contains("AppSpacing.formFieldHeight"))
   }
 
   @Test
