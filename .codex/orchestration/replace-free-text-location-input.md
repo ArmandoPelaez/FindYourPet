@@ -1,15 +1,15 @@
 # Orchestration: replace-free-text-location-input
 
-state: BLOCKED
+state: INTEGRATED
 issue: SCRUM-13
 issue_url: https://pelaezarmando.atlassian.net/browse/SCRUM-13
 base_branch: main
 base_commit: 2758cd2948f31ece337c7bab8ec71ca9c5257d69
 remote_base_commit: 2758cd2948f31ece337c7bab8ec71ca9c5257d69
 branch: ops/replace-free-text-location-input
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 2c116d24a110d6c74e4b014950e294b921b491ca
+integration_evidence: PR #33 merged into main; main and origin/main synchronized at 2c116d24a110d6c74e4b014950e294b921b491ca on 2026-08-13.
 delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 agent_id: 019ffb7b-0985-7193-8fc2-fbbebd4bbe88
