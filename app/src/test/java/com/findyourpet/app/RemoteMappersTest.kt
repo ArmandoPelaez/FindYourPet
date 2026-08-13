@@ -46,40 +46,39 @@ class RemoteMappersTest {
 
     assertEquals("PERDIDO", mapped.status)
     assertEquals("uid_owner", mapped.ownerId)
-    assertEquals("", mapped.characteristics)
   }
 
   @Test
-  fun petPostCharacteristicsRoundTripsAsIndependentRemoteField() {
-    val post = samplePost(ownerId = "uid_owner").copy(characteristics = "Negro, mediano, 4 años")
+  fun petPostSerializationOmitsRetiredRecognitionFields() {
+    val post = samplePost(ownerId = "uid_owner")
 
     val document = post.toDocument(createdAt = 100L)
-    val mapped = document.toPetPostEntity("post_characteristics")
 
-    assertEquals("Negro, mediano, 4 años", document["characteristics"])
-    assertEquals("Negro, mediano, 4 años", mapped.characteristics)
+    assertNull(document["characteristics"])
+    assertNull(document["particularMarks"])
     assertEquals(post.features, document["features"])
   }
 
   @Test
-  fun petPostParticularMarksRoundTripsWithoutOverwritingExistingDetails() {
-    val post = samplePost(ownerId = "uid_owner").copy(
-      features = "Detalles generales",
-      characteristics = "Cafe, mediano",
-      particularMarks = "Collar azul y cicatriz en la pata"
+  fun legacyPetPostWithRetiredRecognitionFieldsMapsWithoutReintroducingThem() {
+    val legacyDocument = mapOf(
+      "id" to "post_legacy_recognition",
+      "petName" to "Milo",
+      "features" to "Detalles generales",
+      "characteristics" to "Cafe, mediano",
+      "particularMarks" to "Collar azul y cicatriz en la pata"
     )
 
-    val document = post.toDocument(createdAt = 100L)
-    val mapped = document.toPetPostEntity("post_particular_marks")
+    val mapped = legacyDocument.toPetPostEntity("post_legacy_recognition")
+    val currentDocument = mapped.toDocument(createdAt = 100L)
 
-    assertEquals("Collar azul y cicatriz en la pata", document["particularMarks"])
-    assertEquals("Collar azul y cicatriz en la pata", mapped.particularMarks)
-    assertEquals("Cafe, mediano", mapped.characteristics)
     assertEquals("Detalles generales", mapped.features)
+    assertNull(currentDocument["characteristics"])
+    assertNull(currentDocument["particularMarks"])
   }
 
   @Test
-  fun legacyPetPostWithoutCharacteristicsMapsToEmptyValue() {
+  fun legacyPetPostWithoutRetiredRecognitionFieldsKeepsFeatures() {
     val mapped = mapOf(
       "id" to "post_legacy",
       "petName" to "Milo",
@@ -87,22 +86,6 @@ class RemoteMappersTest {
     ).toPetPostEntity("post_legacy")
 
     assertEquals("Collar rojo", mapped.features)
-    assertEquals("", mapped.characteristics)
-    assertEquals("", mapped.particularMarks)
-  }
-
-  @Test
-  fun legacyPetPostWithoutParticularMarksMapsToEmptyValue() {
-    val mapped = mapOf(
-      "id" to "post_legacy_marks",
-      "petName" to "Milo",
-      "features" to "Detalles generales",
-      "characteristics" to "Cafe, mediano"
-    ).toPetPostEntity("post_legacy_marks")
-
-    assertEquals("Cafe, mediano", mapped.characteristics)
-    assertEquals("Detalles generales", mapped.features)
-    assertEquals("", mapped.particularMarks)
   }
 
   @Test
@@ -374,8 +357,6 @@ class RemoteMappersTest {
       breed = "Mestizo",
       color = "Cafe",
       features = "Collar rojo",
-      characteristics = "Cafe, mediano",
-      particularMarks = "Collar azul",
       status = "PERDIDO",
       photoUri = "photo",
       dateLost = 123L,
