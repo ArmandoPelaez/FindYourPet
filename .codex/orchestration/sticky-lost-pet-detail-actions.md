@@ -1,7 +1,7 @@
 # Orchestration State: sticky-lost-pet-detail-actions
 
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-15
 issue_url: https://pelaezarmando.atlassian.net/browse/SCRUM-15
 base_branch: main
@@ -9,9 +9,9 @@ base_commit: 600139c46cc8418ce708cedcf838986e53ff03e6
 remote_base_commit: 600139c46cc8418ce708cedcf838986e53ff03e6
 branch: ops/sticky-lost-pet-detail-actions
 work_parallel_authorized: true
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 691bcab
+integration_evidence: PR #35 mergeado en origin/main; origin/main actualizado y contiene el commit de implementación 1080f7b.
 
 ## Jira
 
@@ -109,11 +109,11 @@ agent_id:
 agent_role: findyourpet-implementer
 delegation_error: spawn_agent rejected the payload because message and items were supplied together; no agent_id was created.
 
-La implementación se ejecutó secuencialmente mediante la skill `findyourpet-implementer`. No hay evidencia de integración.
+La implementación se ejecutó secuencialmente mediante la skill `findyourpet-implementer`. La integración quedó registrada en `origin/main` mediante el PR #35.
 
 ## Implementer report
 
-Status: `BLOCKED`
+Status: `INTEGRATED`
 
 Change: `sticky-lost-pet-detail-actions`
 
@@ -157,7 +157,7 @@ Riesgo/bloqueo: la validación manual de rutas completas requiere `adb` y un dis
 
 - `git diff --check` pendiente de ejecutar.
 - `openspec validate --strict`, tests debug unitarios, screenshots y `assembleDebug` tienen evidencia exitosa.
-- El change no puede pasar a `PASSED_PENDING_INTEGRATION` hasta completar la validación manual pendiente.
+- El change fue integrado en `origin/main` mediante el PR #35.
 
 ## Actualización de alcance solicitada por el usuario
 
