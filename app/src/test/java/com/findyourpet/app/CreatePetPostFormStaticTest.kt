@@ -1,6 +1,9 @@
 package com.findyourpet.app
 
 import java.io.File
+import com.findyourpet.app.ui.screens.AdditionalDetailsMaxLength
+import com.findyourpet.app.ui.screens.limitAdditionalDetailsInput
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -17,7 +20,8 @@ class CreatePetPostFormStaticTest {
       "FormFieldPlaceholder(\"Ej. Toby, Mia\")",
       "FormFieldLabel(\"Características\", required = false)",
       "FormFieldPlaceholder(\"Ej: color,raza,tamaño\")",
-      "Mas detalles utiles para reconocerla",
+      "Descripcion adicional",
+      "Contanos cómo reconocerla...",
       "Ubicacion",
       "Ultima ubicacion vista",
       "Publicar ficha"
@@ -49,7 +53,7 @@ class CreatePetPostFormStaticTest {
 
     val characteristicsLabelStart = source.indexOf("FormFieldLabel(\"Características\", required = false)")
     val particularMarksLabelStart = source.indexOf("FormFieldLabel(\"Señas particulares\", required = false)")
-    val additionalDetailsLabelStart = source.indexOf("FormFieldLabel(\"Detalles adicionales\")")
+    val additionalDetailsLabelStart = source.indexOf("FormFieldLabel(\"Descripcion adicional\")")
     assertTrue(characteristicsLabelStart >= 0)
     assertTrue(particularMarksLabelStart >= 0)
     assertTrue(characteristicsLabelStart < additionalDetailsLabelStart)
@@ -68,6 +72,24 @@ class CreatePetPostFormStaticTest {
     assertTrue(particularMarksField.contains("AppFormTypography.input"))
     assertTrue(particularMarksField.contains("AppShapes.chip"))
     assertTrue(particularMarksField.contains("AppSpacing.formFieldHeight"))
+  }
+
+  @Test
+  fun additionalDetails_usesMultilineInputWithCounterAndLimit() {
+    assertTrue(source.contains("onValueChange = { recognitionDetails = limitAdditionalDetailsInput(it) }"))
+    assertTrue(source.contains("placeholder = { FormFieldPlaceholder(\"Contanos cómo reconocerla...\") }"))
+    assertTrue(source.contains("text = \"\${recognitionDetails.length}/\$AdditionalDetailsMaxLength\""))
+    assertTrue(source.contains("minLines = 3"))
+    assertTrue(source.contains("maxLines = 4"))
+    assertTrue(source.contains("AppFormTypography.placeholder"))
+    assertTrue(source.contains("AppSpacing.formFieldHeight"))
+  }
+
+  @Test
+  fun additionalDetails_inputIsCappedAtFiveHundredCharacters() {
+    assertEquals(500, AdditionalDetailsMaxLength)
+    assertEquals(500, limitAdditionalDetailsInput("x".repeat(501)).length)
+    assertEquals("texto", limitAdditionalDetailsInput("texto"))
   }
 
   @Test
