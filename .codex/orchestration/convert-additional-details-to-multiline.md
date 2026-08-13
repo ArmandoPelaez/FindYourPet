@@ -1,7 +1,7 @@
 # Orchestration State: convert-additional-details-to-multiline
 
-state: READY_FOR_VERIFICATION
-phase: VERIFICATION_PENDING
+state: PASSED_PENDING_INTEGRATION
+phase: VERIFYING
 integration_status: PENDING
 integrated_commit:
 integration_evidence:
@@ -76,13 +76,22 @@ delegation_error:
 
 ## Implementación
 
-- commit: `2db02fc`
+- status: `READY_FOR_VERIFICATION`
+- commit: `d6b7a33`
+- agent: `019ffb2c-45e1-7172-9d73-e8bafa8856cf`
 - progreso OpenSpec: `12/12`
 - archivos: `CreatePetPostScreen.kt`, `CreatePetPostFormStaticTest.kt`, `CreatePetPostScreenScreenshotTest.kt` y cuatro referencias Roborazzi de Create Post.
 - `openspec validate "convert-additional-details-to-multiline" --strict` => válido.
 - `openspec instructions apply --change "convert-additional-details-to-multiline" --json` => `all_done`, `12/12`.
 - `.\gradlew.bat testDebugUnitTest` => `BUILD SUCCESSFUL`.
 - `.\gradlew.bat assembleDebug` => `BUILD SUCCESSFUL`.
+- Verification in this workspace completed after the implementer report.
+- `openspec validate "convert-additional-details-to-multiline" --strict` => valid.
+- `openspec instructions apply --change "convert-additional-details-to-multiline" --json` => `all_done`, `12/12`.
+- `git diff --check main..HEAD` => no errors.
+- Diff limited to `CreatePetPostScreen.kt`, form tests, four Roborazzi screenshots and OpenSpec/orchestration artifacts.
+- Visual review of compact/tall Light/Dark screenshots => no clipping or overlap; label, placeholder and counter are visible.
+- Result: `PASSED_PENDING_INTEGRATION`.
 - `git diff --check` => sin errores.
 - Revisión manual de capturas compact/tall y Light/Dark => etiqueta, placeholder, contador `0/500`, multilinea y scroll sin clipping.
 - Alcance: no se modificaron modelos, ViewModel, repositorios, backend, permisos, ubicación ni otras pantallas.
