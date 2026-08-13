@@ -304,27 +304,33 @@ fun CreatePetPostScreen(
                 )
             }
 
-            OutlinedTextField(
-                value = recognitionDetails,
-                onValueChange = { recognitionDetails = it },
-                label = { FormFieldLabel("Detalles adicionales") },
-                textStyle = AppFormTypography.input,
-                supportingText = {
-                    Text("Mas detalles utiles para reconocerla. Ej. color, señas particulares, collar o temperamento")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(AppSpacing.formFieldHeight),
-                shape = AppShapes.chip,
-                minLines = 3,
-                maxLines = 4,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    cursorColor = MaterialTheme.colorScheme.primary
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                FormFieldLabel("Descripcion adicional")
+                OutlinedTextField(
+                    value = recognitionDetails,
+                    onValueChange = { recognitionDetails = limitAdditionalDetailsInput(it) },
+                    placeholder = { FormFieldPlaceholder("Contanos cómo reconocerla...") },
+                    textStyle = AppFormTypography.input,
+                    supportingText = {
+                        Text(
+                            text = "${recognitionDetails.length}/$AdditionalDetailsMaxLength",
+                            style = AppFormTypography.placeholder,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AppSpacing.formFieldHeight),
+                    shape = AppShapes.chip,
+                    minLines = 3,
+                    maxLines = 4,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
-            )
+            }
 
             FormSectionTitle(text = "Ubicacion")
 
@@ -412,3 +418,8 @@ fun CreatePetPostScreen(
 
 internal fun requiredPetNameMessage(petName: String): String? =
     if (petName.isBlank()) "Campo obligatorio" else null
+
+internal const val AdditionalDetailsMaxLength = 500
+
+internal fun limitAdditionalDetailsInput(value: String): String =
+    value.take(AdditionalDetailsMaxLength)

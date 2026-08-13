@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
@@ -47,13 +48,16 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onAllNodesWithText("Características").assertCountEquals(1)
     composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Señas particulares").assertCountEquals(1)
-    composeTestRule.onAllNodesWithText("Detalles adicionales").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Descripcion adicional").assertCountEquals(1)
     composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-compact-top.png"
     )
 
+    composeTestRule.onNodeWithText("Descripcion adicional").performScrollTo().assertIsDisplayed()
+    composeTestRule.onNodeWithText("Contanos cómo reconocerla...").performScrollTo().assertIsDisplayed()
+    composeTestRule.onNodeWithText("0/500").performScrollTo().assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
@@ -78,13 +82,16 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onAllNodesWithText("Características").assertCountEquals(1)
     composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Señas particulares").assertCountEquals(1)
-    composeTestRule.onAllNodesWithText("Detalles adicionales").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Descripcion adicional").assertCountEquals(1)
     composeTestRule.onNodeWithText("*").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-tall-top.png"
     )
 
+    composeTestRule.onNodeWithText("Descripcion adicional").performScrollTo().assertIsDisplayed()
+    composeTestRule.onNodeWithText("Contanos cómo reconocerla...").performScrollTo().assertIsDisplayed()
+    composeTestRule.onNodeWithText("0/500").performScrollTo().assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
