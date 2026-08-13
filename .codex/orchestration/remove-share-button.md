@@ -160,6 +160,6 @@ El bloqueo del suite completo quedo resuelto mediante la reparacion autorizada d
 
 ## Integración
 
-- `integration_status: PASSED`
-- `integrated_commit:`https://github.com/ArmandoPelaez/FindYourPet/pull/27/changes/b34577c204c3d94c6644bce75489a8c88982c4ed
-- `integration_evidence:`https://github.com/ArmandoPelaez/FindYourPet/pull/27
+- `integration_status: MERGED`
+- `integrated_commit: ce2cc7b4d8fb08967efa7c507767802c517de259`
+- `integration_evidence: implementación ya contenida en main; evidencia de integración registrada en 588e111fa3806ead0eef5a9ada413d4674b08f34; PR #27; main sincronizada con origin/main.`
