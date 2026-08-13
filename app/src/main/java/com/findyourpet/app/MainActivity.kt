@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,13 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
+import com.findyourpet.app.ui.components.BottomNavigationDestination
 import com.findyourpet.app.ui.screens.AuthScreen
 import com.findyourpet.app.ui.screens.ChatDetailScreen
 import com.findyourpet.app.ui.screens.ChatListScreen
@@ -62,8 +62,6 @@ private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_ALERT = "alert/{postId}"
 private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
 
-private val PRIMARY_DESTINATION_ROUTES = setOf(ROUTE_HOME, ROUTE_PROFILE, ROUTE_CHATS)
-
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
     val authState by viewModel.authState.collectAsState()
@@ -83,47 +81,50 @@ fun PetAppNavigation(viewModel: PetViewModel) {
 private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
     val navController = rememberNavController()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
+    val notifications by viewModel.allNotifications.collectAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route.orEmpty()
+    val selectedDestination = when {
+        currentRoute.startsWith(ROUTE_PROFILE) -> BottomNavigationDestination.Profile
+        currentRoute.startsWith(ROUTE_CREATE) -> BottomNavigationDestination.Create
+        currentRoute.startsWith(ROUTE_CHATS) || currentRoute.startsWith("chat/") -> BottomNavigationDestination.Chats
+        currentRoute.startsWith(ROUTE_NOTIFICATIONS) || currentRoute.startsWith(ROUTE_ALERT.substringBefore("{")) -> BottomNavigationDestination.Notifications
+        else -> BottomNavigationDestination.Home
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(AppSpacing.none),
         bottomBar = {
-            if (currentRoute in PRIMARY_DESTINATION_ROUTES) {
-                BottomPrimaryActionBanner(
-                    onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) },
-                    onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) },
-                    onCreatePostClick = { navController.navigateToCreatePost() },
-                    onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) },
-                    modifier = Modifier.padding(bottom = AppSpacing.bottomBarInset)
-                )
-            }
+            BottomPrimaryActionBanner(
+                onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) },
+                onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) },
+                onCreatePostClick = { navController.navigateToCreatePost() },
+                onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) },
+                onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) },
+                unreadNotificationsCount = notifications.count { !it.isRead },
+                selectedDestination = selectedDestination,
+            )
         }
     ) { shellPadding ->
         NavHost(
             navController = navController,
             startDestination = ROUTE_HOME,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(shellPadding)
         ) {
             composable(ROUTE_HOME) {
                 HomeScreen(
                     viewModel = viewModel,
                     onNavigateToAlert = { postId -> navController.navigate(alertRoute(postId)) },
-                    onNavigateToNotifications = { navController.navigate(ROUTE_NOTIFICATIONS) }
                 )
             }
 
             composable(ROUTE_CREATE) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    CreatePetPostScreen(
-                        viewModel = viewModel,
-                        onBackClick = { navController.popBackStack() },
-                        onPostCreated = { navController.popBackStack() }
-                    )
-                }
+                CreatePetPostScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onPostCreated = { navController.popBackStack() }
+                )
             }
 
             composable(
@@ -131,20 +132,14 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 arguments = listOf(navArgument("postId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val postId = backStackEntry.arguments?.getString("postId") ?: ""
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    SightingAlertScreen(
-                        viewModel = viewModel,
-                        postId = postId,
-                        onBackClick = { navController.popBackStack() },
-                        onAlertSent = {
-                            navController.navigateToPrimaryDestination(ROUTE_HOME)
-                        }
-                    )
-                }
+                SightingAlertScreen(
+                    viewModel = viewModel,
+                    postId = postId,
+                    onBackClick = { navController.popBackStack() },
+                    onAlertSent = {
+                        navController.navigateToPrimaryDestination(ROUTE_HOME)
+                    }
+                )
             }
 
             composable(
@@ -152,17 +147,11 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 arguments = listOf(navArgument("chatId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    ChatDetailScreen(
-                        viewModel = viewModel,
-                        chatId = chatId,
-                        onBackClick = { navController.popBackStack() }
-                    )
-                }
+                ChatDetailScreen(
+                    viewModel = viewModel,
+                    chatId = chatId,
+                    onBackClick = { navController.popBackStack() }
+                )
             }
 
             composable(ROUTE_CHATS) {
@@ -173,19 +162,13 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(ROUTE_NOTIFICATIONS) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(shellPadding)
-                ) {
-                    NotificationsScreen(
-                        viewModel = viewModel,
-                        onBackClick = { navController.popBackStack() },
-                        onNotificationClick = { targetId ->
-                            navController.navigate(chatDetailRoute(targetId))
-                        }
-                    )
-                }
+                NotificationsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onNotificationClick = { targetId ->
+                        navController.navigate(chatDetailRoute(targetId))
+                    }
+                )
             }
 
             composable(ROUTE_PROFILE) {

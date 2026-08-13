@@ -35,16 +35,16 @@ class HomeFeedPresentationScreenshotTest {
   @Config(qualifiers = RobolectricDeviceQualifiers.SmallPhone, sdk = [36])
   fun homeFeed_compactPhone_lightTheme_hasContinuousTopAndScrolledContent() {
     renderHomeFeed(width = 360, height = 640, darkTheme = false)
-
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
     composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
+    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-compact-light-top.png"
     )
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("¡Lo he visto!").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Información reportada").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-compact-light-scrolled.png"
     )
@@ -57,31 +57,24 @@ class HomeFeedPresentationScreenshotTest {
       width = 411,
       height = 914,
       darkTheme = true,
-      features = "Visto por ultima vez cerca del Parque Central. " +
-        "Es asustadizo, llevaba collar azul y suele esconderse en zonas tranquilas. " +
-        "La familia busca ayuda para encontrarlo y agradece cualquier aviso."
+      features = "Visto por ultima vez cerca del Parque Central. Es asustadizo, llevaba collar azul y suele esconderse en zonas tranquilas. La familia busca ayuda para encontrarlo y agradece cualquier aviso."
     )
-
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
     composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
+    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-tall-dark-top.png"
     )
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("¡Lo he visto!").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Información reportada").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-tall-dark-scrolled.png"
     )
   }
 
-  private fun renderHomeFeed(
-    width: Int,
-    height: Int,
-    darkTheme: Boolean,
-    features: String = "Visto por ultima vez cerca del Parque Central. Es asustadizo y llevaba collar azul."
-  ) {
+  private fun renderHomeFeed(width: Int, height: Int, darkTheme: Boolean, features: String = defaultFeatures) {
     composeTestRule.setContent {
       MascotasPerdidasTheme(darkTheme = darkTheme) {
         Surface {
@@ -91,36 +84,23 @@ class HomeFeedPresentationScreenshotTest {
               .height(height.dp)
               .testTag(VisualRootTag)
           ) {
-            PetPostCard(
-              post = samplePost(features),
-              canReportSighting = true,
-              onAlertClick = {}
-            )
+            PetPostCard(post = samplePost(features), canReportSighting = true, onAlertClick = {})
           }
         }
       }
     }
   }
 
-  private fun samplePost(features: String = "Visto por ultima vez cerca del Parque Central. Es asustadizo y llevaba collar azul.") = PetPostEntity(
-    id = "post_1",
-    petName = "REX",
-    species = "Perro",
-    breed = "Boxer",
-    color = "Marron",
-    features = features,
-    status = "PERDIDO",
-    photoUri = "https://example.com/rex.jpg",
-    dateLost = 1785207600000L,
-    lastSeenLocation = "Cerca del Parque Central",
-    latitude = -32.95,
-    longitude = -60.66,
-    rewardAmount = "Sin recompensa",
-    ownerId = "owner_1",
-    ownerName = "Persona Responsable"
+  private fun samplePost(features: String = defaultFeatures) = PetPostEntity(
+    id = "post_1", petName = "REX", species = "Perro", breed = "Boxer", color = "Marron",
+    features = features, status = "PERDIDO", photoUri = "https://example.com/rex.jpg",
+    dateLost = 1785207600000L, lastSeenLocation = "Cerca del Parque Central",
+    latitude = -32.95, longitude = -60.66, rewardAmount = "Sin recompensa",
+    ownerId = "owner_1", ownerName = "Persona Responsable"
   )
 
   private companion object {
     const val VisualRootTag = "home-feed-visual-root"
+    const val defaultFeatures = "Visto por ultima vez cerca del Parque Central. Es asustadizo y llevaba collar azul."
   }
 }

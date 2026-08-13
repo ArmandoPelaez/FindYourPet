@@ -39,7 +39,6 @@ import java.util.Locale
 fun HomeScreen(
     viewModel: PetViewModel,
     onNavigateToAlert: (String) -> Unit,
-    onNavigateToNotifications: () -> Unit
 ) {
     val posts by viewModel.filteredPosts.collectAsState()
     val feedState by viewModel.postFeedState.collectAsState()
@@ -47,9 +46,7 @@ fun HomeScreen(
     val selectedSpecies by viewModel.selectedSpecies.collectAsState()
     val selectedStatusFilter by viewModel.selectedStatusFilter.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
-    val notifications by viewModel.allNotifications.collectAsState()
-
-    val unreadNotificationsCount = notifications.count { !it.isRead }
+    val pagerState = rememberPagerState(pageCount = { posts.size })
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -86,33 +83,12 @@ fun HomeScreen(
                         }
                     }
                 },
-                actions = {
-                    IconButton(onClick = onNavigateToNotifications) {
-                        BadgedBox(
-                            badge = {
-                                        if (unreadNotificationsCount > 0) {
-                                    Badge(
-                                        containerColor = MaterialTheme.colorScheme.error,
-                                        contentColor = MaterialTheme.colorScheme.onError
-                                    ) {
-                                        Text(text = "$unreadNotificationsCount")
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Notifications,
-                                contentDescription = "Notificaciones"
-                            )
-                        }
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
                     scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar)
                 )
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -135,8 +111,6 @@ fun HomeScreen(
                     )
                 }
             } else {
-                val pagerState = rememberPagerState(pageCount = { posts.size })
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
@@ -162,7 +136,7 @@ fun HomeScreen(
 fun PetPostCard(
     post: PetPostEntity,
     canReportSighting: Boolean = true,
-    onAlertClick: () -> Unit
+    onAlertClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val formattedDate = remember(post.dateLost) {
@@ -181,7 +155,7 @@ fun PetPostCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = AppSpacing.cardImageMinHeight, max = AppSpacing.cardImageMaxHeight)
+                    .aspectRatio(AppSpacing.cardImageAspectRatio)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -193,17 +167,13 @@ fun PetPostCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                Box(
+                PetStatusChip(
+                    status = post.status,
+                    showIcon = false,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
+                        .align(Alignment.TopStart)
                         .padding(AppSpacing.imageOverlay)
-                ) {
-                    PetStatusChip(
-                        status = post.status,
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    )
-                }
+                )
             }
 
             Column(
@@ -211,7 +181,12 @@ fun PetPostCard(
                     .fillMaxWidth()
                     .padding(horizontal = AppSpacing.md, vertical = AppSpacing.cardContentVertical)
             ) {
-                PetIdentitySection(post = post)
+                PetIdentitySection(
+                    post = post,
+                    formattedDate = formattedDate,
+                    canReportSighting = canReportSighting,
+                    onAlertClick = onAlertClick
+                )
 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
 
@@ -238,35 +213,6 @@ fun PetPostCard(
 
                 Spacer(modifier = Modifier.height(AppSpacing.cardContentVertical))
 
-                Text(
-                    text = formattedDate,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(AppSpacing.cardContentVertical))
-
-                if (post.status != "REUNIDO" && canReportSighting) {
-                    AppButton(
-                        onClick = onAlertClick,
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        variant = AppButtonVariant.Danger,
-                        contentDescription = "Reportar avistamiento de ${post.petName}",
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.NotificationsActive,
-                            contentDescription = null,
-                            modifier = Modifier.size(AppSpacing.iconMedium)
-                        )
-                        Spacer(modifier = Modifier.width(AppSpacing.sm))
-                        Text(
-                            text = "¡Lo he visto!",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(AppSpacing.actionBottom))
             }
         }
@@ -274,18 +220,63 @@ fun PetPostCard(
 }
 
 @Composable
-private fun PetIdentitySection(post: PetPostEntity) {
+private fun InlineSightingButton(
+    petName: String,
+    onClick: () -> Unit,
+) {
+    var sightingOpened by remember(petName) { mutableStateOf(false) }
+
+    AppButton(
+        onClick = {
+            sightingOpened = true
+            onClick()
+        },
+        variant = AppButtonVariant.Outlined,
+        contentDescription = "La vi: reportar avistamiento de $petName",
+    ) {
+        Icon(
+            imageVector = if (sightingOpened) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+            contentDescription = null,
+            modifier = Modifier.size(AppSpacing.iconMedium)
+        )
+        Spacer(modifier = Modifier.width(AppSpacing.xs))
+        Text(
+            text = "La vi",
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
+private fun PetIdentitySection(
+    post: PetPostEntity,
+    formattedDate: String,
+    canReportSighting: Boolean,
+    onAlertClick: () -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = post.petName,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            Text(
+                text = post.petName,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (post.status != "REUNIDO" && canReportSighting) {
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                InlineSightingButton(
+                    petName = post.petName,
+                    onClick = onAlertClick
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -305,6 +296,30 @@ private fun PetIdentitySection(post: PetPostEntity) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
+            )
+        }
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Event,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(AppSpacing.iconMedium)
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.locationGap))
+            Text(
+                text = "Última vez visto",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            Text(
+                text = formattedDate,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

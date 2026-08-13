@@ -135,7 +135,7 @@ class ReleaseReadinessStaticTest {
 
     listOf(
       "contentDescription = \"Volver\"",
-      "contentDescription = \"Notificaciones\"",
+      "contentDescription = \"Alertas\"",
       "contentDescription = \"Chats Privados\"",
       "contentDescription = \"Perfil\"",
       "contentDescription = \"Crear publicacion\"",
@@ -157,7 +157,7 @@ class ReleaseReadinessStaticTest {
     assertTrue(!homeSource.contains("onNavigateToProfile"))
     assertTrue(!homeSource.contains("onNavigateToCreate"))
     assertTrue(!homeSource.contains("onNavigateToChatList"))
-    assertTrue(homeSource.contains("contentDescription = \"Notificaciones\""))
+    assertTrue(!homeSource.contains("contentDescription = \"Notificaciones\""))
     assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToChatList)"))
     assertTrue(!homeSource.contains("IconButton(onClick = onNavigateToProfile)"))
     assertTrue(!homeSource.contains("ExtendedFloatingActionButton("))

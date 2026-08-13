@@ -193,7 +193,7 @@ class StaticProjectGuardrailsTest {
     assertTrue(validatorText.contains("OwnershipPolicy.canReportSighting(reporterId, ownerId)"))
     assertTrue(repositoryText.contains("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))"))
     assertTrue(repositoryText.indexOf("require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId))") < repositoryText.indexOf("val sighting = SightingAlertEntity"))
-    assertTrue(homeText.contains("canReportSighting = OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId)"))
+    assertTrue(homeText.contains("OwnershipPolicy.canReportSighting(currentUser.id, post.ownerId)"))
     assertTrue(homeText.contains("post.status != \"REUNIDO\" && canReportSighting"))
     assertTrue(alertText.contains("if (!OwnershipPolicy.canReportSighting(currentUser.id, pet.ownerId))"))
   }

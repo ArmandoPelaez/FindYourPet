@@ -21,10 +21,30 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerEnd > bannerStart)
 
     val bannerSource = components.substring(bannerStart, bannerEnd)
-    assertTrue(bannerSource.contains("surfaceVariant.copy(alpha = AppOpacity.bottomNavigation)"))
+    assertTrue(bannerSource.contains("bottomNavigationSurfaceColor()"))
+    assertTrue(bannerSource.contains("BottomNavigationTopDivider()"))
     assertTrue(!bannerSource.contains("AppOpacity.banner"))
     assertTrue(bannerSource.contains("navigationBarsPadding()"))
-    assertTrue(bannerSource.contains("AppShapes.card"))
+    assertTrue(!bannerSource.contains("AppShapes.card"))
+    assertTrue(!bannerSource.contains("shape = AppShapes."))
+    assertTrue(!bannerSource.contains("padding(horizontal = AppSpacing.lg)"))
+    assertTrue(bannerSource.contains("bottomNavigationWellSize"))
+    assertTrue(bannerSource.contains("bottomNavigationActionLift"))
+    assertTrue(bannerSource.contains("bottomNavigationCreateActionSize"))
+    assertTrue(bannerSource.contains("bottomNavigationIconSlotHeight"))
+    val labels = listOf("Inicio", "Perfil", "Publicar", "Mensajes", "Alertas")
+    var previousIndex = -1
+    labels.forEach { label ->
+      val index = bannerSource.indexOf("label = \"$label\"")
+      assertTrue("Missing bottom navigation label: $label", index >= 0)
+      assertTrue("Bottom navigation order is incorrect at $label", index > previousIndex)
+      previousIndex = index
+    }
+    assertTrue(bannerSource.contains("onNotificationsClick"))
+    assertTrue(bannerSource.contains("unreadNotificationsCount"))
+    assertTrue(bannerSource.contains("Icons.Outlined.NotificationsNone"))
+    assertTrue(bannerSource.contains("Icons.Filled.Home"))
+    assertTrue(bannerSource.contains("AppSpacing.bottomNavigationCreateActionSize"))
   }
 
   private fun source(relativePath: String): String = File(root, relativePath).readText()
