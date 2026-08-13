@@ -1,10 +1,10 @@
 # Orchestration State: convert-additional-details-to-multiline
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+state: INTEGRATED
+phase: INTEGRATED
+integration_status: MERGED
+integrated_commit: 46f9245
+integration_evidence: PR #32 mergeado en origin/main; main local sincronizada mediante fast-forward.
 
 ## Jira
 
