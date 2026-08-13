@@ -21,7 +21,7 @@ import com.findyourpet.app.data.local.entity.SightingAlertEntity
         ChatSessionEntity::class,
         AppNotificationEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,7 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_3_4,
                     MIGRATION_4_5,
                     MIGRATION_5_6,
-                    MIGRATION_6_7
+                    MIGRATION_6_7,
+                    MIGRATION_7_8
                 ).build()
                 INSTANCE = instance
                 instance
@@ -88,6 +89,48 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE pet_posts ADD COLUMN particularMarks TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE pet_posts_new (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        petName TEXT NOT NULL,
+                        species TEXT NOT NULL,
+                        breed TEXT NOT NULL,
+                        color TEXT NOT NULL,
+                        features TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        photoUri TEXT NOT NULL,
+                        dateLost INTEGER NOT NULL,
+                        lastSeenLocation TEXT NOT NULL,
+                        latitude REAL NOT NULL,
+                        longitude REAL NOT NULL,
+                        rewardAmount TEXT NOT NULL,
+                        ownerId TEXT NOT NULL,
+                        ownerName TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO pet_posts_new (
+                        id, petName, species, breed, color, features, status, photoUri,
+                        dateLost, lastSeenLocation, latitude, longitude, rewardAmount,
+                        ownerId, ownerName
+                    )
+                    SELECT
+                        id, petName, species, breed, color, features, status, photoUri,
+                        dateLost, lastSeenLocation, latitude, longitude, rewardAmount,
+                        ownerId, ownerName
+                    FROM pet_posts
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE pet_posts")
+                db.execSQL("ALTER TABLE pet_posts_new RENAME TO pet_posts")
             }
         }
 

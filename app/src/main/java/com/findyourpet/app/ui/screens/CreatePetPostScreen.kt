@@ -88,8 +88,6 @@ fun CreatePetPostScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var petName by remember { mutableStateOf("") }
-    var characteristics by remember { mutableStateOf("") }
-    var particularMarks by remember { mutableStateOf("") }
     var recognitionDetails by remember { mutableStateOf("") }
     var locationSelection by remember { mutableStateOf<LocationSelection?>(null) }
     var lastSeenLocation by remember { mutableStateOf("") }
@@ -382,48 +380,6 @@ fun CreatePetPostScreen(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
-                FormFieldLabel("Características", required = false)
-                OutlinedTextField(
-                    value = characteristics,
-                    onValueChange = { characteristics = it },
-                    placeholder = { FormFieldPlaceholder("Ej: color,raza,tamaño") },
-                    textStyle = AppFormTypography.input,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(AppSpacing.formFieldHeight),
-                    shape = AppShapes.chip,
-                    minLines = 3,
-                    maxLines = 4,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
-                FormFieldLabel("Señas particulares", required = false)
-                OutlinedTextField(
-                    value = particularMarks,
-                    onValueChange = { particularMarks = it },
-                    placeholder = { FormFieldPlaceholder("Ej: collar, manchas o cicatrices") },
-                    textStyle = AppFormTypography.input,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(AppSpacing.formFieldHeight),
-                    shape = AppShapes.chip,
-                    minLines = 3,
-                    maxLines = 4,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
                 FormFieldLabel("Descripcion adicional")
                 OutlinedTextField(
                     value = recognitionDetails,
@@ -489,8 +445,6 @@ fun CreatePetPostScreen(
                         breed = "Mestizo",
                         color = "Variado",
                         features = recognitionDetails.ifBlank { "Sin caracteristicas registradas" },
-                        characteristics = characteristics,
-                        particularMarks = particularMarks,
                         photoUri = photoUri,
                         lastSeenLocation = lastSeenLocation,
                         latitude = latitude,

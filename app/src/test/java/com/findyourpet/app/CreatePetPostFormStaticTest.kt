@@ -15,7 +15,6 @@ class CreatePetPostFormStaticTest {
     listOf(
       "Toca para agregar foto", "Datos de la mascota", "Icons.Filled.Pets",
       "FormFieldLabel(text = \"Nombre\", required = true)", "FormFieldPlaceholder(\"Ej. Toby, Mia\")",
-      "FormFieldLabel(\"Características\", required = false)", "FormFieldPlaceholder(\"Ej: color,raza,tamaño\")",
       "Descripcion adicional", "Contanos cómo reconocerla...", "¿Dónde fue vista por última vez?",
       "Seleccionar ubicación", "Usar mi ubicación actual", "Elegir en el mapa", "Escribir una referencia",
       "Publicar ficha"
@@ -32,30 +31,14 @@ class CreatePetPostFormStaticTest {
     assertTrue(source.contains("breed = \"Mestizo\""))
     assertTrue(source.contains("color = \"Variado\""))
     assertTrue(source.contains("features = recognitionDetails.ifBlank"))
-    assertTrue(source.contains("characteristics = characteristics"))
-    assertTrue(source.contains("particularMarks = particularMarks"))
-
-    val characteristicsLabelStart = source.indexOf("FormFieldLabel(\"Características\", required = false)")
-    val particularMarksLabelStart = source.indexOf("FormFieldLabel(\"Señas particulares\", required = false)")
     val additionalDetailsLabelStart = source.indexOf("FormFieldLabel(\"Descripcion adicional\")")
-    assertTrue(characteristicsLabelStart >= 0)
-    assertTrue(particularMarksLabelStart >= 0)
-    assertTrue(characteristicsLabelStart < additionalDetailsLabelStart)
-    assertTrue(characteristicsLabelStart < particularMarksLabelStart)
-    assertTrue(particularMarksLabelStart < additionalDetailsLabelStart)
-    val characteristicsField = source.substring(characteristicsLabelStart, additionalDetailsLabelStart)
-    assertTrue(!characteristicsField.contains("required = true"))
-    assertTrue(!characteristicsField.contains("leadingIcon"))
-    assertTrue(characteristicsField.contains("FormFieldPlaceholder(\"Ej: color,raza,tamaño\")"))
-    assertTrue(!characteristicsField.contains("label = { FormFieldLabel"))
-
-    val particularMarksField = source.substring(particularMarksLabelStart, additionalDetailsLabelStart)
-    assertTrue(!particularMarksField.contains("required = true"))
-    assertTrue(!particularMarksField.contains("leadingIcon"))
-    assertTrue(!particularMarksField.contains("Icons."))
-    assertTrue(particularMarksField.contains("AppFormTypography.input"))
-    assertTrue(particularMarksField.contains("AppShapes.chip"))
-    assertTrue(particularMarksField.contains("AppSpacing.formFieldHeight"))
+    assertTrue(additionalDetailsLabelStart >= 0)
+    assertTrue(!source.contains("Características"))
+    assertTrue(!source.contains("Señas particulares"))
+    assertTrue(!source.contains("var characteristics"))
+    assertTrue(!source.contains("var particularMarks"))
+    assertTrue(!source.contains("characteristics = characteristics"))
+    assertTrue(!source.contains("particularMarks = particularMarks"))
   }
 
   @Test
