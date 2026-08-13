@@ -49,7 +49,7 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Señas particulares").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Descripcion adicional").assertCountEquals(1)
-    composeTestRule.onNodeWithText("*").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("*").assertCountEquals(2)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-compact-top.png"
@@ -61,7 +61,7 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithText("Ubicacion").assertIsDisplayed()
+    composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
     composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
@@ -83,7 +83,7 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithText("Ej: color,raza,tamaño").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Señas particulares").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Descripcion adicional").assertCountEquals(1)
-    composeTestRule.onNodeWithText("*").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("*").assertCountEquals(2)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-tall-top.png"
@@ -95,7 +95,7 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithText("Ubicacion").assertIsDisplayed()
+    composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
     composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(

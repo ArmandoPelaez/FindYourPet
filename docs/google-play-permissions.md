@@ -14,6 +14,10 @@ En este documento, "permiso" refiere solo a permisos Android/runtime y controles
 | `android.permission.ACCESS_FINE_LOCATION` | Usar ubicacion actual con mayor precision cuando el usuario lo autoriza | Accion "usar mi ubicacion" en publicacion o avistamiento | Coordenadas del dispositivo | Mejora la referencia de un avistamiento o publicacion cuando el usuario acepta | Estados concedido, denegado, denegado permanente y no disponible |
 | `android.permission.POST_NOTIFICATIONS` | Recibir avisos de avistamientos y mensajes dentro de la app | La app intenta publicar una notificacion y el usuario concede el permiso | Notificaciones del dispositivo | Permite avisos oportunos sin exponer datos de contacto | Estados concedido, denegado y no disponible |
 
+## Servicios de ubicacion sin permiso runtime adicional
+
+La opcion `Elegir en el mapa` usa Maps SDK for Android. Es una seleccion iniciada y confirmada por el usuario, no una captura GPS del dispositivo, por lo que no agrega permisos Android. Requiere una clave restringida, billing, Maps SDK for Android habilitado y cuotas configuradas en Google Cloud. Si el mapa no esta disponible, el flujo conserva `Escribir una referencia`.
+
 ## Bloqueo de release
 
 - Cualquier permiso nuevo debe tener un flujo real implementado, justificacion de Play, texto de razonamiento visible cuando aplique y evidencia de validacion.

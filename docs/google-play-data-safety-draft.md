@@ -10,7 +10,7 @@ Este borrador alinea la declaracion de Google Play con `app/src/main/AndroidMani
 | --- | --- | --- | --- |
 | Informacion personal | Nombre visible y email de cuenta | Cuenta y perfil autenticado | Firebase Authentication, Cloud Firestore |
 | Fotos y videos | Fotos de mascotas y avistamientos elegidas por el usuario | Publicaciones, avistamientos, evidencia visual | Cloudinary, Cloud Firestore para referencias |
-| Ubicacion | Zona aproximada, ubicacion GPS si el usuario acepta | Publicaciones y avistamientos | Cloud Firestore, Google Play Services Location |
+| Ubicacion | Zona aproximada, ubicacion GPS si el usuario acepta, o punto elegido en el mapa por la persona | Publicaciones y avistamientos | Cloud Firestore, Google Play Services Location y Google Maps SDK for Android |
 | Mensajes | Conversaciones privadas y metadata de chat | Comunicacion por chat interno entre participantes autorizados | Cloud Firestore |
 | Contenido generado por usuarios | Publicaciones, notas de avistamiento, estados y reportes | Operacion principal de la app | Cloud Firestore, Cloudinary cuando incluye imagen |
 | Diagnostico | Version de app, estado tecnico acotado y crash reports | Diagnostico de fallos | Firebase Crashlytics |

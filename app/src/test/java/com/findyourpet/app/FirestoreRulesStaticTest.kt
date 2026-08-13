@@ -20,12 +20,27 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("request.resource.data.ownerId == resource.data.ownerId"))
     assertTrue(rulesText.contains("allow delete: if isPostOwner()"))
     assertTrue(rulesText.contains("hasNoPublicContactFields(request.resource.data)"))
+    assertTrue(rulesText.contains("validPetPostLocation(request.resource.data)"))
     assertTrue(rulesText.contains("validCloudinaryMediaReference(request.resource.data)"))
     assertTrue(rulesText.contains("validLocationSource(request.resource.data)"))
     assertTrue(rulesText.contains("'isContactRevealedToAll'"))
     assertTrue(rulesText.contains("'ownerPhone'"))
     assertTrue(rulesText.contains("'ownerEmail'"))
     assertTrue(rulesText.contains("'ownerAddress'"))
+    assertTrue(rulesText.contains("'ownerLatitude'"))
+    assertTrue(rulesText.contains("'ownerLongitude'"))
+  }
+
+  @Test
+  fun postLocationRulesAcceptOnlyValidPetCoordinates() {
+    assertTrue(rulesText.contains("function validPetPostLocation(data)"))
+    assertTrue(rulesText.contains("function validOptionalPetPostLocation(data)"))
+    assertTrue(rulesText.contains("data.latitude is number"))
+    assertTrue(rulesText.contains("data.longitude is number"))
+    assertTrue(rulesText.contains("data.latitude >= -90"))
+    assertTrue(rulesText.contains("data.latitude <= 90"))
+    assertTrue(rulesText.contains("data.longitude >= -180"))
+    assertTrue(rulesText.contains("data.longitude <= 180"))
   }
 
   @Test

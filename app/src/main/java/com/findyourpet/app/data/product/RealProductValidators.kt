@@ -14,11 +14,13 @@ object RealProductValidators {
         petName: String,
         photoUri: String,
         ownerId: String,
-        locationName: String
+        locationName: String,
+        locationSource: LocationSource = LocationSource.MANUAL_COARSE
     ): FormValidationResult {
         if (ownerId.isBlank()) return FormValidationResult(false, "Inicia sesion antes de publicar.")
         if (petName.isBlank()) return FormValidationResult(false, "Indica el nombre de la mascota.")
         if (locationName.isBlank()) return FormValidationResult(false, "Indica una ubicacion aproximada.")
+        if (locationSource == LocationSource.NONE) return FormValidationResult(false, "Selecciona una ubicacion.")
         if (!isRealMediaUri(photoUri)) return FormValidationResult(false, "Adjunta una foto real desde camara o galeria.")
         return FormValidationResult.Valid
     }

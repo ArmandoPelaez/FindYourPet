@@ -48,11 +48,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.findyourpet.app.data.location.DeviceLocationProvider
+import com.findyourpet.app.data.location.LocationSelection
+import com.findyourpet.app.data.location.reverseGeocode
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
@@ -62,11 +66,16 @@ import com.findyourpet.app.ui.components.FormFieldLabel
 import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.components.FormPhotoUploadSurface
 import com.findyourpet.app.ui.components.FormSectionTitle
+import com.findyourpet.app.ui.components.LocationChoiceSheet
+import com.findyourpet.app.ui.components.LocationSelectionField
+import com.findyourpet.app.ui.components.ManualLocationSheet
+import com.findyourpet.app.ui.components.MapLocationSheet
 import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,22 +85,88 @@ fun CreatePetPostScreen(
     onPostCreated: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var petName by remember { mutableStateOf("") }
     var characteristics by remember { mutableStateOf("") }
     var particularMarks by remember { mutableStateOf("") }
     var recognitionDetails by remember { mutableStateOf("") }
+    var locationSelection by remember { mutableStateOf<LocationSelection?>(null) }
     var lastSeenLocation by remember { mutableStateOf("") }
     var latitude by remember { mutableStateOf(0.0) }
     var longitude by remember { mutableStateOf(0.0) }
-    var locationSource by remember { mutableStateOf(LocationSource.MANUAL_COARSE) }
+    var locationSource by remember { mutableStateOf(LocationSource.NONE) }
     var photoUri by remember { mutableStateOf("") }
     var mediaSource by remember { mutableStateOf<MediaSource?>(null) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     var formMessage by remember { mutableStateOf<String?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
     var showPhotoOptions by remember { mutableStateOf(false) }
+    var showLocationChoices by remember { mutableStateOf(false) }
+    var showMapPicker by remember { mutableStateOf(false) }
+    var showManualLocation by remember { mutableStateOf(false) }
     val authMessage by viewModel.authMessage.collectAsState()
+
+    fun applyLocationSelection(selection: LocationSelection) {
+        locationSelection = selection
+        lastSeenLocation = selection.displayText
+        latitude = selection.persistedLatitude()
+        longitude = selection.persistedLongitude()
+        locationSource = selection.source
+        formMessage = null
+    }
+
+    fun captureCurrentLocation() {
+        coroutineScope.launch {
+            val capture = DeviceLocationProvider.currentLocation(context)
+            val selection = LocationSelection.fromCapture(capture)
+            if (selection != null) {
+                val geocodedLabel = selection.latitude?.let { latitude ->
+                    selection.longitude?.let { longitude ->
+                        reverseGeocode(context, latitude, longitude)
+                    }
+                }
+                applyLocationSelection(
+                    geocodedLabel?.let { selection.copy(displayText = it) } ?: selection
+                )
+            } else {
+                formMessage = when (capture.permissionState) {
+                    com.findyourpet.app.data.product.LocationPermissionState.DENIED ->
+                        "Permiso de ubicación denegado. Puedes elegir el mapa o escribir una referencia."
+                    else -> "La ubicación actual no está disponible. Puedes elegir el mapa o escribir una referencia."
+                }
+            }
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) captureCurrentLocation() else {
+            formMessage = "Permiso de ubicación denegado. Puedes elegir el mapa o escribir una referencia."
+        }
+    }
+
+    fun requestCurrentLocation() {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (fineGranted || coarseGranted) captureCurrentLocation() else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -173,6 +248,50 @@ fun CreatePetPostScreen(
                 }
             }
         }
+    }
+
+    if (showLocationChoices) {
+        LocationChoiceSheet(
+            onDismiss = { showLocationChoices = false },
+            onCurrentLocation = {
+                showLocationChoices = false
+                requestCurrentLocation()
+            },
+            onMap = {
+                showLocationChoices = false
+                showMapPicker = true
+            },
+            onManual = {
+                showLocationChoices = false
+                showManualLocation = true
+            }
+        )
+    }
+
+    if (showMapPicker) {
+        MapLocationSheet(
+            initialSelection = locationSelection,
+            onDismiss = { showMapPicker = false },
+            onConfirm = { selection ->
+                showMapPicker = false
+                applyLocationSelection(selection)
+            }
+        )
+    }
+
+    if (showManualLocation) {
+        ManualLocationSheet(
+            initialValue = if (locationSource == LocationSource.MANUAL_COARSE && !locationSelection?.hasCoordinates.orFalse()) {
+                lastSeenLocation
+            } else {
+                ""
+            },
+            onDismiss = { showManualLocation = false },
+            onConfirm = { selection ->
+                showManualLocation = false
+                applyLocationSelection(selection)
+            }
+        )
     }
 
     Scaffold(
@@ -332,22 +451,20 @@ fun CreatePetPostScreen(
                 )
             }
 
-            FormSectionTitle(text = "Ubicacion")
-
-            OutlinedTextField(
-                value = lastSeenLocation,
-                onValueChange = {
-                    lastSeenLocation = it
-                    locationSource = LocationSource.MANUAL_COARSE
-                    latitude = 0.0
-                    longitude = 0.0
-                },
-                placeholder = { FormFieldPlaceholder("Ultima ubicacion vista (Barrio, Ciudad o referencia)") },
-                textStyle = AppFormTypography.input,
-                leadingIcon = { Icon(Icons.Filled.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = AppShapes.chip
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                FormFieldLabel("¿Dónde fue vista por última vez?", required = true)
+                LocationSelectionField(
+                    selection = locationSelection,
+                    onClick = { showLocationChoices = true }
+                )
+                locationSelection?.address?.takeIf { it.isNotBlank() }?.let { address ->
+                    Text(
+                        text = address,
+                        style = AppFormTypography.placeholder,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             AppButton(
                 onClick = {
@@ -359,6 +476,10 @@ fun CreatePetPostScreen(
                     val selectedMediaSource = mediaSource
                     if (selectedMediaSource == null) {
                         formMessage = "Adjunta una foto real desde camara o galeria."
+                        return@AppButton
+                    }
+                    if (locationSelection?.isValid != true) {
+                        formMessage = "Selecciona una ubicación antes de publicar."
                         return@AppButton
                     }
                     isSubmitting = true
@@ -387,7 +508,7 @@ fun CreatePetPostScreen(
                         }
                     )
                 },
-                enabled = lastSeenLocation.isNotBlank() && photoUri.isNotBlank() && !isSubmitting,
+                enabled = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth(),
                 contentDescription = "Publicar ficha",
@@ -423,3 +544,5 @@ internal const val AdditionalDetailsMaxLength = 500
 
 internal fun limitAdditionalDetailsInput(value: String): String =
     value.take(AdditionalDetailsMaxLength)
+
+private fun Boolean?.orFalse(): Boolean = this == true

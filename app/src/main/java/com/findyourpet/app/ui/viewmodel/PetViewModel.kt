@@ -425,7 +425,8 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             petName = petName,
             photoUri = photoUri,
             ownerId = user.id,
-            locationName = lastSeenLocation
+            locationName = lastSeenLocation,
+            locationSource = locationSource
         )
         if (!validation.isValid) {
             val message = validation.message ?: "Completa los datos de la publicacion."
