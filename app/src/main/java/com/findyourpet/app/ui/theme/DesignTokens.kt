@@ -30,6 +30,7 @@ object AppSpacing {
     val borderWidth: Dp = 1.dp
     val cardImageMinHeight: Dp = 260.dp
     val cardImageMaxHeight: Dp = 320.dp
+    const val cardImageAspectRatio: Float = 1.58f
     val mediaHeight: Dp = 220.dp
     val messageImageHeight: Dp = 120.dp
     val formFieldHeight: Dp = 120.dp
@@ -66,6 +67,14 @@ object AppSpacing {
     val submitButtonHeight: Dp = 56.dp
     val bannerHeight: Dp = 72.dp
     val bannerHorizontalPadding: Dp = 18.dp
+    val bottomNavigationIconSlotHeight: Dp = 28.dp
+    val bottomNavigationIcon: Dp = 22.dp
+    val bottomNavigationCreateActionSize: Dp = 52.dp
+    val bottomNavigationCreateIconSize: Dp = 24.dp
+    val bottomNavigationLabelGap: Dp = none
+    val bottomNavigationWellSize: Dp = 68.dp
+    val bottomNavigationDividerArcHeight: Dp = 8.dp
+    val bottomNavigationActionLift: Dp = 8.dp
     val titleGap: Dp = 10.dp
     val actionGap: Dp = 10.dp
     val locationGap: Dp = 6.dp
@@ -107,6 +116,7 @@ object AppOpacity {
     const val subtleSurface = 0.45f
     const val banner = 0.96f
     const val bottomNavigation = 0.88f
+    const val bottomNavigationSurface = 0.28f
     const val syncSurface = 0.12f
     const val unreadSurface = 0.12f
     const val mediaOverlay = 0.78f
@@ -126,7 +136,7 @@ object PetStatusColors {
     @Composable
     fun forStatus(status: String): StatusColorTokens {
         return when (status.uppercase()) {
-            "PERDIDO" -> StatusColorTokens(AppColors.alertContainer, AppColors.alert)
+            "PERDIDO" -> StatusColorTokens(AppColors.alert, AppColors.onPrimary)
             "AVISTADO" -> StatusColorTokens(AppColors.secondaryContainer, AppColors.secondary)
             "REUNIDO" -> StatusColorTokens(AppColors.reunitedContainer, AppColors.reunited)
             else -> StatusColorTokens(

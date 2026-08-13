@@ -1,6 +1,9 @@
 ﻿package com.findyourpet.app.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.Icons
@@ -11,9 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.ui.theme.AppColors
 import com.findyourpet.app.ui.theme.AppElevation
@@ -23,7 +30,11 @@ import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.theme.PetStatusColors
 
 @Composable
-fun PetStatusChip(status: String, modifier: Modifier = Modifier) {
+fun PetStatusChip(
+    status: String,
+    modifier: Modifier = Modifier,
+    showIcon: Boolean = true,
+) {
     val statusColors = PetStatusColors.forStatus(status)
     val (label, icon) = when (status.uppercase()) {
         "PERDIDO" -> "PERDIDO" to Icons.Filled.Warning
@@ -42,13 +53,15 @@ fun PetStatusChip(status: String, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = AppSpacing.md - AppSpacing.xs, vertical = AppSpacing.xs)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = statusColors.content,
-                modifier = Modifier.size(AppSpacing.iconSmall)
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
+            if (showIcon) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = statusColors.content,
+                    modifier = Modifier.size(AppSpacing.iconSmall)
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
+            }
             Text(
                 text = label,
                 color = statusColors.content,
@@ -173,78 +186,271 @@ fun BottomPrimaryActionBanner(
     onProfileClick: () -> Unit,
     onCreatePostClick: () -> Unit,
     onChatClick: () -> Unit,
+    onNotificationsClick: () -> Unit = {},
+    unreadNotificationsCount: Int = 0,
+    selectedDestination: BottomNavigationDestination = BottomNavigationDestination.Home,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    val navigationSurfaceColor = bottomNavigationSurfaceColor()
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.lg)
             .navigationBarsPadding()
+            .background(navigationSurfaceColor)
             .semantics { contentDescription = "Acciones principales" },
-        shape = AppShapes.card,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.bottomNavigation),
-        tonalElevation = AppElevation.card,
-        shadowElevation = AppElevation.card + AppSpacing.xs
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(AppSpacing.bannerHeight)
-                .padding(horizontal = AppSpacing.bannerHorizontalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(
-                onClick = onHomeClick,
-                modifier = Modifier.size(AppSpacing.md + AppSpacing.xl)
+        BottomNavigationTopDivider()
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AppSpacing.bannerHeight),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Home,
+                BottomNavigationItem(
+                    selected = selectedDestination == BottomNavigationDestination.Home,
+                    label = "Inicio",
                     contentDescription = "Inicio",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(AppSpacing.xl - AppSpacing.xs)
+                    icon = Icons.Filled.Home,
+                    onClick = onHomeClick,
                 )
-            }
-
-            IconButton(
-                onClick = onProfileClick,
-                modifier = Modifier.size(AppSpacing.md + AppSpacing.xl)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
+                BottomNavigationItem(
+                    selected = selectedDestination == BottomNavigationDestination.Profile,
+                    label = "Perfil",
                     contentDescription = "Perfil",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(AppSpacing.xl - AppSpacing.xs)
+                    icon = Icons.Outlined.Person,
+                    onClick = onProfileClick,
                 )
-            }
-
-            FilledIconButton(
-                onClick = onCreatePostClick,
-                modifier = Modifier.size(AppSpacing.iconLarge),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
+                BottomNavigationItem(
+                    selected = selectedDestination == BottomNavigationDestination.Create,
+                    label = "Publicar",
                     contentDescription = "Crear publicacion",
-                    modifier = Modifier.size(AppSpacing.xl)
+                    icon = Icons.Filled.Add,
+                    isCreateAction = true,
+                    onClick = onCreatePostClick,
                 )
-            }
-
-            IconButton(
-                onClick = onChatClick,
-                modifier = Modifier.size(AppSpacing.md + AppSpacing.xl)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Chat,
+                BottomNavigationItem(
+                    selected = selectedDestination == BottomNavigationDestination.Chats,
+                    label = "Mensajes",
                     contentDescription = "Chats Privados",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(AppSpacing.xl - AppSpacing.xs)
+                    icon = Icons.AutoMirrored.Outlined.Chat,
+                    onClick = onChatClick,
+                )
+                BottomNavigationItem(
+                    selected = selectedDestination == BottomNavigationDestination.Notifications,
+                    label = "Alertas",
+                    contentDescription = "Alertas",
+                    icon = Icons.Outlined.NotificationsNone,
+                    unreadCount = unreadNotificationsCount,
+                    onClick = onNotificationsClick,
                 )
             }
         }
+    }
+}
+
+enum class BottomNavigationDestination {
+    Home,
+    Profile,
+    Create,
+    Chats,
+    Notifications,
+}
+
+@Composable
+private fun RowScope.BottomNavigationItem(
+    selected: Boolean,
+    label: String,
+    contentDescription: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    isCreateAction: Boolean = false,
+    unreadCount: Int = 0,
+) {
+    val itemModifier = Modifier
+        .weight(1f)
+        .height(AppSpacing.bannerHeight)
+
+    if (isCreateAction) {
+        Box(
+            modifier = itemModifier,
+            contentAlignment = Alignment.Center,
+        ) {
+            BottomNavigationItemContent(
+                selected = selected,
+                label = label,
+                contentDescription = contentDescription,
+                icon = icon,
+                onClick = onClick,
+                isCreateAction = true,
+                unreadCount = unreadCount,
+            )
+        }
+    } else {
+        IconButton(
+            onClick = onClick,
+            modifier = itemModifier,
+        ) {
+            BottomNavigationItemContent(
+                selected = selected,
+                label = label,
+                contentDescription = contentDescription,
+                icon = icon,
+                onClick = onClick,
+                isCreateAction = false,
+                unreadCount = unreadCount,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BottomNavigationItemContent(
+    selected: Boolean,
+    label: String,
+    contentDescription: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    isCreateAction: Boolean,
+    unreadCount: Int,
+) {
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val navigationSurfaceColor = bottomNavigationSurfaceColor()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        if (isCreateAction) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AppSpacing.bottomNavigationCreateActionSize),
+                contentAlignment = Alignment.Center,
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(AppSpacing.bottomNavigationWellSize)
+                    .offset(y = -AppSpacing.bottomNavigationActionLift),
+                    shape = CircleShape,
+                    color = navigationSurfaceColor,
+                    tonalElevation = AppSpacing.none,
+                    shadowElevation = AppElevation.subtle,
+                ) {}
+                FilledIconButton(
+                    onClick = onClick,
+                    modifier = Modifier
+                        .size(AppSpacing.bottomNavigationCreateActionSize)
+                        .offset(y = -AppSpacing.bottomNavigationActionLift),
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = contentDescription,
+                        modifier = Modifier.size(AppSpacing.bottomNavigationCreateIconSize),
+                    )
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier.height(AppSpacing.bottomNavigationCreateActionSize),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier.height(AppSpacing.bottomNavigationIconSlotHeight),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BadgedBox(
+                        badge = {
+                            if (unreadCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError,
+                                ) { Text(text = "$unreadCount") }
+                            }
+                        },
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = contentDescription,
+                            tint = contentColor,
+                            modifier = Modifier.size(AppSpacing.bottomNavigationIcon),
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(AppSpacing.bottomNavigationLabelGap))
+        Text(
+            text = label,
+            color = if (isCreateAction) MaterialTheme.colorScheme.primary else contentColor,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Clip,
+        )
+    }
+}
+
+@Composable
+private fun bottomNavigationSurfaceColor(): Color =
+    MaterialTheme.colorScheme.surfaceVariant
+        .copy(alpha = AppOpacity.bottomNavigationSurface)
+        .compositeOver(MaterialTheme.colorScheme.background)
+
+@Composable
+private fun BoxScope.BottomNavigationTopDivider() {
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppOpacity.border)
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(AppSpacing.bottomNavigationDividerArcHeight + AppSpacing.borderWidth)
+            .offset(y = -AppSpacing.bottomNavigationDividerArcHeight),
+    ) {
+        val dividerY = AppSpacing.bottomNavigationDividerArcHeight.toPx()
+        val radius = AppSpacing.bottomNavigationCreateActionSize.toPx() / 2f
+        val centerX = size.width / 2f
+        val strokeWidth = AppSpacing.borderWidth.toPx()
+        val arcHeight = AppSpacing.bottomNavigationDividerArcHeight.toPx()
+        val path = Path().apply {
+            moveTo(0f, dividerY)
+            lineTo(centerX - radius, dividerY)
+            cubicTo(
+                centerX - radius * 0.58f,
+                dividerY,
+                centerX - radius * 0.52f,
+                dividerY - arcHeight,
+                centerX,
+                dividerY - arcHeight,
+            )
+            cubicTo(
+                centerX + radius * 0.52f,
+                dividerY - arcHeight,
+                centerX + radius * 0.58f,
+                dividerY,
+                centerX + radius,
+                dividerY,
+            )
+            lineTo(size.width, dividerY)
+        }
+
+        drawPath(
+            path = path,
+            color = dividerColor,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth),
+        )
     }
 }
 
