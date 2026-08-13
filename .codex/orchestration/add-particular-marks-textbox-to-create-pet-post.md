@@ -1,10 +1,10 @@
 # Orchestration State: add-particular-marks-textbox-to-create-pet-post
 
-state: BLOCKED
-phase: VERIFYING
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+state: INTEGRATED
+phase: INTEGRATED
+integration_status: INTEGRATED
+integrated_commit: df2a1b7231a65f2706f57f0d17d7813569fed9e2
+integration_evidence:Merge pull request #31 from ArmandoPelaez:ops/add-particular-marks-textbox-to-create-pet-post
 
 ## Jira
 
