@@ -24,6 +24,7 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -40,7 +41,7 @@ class CreatePetPostScreenScreenshotTest {
   fun createPostScreen_compactPhone_hasStableTopAndScrolledVisuals() {
     renderCreatePostScreen(width = 360, height = 640, darkTheme = false)
 
-    composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
+    assertTitlePrecedesPhotoUpload()
     composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
@@ -73,7 +74,7 @@ class CreatePetPostScreenScreenshotTest {
   fun createPostScreen_tallPhone_hasStableTopAndScrolledVisuals() {
     renderCreatePostScreen(width = 411, height = 914, darkTheme = true)
 
-    composeTestRule.onNodeWithText("Publicar Mascota Perdida").assertIsDisplayed()
+    assertTitlePrecedesPhotoUpload()
     composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     composeTestRule.onNodeWithText("Toca para agregar foto").assertIsDisplayed()
     composeTestRule.onNodeWithText("Datos de la mascota").assertIsDisplayed()
@@ -114,7 +115,6 @@ class CreatePetPostScreenScreenshotTest {
         ) {
           CreatePetPostScreen(
             viewModel = viewModel,
-            onBackClick = {},
             onPostCreated = {}
           )
         }
@@ -125,6 +125,22 @@ class CreatePetPostScreenScreenshotTest {
   private fun assertNoCurrentLocationAction() {
     composeTestRule.onAllNodesWithText("Usar ubicacion actual").assertCountEquals(0)
     composeTestRule.onAllNodesWithText("Ubicacion GPS capturada").assertCountEquals(0)
+  }
+
+  private fun assertTitlePrecedesPhotoUpload() {
+    composeTestRule.onNodeWithText("Publicar mascota perdida").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
+    val titleTop = composeTestRule
+      .onNodeWithText("Publicar mascota perdida")
+      .fetchSemanticsNode()
+      .boundsInRoot
+      .top
+    val photoTop = composeTestRule
+      .onNodeWithTag("create-post-photo-upload-surface")
+      .fetchSemanticsNode()
+      .boundsInRoot
+      .top
+    assertTrue("The integrated title must precede the photo upload surface", titleTop < photoTop)
   }
 
   private companion object {

@@ -11,6 +11,18 @@ class CreatePetPostFormStaticTest {
   private val source: String = createPostSource()
 
   @Test
+  fun createPostHeader_isIntegratedAndUsesExistingTokens() {
+    assertTrue(source.contains("contentWindowInsets = WindowInsets.safeDrawing"))
+    assertTrue(source.contains("text = \"Publicar mascota perdida\""))
+    assertTrue(source.contains("style = MaterialTheme.typography.titleLarge"))
+    assertTrue(source.contains("FormPhotoUploadSurface("))
+    assertTrue(source.indexOf("text = \"Publicar mascota perdida\"") < source.indexOf("FormPhotoUploadSurface("))
+    assertTrue(!source.contains("TopAppBar("))
+    assertTrue(!source.contains("Icons.Filled.ArrowBack"))
+    assertTrue(!source.contains("onBackClick"))
+  }
+
+  @Test
   fun simplifiedForm_showsEssentialFlowAndHidesSplitAttributeInputs() {
     listOf(
       "Toca para agregar foto", "Datos de la mascota", "Icons.Filled.Pets",
