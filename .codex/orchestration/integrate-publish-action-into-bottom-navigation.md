@@ -1,7 +1,7 @@
 # Orchestration State: integrate-publish-action-into-bottom-navigation
 
-state: PASSED_PENDING_INTEGRATION
-phase: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-17
 issue_url: https://pelaezarmando.atlassian.net/browse/SCRUM-17
 base_branch: main
@@ -9,9 +9,9 @@ base_commit: a1ad150069d4470a4af22deb1d4efb07af5b8fa1
 remote_base_commit: a1ad150069d4470a4af22deb1d4efb07af5b8fa1
 branch: ops/integrate-publish-action-into-bottom-navigation
 work_parallel_authorized: true
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: INTEGRATED
+integrated_commit: 2009eb4
+integration_evidence: PR #37 mergeado en origin/main; main local limpia y sincronizada.
 
 ## Jira
 
