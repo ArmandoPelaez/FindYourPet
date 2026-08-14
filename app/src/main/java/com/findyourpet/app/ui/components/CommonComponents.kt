@@ -76,6 +76,8 @@ enum class AppButtonVariant {
     Danger,
     Success,
     Tonal,
+    CompactPrimary,
+    CompactOutlined,
     Outlined,
 }
 
@@ -89,7 +91,13 @@ fun AppButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val buttonModifier = modifier
-        .heightIn(min = AppSpacing.buttonHeight)
+        .heightIn(
+            min = if (variant == AppButtonVariant.CompactPrimary || variant == AppButtonVariant.CompactOutlined) {
+                AppSpacing.compactButtonHeight
+            } else {
+                AppSpacing.buttonHeight
+            }
+        )
         .then(
             if (contentDescription == null) {
                 Modifier
@@ -99,43 +107,98 @@ fun AppButton(
         )
 
     when (variant) {
-        AppButtonVariant.Outlined -> OutlinedButton(
+        AppButtonVariant.Outlined,
+        AppButtonVariant.CompactOutlined -> OutlinedButton(
             onClick = onClick,
             enabled = enabled,
             modifier = buttonModifier,
-            shape = AppShapes.button,
+            shape = if (variant == AppButtonVariant.CompactOutlined) AppShapes.chip else AppShapes.button,
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary
             ),
+            contentPadding = if (variant == AppButtonVariant.CompactOutlined) {
+                PaddingValues(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
+            } else {
+                ButtonDefaults.ContentPadding
+            },
             content = content,
         )
         AppButtonVariant.Primary,
         AppButtonVariant.Danger,
         AppButtonVariant.Success,
-        AppButtonVariant.Tonal -> Button(
+        AppButtonVariant.Tonal,
+        AppButtonVariant.CompactPrimary -> Button(
             onClick = onClick,
             enabled = enabled,
             modifier = buttonModifier,
-            shape = AppShapes.button,
+            shape = if (variant == AppButtonVariant.CompactPrimary) AppShapes.chip else AppShapes.button,
             colors = ButtonDefaults.buttonColors(
                 containerColor = when (variant) {
                     AppButtonVariant.Danger -> MaterialTheme.colorScheme.error
                     AppButtonVariant.Success -> AppColors.reunited
                     AppButtonVariant.Tonal -> MaterialTheme.colorScheme.surfaceVariant
                     AppButtonVariant.Primary,
-                    AppButtonVariant.Outlined -> MaterialTheme.colorScheme.primary
+                    AppButtonVariant.Outlined,
+                    AppButtonVariant.CompactPrimary,
+                    AppButtonVariant.CompactOutlined -> MaterialTheme.colorScheme.primary
                 },
                 contentColor = when (variant) {
                     AppButtonVariant.Danger -> MaterialTheme.colorScheme.onError
                     AppButtonVariant.Success -> AppColors.onPrimary
                     AppButtonVariant.Tonal -> MaterialTheme.colorScheme.onSurfaceVariant
                     AppButtonVariant.Primary,
-                    AppButtonVariant.Outlined -> MaterialTheme.colorScheme.onPrimary
+                    AppButtonVariant.Outlined,
+                    AppButtonVariant.CompactPrimary,
+                    AppButtonVariant.CompactOutlined -> MaterialTheme.colorScheme.onPrimary
                 },
             ),
+            contentPadding = if (variant == AppButtonVariant.CompactPrimary) {
+                PaddingValues(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
+            } else {
+                ButtonDefaults.ContentPadding
+            },
             content = content,
         )
     }
+}
+
+@Composable
+fun AppActionChip(
+    onClick: () -> Unit,
+    label: String,
+    leadingIcon: ImageVector,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    AssistChip(
+        onClick = onClick,
+        modifier = modifier.semantics {
+            this.contentDescription = contentDescription
+        },
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                ),
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = null,
+                modifier = Modifier.size(AppSpacing.iconMedium),
+            )
+        },
+        shape = AppShapes.chip,
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            labelColor = MaterialTheme.colorScheme.onPrimary,
+            leadingIconContentColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+        elevation = null,
+        border = null,
+    )
 }
 
 @Composable
@@ -197,55 +260,77 @@ fun BottomPrimaryActionBanner(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .background(navigationSurfaceColor)
             .semantics { contentDescription = "Acciones principales" },
     ) {
-        BottomNavigationTopDivider()
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val horizontalMargin = when {
+                maxWidth <= AppSpacing.bottomNavigationSmallBreakpoint -> AppSpacing.sm
+                maxWidth < AppSpacing.bottomNavigationLargeBreakpoint -> AppSpacing.md
+                else -> AppSpacing.lg
+            }
+            val availableWidth = maxWidth - (horizontalMargin * 2)
+            val navigationWidth = minOf(availableWidth, AppSpacing.bottomNavigationMaxWidth)
+
+            Surface(
                 modifier = Modifier
+                    .align(Alignment.Center)
                     .fillMaxWidth()
-                    .height(AppSpacing.bannerHeight),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .widthIn(max = navigationWidth),
+                shape = AppShapes.button,
+                color = navigationSurfaceColor,
+                tonalElevation = AppSpacing.none,
+                shadowElevation = AppElevation.bottomNavigation,
             ) {
-                BottomNavigationItem(
-                    selected = selectedDestination == BottomNavigationDestination.Home,
-                    label = "Inicio",
-                    contentDescription = "Inicio",
-                    icon = Icons.Filled.Home,
-                    onClick = onHomeClick,
-                )
-                BottomNavigationItem(
-                    selected = selectedDestination == BottomNavigationDestination.Profile,
-                    label = "Perfil",
-                    contentDescription = "Perfil",
-                    icon = Icons.Outlined.Person,
-                    onClick = onProfileClick,
-                )
-                BottomNavigationItem(
-                    selected = selectedDestination == BottomNavigationDestination.Create,
-                    label = "Publicar",
-                    contentDescription = "Crear publicacion",
-                    icon = Icons.Filled.Add,
-                    isCreateAction = true,
-                    onClick = onCreatePostClick,
-                )
-                BottomNavigationItem(
-                    selected = selectedDestination == BottomNavigationDestination.Chats,
-                    label = "Mensajes",
-                    contentDescription = "Chats Privados",
-                    icon = Icons.AutoMirrored.Outlined.Chat,
-                    onClick = onChatClick,
-                )
-                BottomNavigationItem(
-                    selected = selectedDestination == BottomNavigationDestination.Notifications,
-                    label = "Alertas",
-                    contentDescription = "Alertas",
-                    icon = Icons.Outlined.NotificationsNone,
-                    unreadCount = unreadNotificationsCount,
-                    onClick = onNotificationsClick,
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    BottomNavigationTopDivider()
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(AppSpacing.bannerHeight),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Home,
+                                label = "Inicio",
+                                contentDescription = "Inicio",
+                                icon = Icons.Filled.Home,
+                                onClick = onHomeClick,
+                            )
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Profile,
+                                label = "Perfil",
+                                contentDescription = "Perfil",
+                                icon = Icons.Outlined.Person,
+                                onClick = onProfileClick,
+                            )
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Create,
+                                label = "Publicar",
+                                contentDescription = "Crear publicacion",
+                                icon = Icons.Filled.Add,
+                                isCreateAction = true,
+                                onClick = onCreatePostClick,
+                            )
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Chats,
+                                label = "Mensajes",
+                                contentDescription = "Chats Privados",
+                                icon = Icons.AutoMirrored.Outlined.Chat,
+                                onClick = onChatClick,
+                            )
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Notifications,
+                                label = "Alertas",
+                                contentDescription = "Alertas",
+                                icon = Icons.Outlined.NotificationsNone,
+                                unreadCount = unreadNotificationsCount,
+                                onClick = onNotificationsClick,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -293,15 +378,20 @@ private fun RowScope.BottomNavigationItem(
             onClick = onClick,
             modifier = itemModifier,
         ) {
-            BottomNavigationItemContent(
-                selected = selected,
-                label = label,
-                contentDescription = contentDescription,
-                icon = icon,
-                onClick = onClick,
-                isCreateAction = false,
-                unreadCount = unreadCount,
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                BottomNavigationItemContent(
+                    selected = selected,
+                    label = label,
+                    contentDescription = contentDescription,
+                    icon = icon,
+                    onClick = onClick,
+                    isCreateAction = false,
+                    unreadCount = unreadCount,
+                )
+            }
         }
     }
 }
@@ -323,83 +413,102 @@ private fun BottomNavigationItemContent(
     }
     val navigationSurfaceColor = bottomNavigationSurfaceColor()
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        if (isCreateAction) {
-            Box(
+    if (isCreateAction) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppSpacing.bannerHeight),
+        ) {
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(AppSpacing.bottomNavigationCreateActionSize),
+                    .align(Alignment.Center)
+                    .size(AppSpacing.bottomNavigationWellSize)
+                    .offset(y = -AppSpacing.bottomNavigationActionLift),
+                shape = CircleShape,
+                color = navigationSurfaceColor,
+                tonalElevation = AppSpacing.none,
+                shadowElevation = AppElevation.bottomNavigation,
+            ) {}
+
+            FilledIconButton(
+                onClick = onClick,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(AppSpacing.bottomNavigationCreateActionSize)
+                    .offset(y = -AppSpacing.bottomNavigationActionLift),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(
+                        AppSpacing.bottomNavigationCreateIconSize,
+                    ),
+                )
+            }
+
+            Text(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                text = label,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip,
+            )
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Box(
+                modifier = Modifier.height(
+                    AppSpacing.bottomNavigationIconSlotHeight,
+                ),
                 contentAlignment = Alignment.Center,
             ) {
-                Surface(
-                    modifier = Modifier
-                        .size(AppSpacing.bottomNavigationWellSize)
-                    .offset(y = -AppSpacing.bottomNavigationActionLift),
-                    shape = CircleShape,
-                    color = navigationSurfaceColor,
-                    tonalElevation = AppSpacing.none,
-                    shadowElevation = AppElevation.subtle,
-                ) {}
-                FilledIconButton(
-                    onClick = onClick,
-                    modifier = Modifier
-                        .size(AppSpacing.bottomNavigationCreateActionSize)
-                        .offset(y = -AppSpacing.bottomNavigationActionLift),
-                    shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError,
+                            ) { Text(text = "$unreadCount") }
+                        }
+                    },
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = contentDescription,
-                        modifier = Modifier.size(AppSpacing.bottomNavigationCreateIconSize),
+                        tint = contentColor,
+                        modifier = Modifier.size(
+                            AppSpacing.bottomNavigationIcon,
+                        ),
                     )
                 }
             }
-        } else {
-            Box(
-                modifier = Modifier.height(AppSpacing.bottomNavigationCreateActionSize),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    modifier = Modifier.height(AppSpacing.bottomNavigationIconSlotHeight),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    BadgedBox(
-                        badge = {
-                            if (unreadCount > 0) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError,
-                                ) { Text(text = "$unreadCount") }
-                            }
-                        },
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = contentDescription,
-                            tint = contentColor,
-                            modifier = Modifier.size(AppSpacing.bottomNavigationIcon),
-                        )
-                    }
-                }
-            }
+
+            Spacer(
+                modifier = Modifier.height(
+                    AppSpacing.bottomNavigationLabelGap,
+                ),
+            )
+
+            Text(
+                text = label,
+                color = contentColor,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip,
+            )
         }
-        Spacer(modifier = Modifier.height(AppSpacing.bottomNavigationLabelGap))
-        Text(
-            text = label,
-            color = if (isCreateAction) MaterialTheme.colorScheme.primary else contentColor,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Clip,
-        )
     }
 }
 
@@ -420,7 +529,7 @@ private fun BoxScope.BottomNavigationTopDivider() {
             .offset(y = -AppSpacing.bottomNavigationDividerArcHeight),
     ) {
         val dividerY = AppSpacing.bottomNavigationDividerArcHeight.toPx()
-        val radius = AppSpacing.bottomNavigationCreateActionSize.toPx() / 2f
+        val radius = AppSpacing.bottomNavigationWellSize.toPx() / 2f
         val centerX = size.width / 2f
         val strokeWidth = AppSpacing.borderWidth.toPx()
         val arcHeight = AppSpacing.bottomNavigationDividerArcHeight.toPx()

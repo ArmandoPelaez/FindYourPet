@@ -17,6 +17,7 @@ object AppSpacing {
     val xl: Dp = 32.dp
 
     val headerLogo: Dp = 36.dp
+    val homeHeaderHeight: Dp = 56.dp
     val avatarLarge: Dp = 72.dp
     val avatarMedium: Dp = 52.dp
     val notificationAvatar: Dp = 40.dp
@@ -65,22 +66,26 @@ object AppSpacing {
     val submitIcon: Dp = 22.dp
     val progressIndicator: Dp = 24.dp
     val submitButtonHeight: Dp = 56.dp
-    val bannerHeight: Dp = 72.dp
+    val bannerHeight: Dp = 60.dp
     val bannerHorizontalPadding: Dp = 18.dp
     val bottomNavigationIconSlotHeight: Dp = 28.dp
     val bottomNavigationIcon: Dp = 22.dp
     val bottomNavigationCreateActionSize: Dp = 52.dp
-    val bottomNavigationCreateIconSize: Dp = 24.dp
+    val bottomNavigationCreateIconSize: Dp = 22.dp
     val bottomNavigationLabelGap: Dp = none
-    val bottomNavigationWellSize: Dp = 68.dp
+    val bottomNavigationWellSize: Dp = 64.dp
     val bottomNavigationDividerArcHeight: Dp = 8.dp
-    val bottomNavigationActionLift: Dp = 8.dp
+    val bottomNavigationActionLift: Dp = 18.dp
+    val bottomNavigationMaxWidth: Dp = 720.dp
+    val bottomNavigationSmallBreakpoint: Dp = 360.dp
+    val bottomNavigationLargeBreakpoint: Dp = 400.dp
     val titleGap: Dp = 10.dp
     val actionGap: Dp = 10.dp
     val locationGap: Dp = 6.dp
     val pagerBottom: Dp = 28.dp
     val actionBottom: Dp = 88.dp
     val buttonHeight: Dp = 52.dp
+    val compactButtonHeight: Dp = 48.dp
 }
 
 /** Shapes that preserve the existing FindYourPet visual language. */
@@ -109,6 +114,7 @@ object AppElevation {
     val auth: Dp = 10.dp
     val subtle: Dp = 1.dp
     val inputBar: Dp = 4.dp
+    val bottomNavigation: Dp = 6.dp
 }
 
 object AppOpacity {

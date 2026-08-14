@@ -30,17 +30,22 @@ primary color, inactive items use `onSurfaceVariant`, and `Publicar` uses the
 filled circular action treatment. Alert badges belong to the bottom navigation;
 screens must not duplicate the alert action in their top bars.
 
-The bottom navigation surface spans the full width as an unrounded rectangle and
-is not rendered as a floating card. The `Publicar` action uses `AppSpacing.bottomNavigationWellSize`
-and `AppSpacing.bottomNavigationActionLift` for its subtle circular emphasis;
-secondary icons use `AppSpacing.bottomNavigationIcon` so their proportions stay
-consistent across themes and window sizes.
+The bottom navigation uses a responsive, centered floating surface. It keeps
+tokenized horizontal margins on small, medium, and large phones, and uses a
+centered maximum width on tablets. The surface uses the shared rounded button
+shape rather than a full-width card. The `Publicar` action uses
+`AppSpacing.bottomNavigationWellSize` and `AppSpacing.bottomNavigationActionLift`
+(18 dp)
+for its circular emphasis; secondary navigation content uses its native slot
+position without an additional vertical offset. Secondary icons use
+`AppSpacing.bottomNavigationIcon` so their proportions stay consistent across
+themes and window sizes.
 
-The compact navigation uses `AppSpacing.bannerHeight` and
+The compact navigation uses `AppSpacing.bannerHeight` (60 dp) and
 `AppSpacing.bottomNavigationIconSlotHeight` for shared alignment. The create
-action uses `AppSpacing.bottomNavigationCreateActionSize` and
+action uses `AppSpacing.bottomNavigationCreateActionSize` (52 dp) and
 `AppSpacing.bottomNavigationCreateIconSize`; its dark elevated well uses the
-shared surface and elevation tokens.
+shared surface and `AppElevation.bottomNavigation` (6 dp).
 
 For lost-pet cards, `AppSpacing.cardImageAspectRatio` is the shared aspect-ratio
 token for the photo frame. The status label uses `PetStatusColors` and is placed

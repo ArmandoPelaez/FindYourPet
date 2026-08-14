@@ -37,14 +37,14 @@ class HomeFeedPresentationScreenshotTest {
     renderHomeFeed(width = 360, height = 640, darkTheme = false)
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
     composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
-    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
+    composeTestRule.onNodeWithText("He visto a esta mascota").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-compact-light-top.png"
     )
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("Información reportada").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Cómo reconocerla").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-compact-light-scrolled.png"
     )
@@ -61,14 +61,14 @@ class HomeFeedPresentationScreenshotTest {
     )
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
     composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
-    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
+    composeTestRule.onNodeWithText("He visto a esta mascota").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-tall-dark-top.png"
     )
 
     composeTestRule.onNodeWithTag(VisualRootTag).performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText("Información reportada").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Cómo reconocerla").assertIsDisplayed()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/home-feed-tall-dark-scrolled.png"
     )

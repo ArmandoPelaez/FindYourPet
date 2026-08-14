@@ -45,15 +45,15 @@ class HomeFeedPresentationTest {
     composeTestRule.onNodeWithText("REX").assertIsDisplayed()
     composeTestRule.onNodeWithText("Cerca del Parque Central").assertIsDisplayed()
     composeTestRule.onNodeWithText("Última vez visto").assertIsDisplayed()
-    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
+    composeTestRule.onNodeWithText("He visto a esta mascota").assertIsDisplayed()
     composeTestRule.onAllNodesWithText("Boxer").assertCountEquals(0)
-    composeTestRule.onAllNodesWithText("Información reportada").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Cómo reconocerla").assertCountEquals(1)
     composeTestRule.onNodeWithText(
       "Visto por ultima vez cerca del Parque Central.",
       substring = true
     ).assertIsDisplayed()
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(0)
-    composeTestRule.onNodeWithContentDescription("La vi: reportar avistamiento de REX").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("He visto a esta mascota: reportar avistamiento de REX").assertIsDisplayed()
     composeTestRule.onAllNodesWithContentDescription("Reportar avistamiento de REX").assertCountEquals(0)
   }
 
@@ -70,8 +70,8 @@ class HomeFeedPresentationTest {
       }
     }
 
-    composeTestRule.onNodeWithText("La vi").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("La vi: reportar avistamiento de REX").performClick()
+    composeTestRule.onNodeWithText("He visto a esta mascota").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("He visto a esta mascota: reportar avistamiento de REX").performClick()
     assertEquals(1, clicks)
   }
 
@@ -84,7 +84,7 @@ class HomeFeedPresentationTest {
     }
 
     composeTestRule.onAllNodesWithText("¡Lo he visto!").assertCountEquals(0)
-    composeTestRule.onAllNodesWithText("La vi").assertCountEquals(0)
+    composeTestRule.onAllNodesWithText("He visto a esta mascota").assertCountEquals(0)
   }
 
   @Test
@@ -116,7 +116,7 @@ class HomeFeedPresentationTest {
       }
     }
 
-    composeTestRule.onNodeWithText("Información reportada").performScrollTo().assertIsDisplayed()
+    composeTestRule.onNodeWithText("Cómo reconocerla").performScrollTo().assertIsDisplayed()
   }
 
   @Test
@@ -130,8 +130,26 @@ class HomeFeedPresentationTest {
     assertTrue(cardSource.contains("modifier = Modifier.fillMaxSize()"))
     assertTrue(cardSource.contains("verticalScroll(rememberScrollState())"))
     assertTrue(cardSource.contains("aspectRatio(AppSpacing.cardImageAspectRatio)"))
+    assertTrue(cardSource.contains("padding(horizontal = AppSpacing.md)"))
+    assertFalse(cardSource.contains("top = AppSpacing.sm"))
+    assertTrue(cardSource.contains("bottom = AppSpacing.cardContentVertical"))
+    assertTrue(cardSource.contains("clip(AppShapes.card)"))
     assertTrue(cardSource.contains("showIcon = false"))
+    assertTrue(homeSource.contains("AppActionChip("))
+    assertTrue(homeSource.contains("He visto a esta mascota"))
+    assertTrue(homeSource.contains("Icons.Outlined.Info"))
+    assertTrue(homeSource.contains("AppSpacing.locationGap"))
+    assertFalse(homeSource.contains("text = \"La vi\""))
     assertTrue(homeSource.contains("Última vez visto"))
+  }
+
+  @Test
+  fun homeHeader_usesCompactHeightAndConsumesStatusBarInset() {
+    val homeSource = File(repoRoot(), "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
+
+    assertTrue(homeSource.contains("AppSpacing.homeHeaderHeight"))
+    assertTrue(homeSource.contains("windowInsetsTopHeight(WindowInsets.statusBars)"))
+    assertFalse(homeSource.contains("TopAppBar("))
   }
 
   @Test

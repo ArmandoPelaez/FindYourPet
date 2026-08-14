@@ -14,6 +14,12 @@ class BottomPrimaryActionBannerPresentationStaticTest {
 
     assertTrue(designTokens.contains("const val banner = 0.96f"))
     assertTrue(designTokens.contains("const val bottomNavigation = 0.88f"))
+    assertTrue(designTokens.contains("val bannerHeight: Dp = 60.dp"))
+    assertTrue(designTokens.contains("val bottomNavigationCreateActionSize: Dp = 52.dp"))
+    assertTrue(designTokens.contains("val bottomNavigation: Dp = 6.dp"))
+    assertTrue(designTokens.contains("val bottomNavigationActionLift: Dp = 18.dp"))
+    assertTrue(designTokens.contains("val bottomNavigationCreateIconSize: Dp = 22.dp"))
+    assertTrue(designTokens.contains("val bottomNavigationWellSize: Dp = 64.dp"))
 
     val bannerStart = components.indexOf("fun BottomPrimaryActionBanner(")
     val bannerEnd = components.indexOf("fun <T> SyncStatusBanner(")
@@ -26,11 +32,17 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(!bannerSource.contains("AppOpacity.banner"))
     assertTrue(bannerSource.contains("navigationBarsPadding()"))
     assertTrue(!bannerSource.contains("AppShapes.card"))
-    assertTrue(!bannerSource.contains("shape = AppShapes."))
+    assertTrue(bannerSource.contains("BoxWithConstraints"))
+    assertTrue(bannerSource.contains("shape = AppShapes.button"))
+    assertTrue(bannerSource.contains("bottomNavigationMaxWidth"))
+    assertTrue(bannerSource.contains("bottomNavigationSmallBreakpoint"))
+    assertTrue(bannerSource.contains("bottomNavigationLargeBreakpoint"))
     assertTrue(!bannerSource.contains("padding(horizontal = AppSpacing.lg)"))
     assertTrue(bannerSource.contains("bottomNavigationWellSize"))
     assertTrue(bannerSource.contains("bottomNavigationActionLift"))
+    assertTrue(!bannerSource.contains("bottomNavigationSecondaryActionLift"))
     assertTrue(bannerSource.contains("bottomNavigationCreateActionSize"))
+    assertTrue(bannerSource.contains("AppElevation.bottomNavigation"))
     assertTrue(bannerSource.contains("bottomNavigationIconSlotHeight"))
     val labels = listOf("Inicio", "Perfil", "Publicar", "Mensajes", "Alertas")
     var previousIndex = -1
@@ -45,6 +57,7 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerSource.contains("Icons.Outlined.NotificationsNone"))
     assertTrue(bannerSource.contains("Icons.Filled.Home"))
     assertTrue(bannerSource.contains("AppSpacing.bottomNavigationCreateActionSize"))
+    assertTrue(bannerSource.contains("radius = AppSpacing.bottomNavigationWellSize.toPx() / 2f"))
   }
 
   private fun source(relativePath: String): String = File(root, relativePath).readText()

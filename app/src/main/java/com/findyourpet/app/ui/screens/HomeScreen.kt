@@ -15,14 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.domain.OwnershipPolicy
-import com.findyourpet.app.ui.components.AppButton
-import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.AppActionChip
 import com.findyourpet.app.ui.components.EmptyState
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
@@ -51,10 +52,19 @@ fun HomeScreen(
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets.safeDrawing,
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AppSpacing.homeHeaderHeight)
+                            .padding(horizontal = AppSpacing.md)
+                    ) {
                         Surface(
                             color = MaterialTheme.colorScheme.primary,
                             shape = CircleShape,
@@ -82,12 +92,8 @@ fun HomeScreen(
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar)
-                )
-            )
+                }
+            }
         },
     ) { padding ->
         Column(
@@ -155,7 +161,9 @@ fun PetPostCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.md)
                     .aspectRatio(AppSpacing.cardImageAspectRatio)
+                    .clip(AppShapes.card)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -179,7 +187,8 @@ fun PetPostCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.cardContentVertical)
+                    .padding(horizontal = AppSpacing.md)
+                    .padding(bottom = AppSpacing.cardContentVertical)
             ) {
                 PetIdentitySection(
                     post = post,
@@ -188,26 +197,42 @@ fun PetPostCard(
                     onAlertClick = onAlertClick
                 )
 
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-
-                Text(
-                    text = "Información reportada",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                Spacer(modifier = Modifier.height(AppSpacing.sectionGap))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = AppSpacing.borderWidth,
                 )
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                Card(
+                Spacer(modifier = Modifier.height(AppSpacing.sectionGap))
+
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = AppShapes.content,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.subtleSurface)
-                    )
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(AppSpacing.iconMedium),
+                    )
+                    Spacer(modifier = Modifier.width(AppSpacing.locationGap))
+                    Text(
+                        text = "Cómo reconocerla",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.width(AppSpacing.iconMedium))
+                    Spacer(modifier = Modifier.width(AppSpacing.locationGap))
                     Text(
                         text = post.features,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(AppSpacing.md)
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.weight(1f),
                     )
                 }
 
@@ -226,25 +251,15 @@ private fun InlineSightingButton(
 ) {
     var sightingOpened by remember(petName) { mutableStateOf(false) }
 
-    AppButton(
+    AppActionChip(
         onClick = {
             sightingOpened = true
             onClick()
         },
-        variant = AppButtonVariant.Outlined,
-        contentDescription = "La vi: reportar avistamiento de $petName",
-    ) {
-        Icon(
-            imageVector = if (sightingOpened) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-            contentDescription = null,
-            modifier = Modifier.size(AppSpacing.iconMedium)
-        )
-        Spacer(modifier = Modifier.width(AppSpacing.xs))
-        Text(
-            text = "La vi",
-            style = MaterialTheme.typography.labelLarge
-        )
-    }
+        label = "He visto a esta mascota",
+        leadingIcon = if (sightingOpened) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+        contentDescription = "He visto a esta mascota: reportar avistamiento de $petName",
+    )
 }
 
 @Composable

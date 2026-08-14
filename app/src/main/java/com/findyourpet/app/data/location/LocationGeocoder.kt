@@ -53,9 +53,65 @@ suspend fun reverseGeocode(
 }
 
 private fun addressLabel(address: Address?): String? =
-    address?.getAddressLine(0)?.trim()?.takeIf { it.isNotBlank() }
-        ?: address?.let {
-            listOfNotNull(it.subLocality, it.locality, it.adminArea)
-                .joinToString(", ")
-                .takeIf(String::isNotBlank)
-        }
+    compactAddressLabel(address)
+
+internal fun compactAddressLabel(address: Address?): String? {
+    val resolvedAddress = address ?: return null
+    return compactAddressLabel(
+        thoroughfare = resolvedAddress.thoroughfare,
+        subThoroughfare = resolvedAddress.subThoroughfare,
+        subLocality = resolvedAddress.subLocality,
+        locality = resolvedAddress.locality,
+        administrativeArea = resolvedAddress.adminArea,
+        postalCode = resolvedAddress.postalCode,
+        addressLine = resolvedAddress.getAddressLine(0),
+    )
+}
+
+internal fun compactAddressLabel(
+    thoroughfare: String? = null,
+    subThoroughfare: String? = null,
+    subLocality: String?,
+    locality: String?,
+    administrativeArea: String?,
+    postalCode: String?,
+    addressLine: String?,
+): String? {
+    val street = listOfNotNull(
+        thoroughfare.cleanAddressPart(),
+        subThoroughfare.cleanAddressPart(),
+    ).joinToString(" ").takeIf { it.isNotBlank() }
+    val neighborhood = subLocality.cleanAddressPart()
+    val resolvedLocality = locality.cleanAddressPart()
+    val resolvedAdministrativeArea = administrativeArea.cleanAddressPart()
+
+    val compactParts = listOfNotNull(
+        street,
+        neighborhood,
+        resolvedLocality ?: resolvedAdministrativeArea,
+    ).distinct()
+
+    return compactParts.joinToString(", ")
+        .takeIf(String::isNotBlank)
+        ?: fallbackAddressLine(addressLine, postalCode)
+}
+
+private fun fallbackAddressLine(addressLine: String?, postalCode: String?): String? {
+    val line = addressLine?.trim().takeIf { !it.isNullOrBlank() }
+        ?: return null
+
+    val withoutPostalCode = postalCode
+        ?.trim()
+        ?.takeIf { it.isNotBlank() }
+        ?.let { postalCode -> line.replace(postalCode, "", ignoreCase = true) }
+        ?: line
+
+    return withoutPostalCode
+        .replace(Regex("\\s{2,}"), " ")
+        .replace(Regex("\\s*,\\s*,"), ",")
+        .trim(' ', ',')
+        .takeIf { it.isNotBlank() }
+}
+
+private fun String?.cleanAddressPart(): String? =
+    this?.trim()?.takeIf { it.isNotBlank() }

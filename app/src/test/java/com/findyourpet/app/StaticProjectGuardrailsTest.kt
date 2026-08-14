@@ -206,7 +206,7 @@ class StaticProjectGuardrailsTest {
     assertTrue(!mainActivityText.contains("route = \"detail/{postId}\""))
     assertTrue(!mainActivityText.contains("navigate(\"detail/"))
     assertTrue(!homeText.contains("Ver Ficha"))
-    assertTrue(homeText.contains("Información reportada"))
+    assertTrue(homeText.contains("Cómo reconocerla"))
     assertTrue(!homeText.contains("Ubicación en la que se perdió"))
   }
 
