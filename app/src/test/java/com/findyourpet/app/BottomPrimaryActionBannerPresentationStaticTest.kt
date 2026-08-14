@@ -58,6 +58,16 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerSource.contains("Icons.Filled.Home"))
     assertTrue(bannerSource.contains("AppSpacing.bottomNavigationCreateActionSize"))
     assertTrue(bannerSource.contains("radius = AppSpacing.bottomNavigationWellSize.toPx() / 2f"))
+    assertTrue(bannerSource.contains("BottomNavigationContextualAction"))
+    assertTrue(bannerSource.contains("contextualCreateAction"))
+    assertTrue(bannerSource.contains(".weight(2f)"))
+    assertTrue(bannerSource.contains("contentPaddingOverride = PaddingValues("))
+    assertTrue(bannerSource.contains("horizontal = AppSpacing.none"))
+    assertTrue(bannerSource.contains("modifier = Modifier.size(AppSpacing.iconSmall)"))
+    assertTrue(bannerSource.contains("overflow = TextOverflow.Clip"))
+    assertTrue(!bannerSource.contains("overflow = TextOverflow.Ellipsis"))
+    assertTrue(bannerSource.contains("action.enabled && !action.isBusy"))
+    assertTrue(bannerSource.contains("if (action.isBusy)"))
   }
 
   private fun source(relativePath: String): String = File(root, relativePath).readText()

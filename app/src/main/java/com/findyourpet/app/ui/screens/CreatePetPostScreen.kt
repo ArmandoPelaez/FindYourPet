@@ -27,9 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Publish
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,11 +39,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,7 @@ import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.ui.media.CameraImageCapture
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
+import com.findyourpet.app.ui.components.BottomNavigationContextualAction
 import com.findyourpet.app.ui.components.FormFieldLabel
 import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.components.FormPhotoUploadSurface
@@ -78,7 +80,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun CreatePetPostScreen(
     viewModel: PetViewModel,
-    onPostCreated: () -> Unit
+    onPostCreated: () -> Unit,
+    onContextualActionChanged: (BottomNavigationContextualAction?) -> Unit = {},
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -204,6 +207,66 @@ fun CreatePetPostScreen(
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
+    }
+
+    fun submitPost() {
+        if (isSubmitting) return
+
+        val petNameError = requiredPetNameMessage(petName)
+        if (petNameError != null) {
+            formMessage = petNameError
+            return
+        }
+        val selectedMediaSource = mediaSource
+        if (selectedMediaSource == null) {
+            formMessage = "Adjunta una foto real desde camara o galeria."
+            return
+        }
+        if (locationSelection?.isValid != true) {
+            formMessage = "Selecciona una ubicación antes de publicar."
+            return
+        }
+        isSubmitting = true
+        viewModel.createNewPetPost(
+            petName = petName,
+            species = "Mascota",
+            breed = "Mestizo",
+            color = "Variado",
+            features = recognitionDetails.ifBlank { "Sin caracteristicas registradas" },
+            photoUri = photoUri,
+            lastSeenLocation = lastSeenLocation,
+            latitude = latitude,
+            longitude = longitude,
+            rewardAmount = "Sin recompensa",
+            mediaSource = selectedMediaSource,
+            locationSource = locationSource,
+            onComplete = {
+                isSubmitting = false
+                onPostCreated()
+            },
+            onError = { message ->
+                isSubmitting = false
+                formMessage = message
+            }
+        )
+    }
+
+    val currentSubmitPost by rememberUpdatedState(newValue = { submitPost() })
+    val canSubmit = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting
+
+    LaunchedEffect(petName, photoUri, locationSelection?.isValid, isSubmitting) {
+        onContextualActionChanged(
+            BottomNavigationContextualAction(
+                label = "Publicar ficha",
+                enabled = canSubmit,
+                isBusy = isSubmitting,
+                onClick = { currentSubmitPost() },
+            )
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onContextualActionChanged(null) }
     }
 
     if (showPhotoOptions) {
@@ -409,60 +472,6 @@ fun CreatePetPostScreen(
                         style = AppFormTypography.placeholder,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            }
-
-            AppButton(
-                onClick = {
-                    val petNameError = requiredPetNameMessage(petName)
-                    if (petNameError != null) {
-                        formMessage = petNameError
-                        return@AppButton
-                    }
-                    val selectedMediaSource = mediaSource
-                    if (selectedMediaSource == null) {
-                        formMessage = "Adjunta una foto real desde camara o galeria."
-                        return@AppButton
-                    }
-                    if (locationSelection?.isValid != true) {
-                        formMessage = "Selecciona una ubicación antes de publicar."
-                        return@AppButton
-                    }
-                    isSubmitting = true
-                    viewModel.createNewPetPost(
-                        petName = petName,
-                        species = "Mascota",
-                        breed = "Mestizo",
-                        color = "Variado",
-                        features = recognitionDetails.ifBlank { "Sin caracteristicas registradas" },
-                        photoUri = photoUri,
-                        lastSeenLocation = lastSeenLocation,
-                        latitude = latitude,
-                        longitude = longitude,
-                        rewardAmount = "Sin recompensa",
-                        mediaSource = selectedMediaSource,
-                        locationSource = locationSource,
-                        onComplete = {
-                            isSubmitting = false
-                            onPostCreated()
-                        },
-                        onError = { message ->
-                            isSubmitting = false
-                            formMessage = message
-                        }
-                    )
-                },
-                enabled = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                contentDescription = "Publicar ficha",
-            ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(AppSpacing.progressIndicator))
-                } else {
-                    Icon(Icons.Filled.Publish, contentDescription = null)
-                    Spacer(modifier = Modifier.width(AppSpacing.sm))
-                    Text(text = "Publicar ficha", style = MaterialTheme.typography.labelLarge)
                 }
             }
 
