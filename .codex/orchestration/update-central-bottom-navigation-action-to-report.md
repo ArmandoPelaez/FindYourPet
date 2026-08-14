@@ -1,7 +1,7 @@
 # Orchestration: update-central-bottom-navigation-action-to-report
 
-state: PASSED_PENDING_INTEGRATION
-phase: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-18
 change: update-central-bottom-navigation-action-to-report
 branch: ops/update-central-bottom-navigation-action-to-report
@@ -12,9 +12,9 @@ delegation_status: MANUAL_HANDOFF
 handoff_mode: MANUAL
 agent_id:
 agent_role: findyourpet-implementer
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 3c040f9527b9ad2bf4e27f8fea6be510e542aa83
+integration_evidence: PR #38 merged into main; main and origin/main synchronized at 3c040f9527b9ad2bf4e27f8fea6be510e542aa83.
 
 ## Scrum normalizado
 
@@ -81,5 +81,10 @@ integration_evidence:
 - `openspec instructions apply`: 10/11 tareas completas; la tarea manual queda explícitamente no verificada.
 - `git diff --check`: sin errores.
 - Alcance revisado: cambios limitados a la acción central, CTA del formulario, Design System y pruebas relacionadas.
-- Estado: `PASSED_PENDING_INTEGRATION`.
-- Integración: pendiente de PR/merge autorizado; no se ejecutaron push, merge ni eliminación de rama.
+- Estado: `INTEGRATED`.
+- PR: `#38`, mergeado en `main`.
+- `git fetch origin --prune`: correcto.
+- `git switch main`: correcto.
+- `git pull --ff-only origin main`: correcto.
+- `git rev-parse main`: `3c040f9527b9ad2bf4e27f8fea6be510e542aa83`.
+- `git rev-parse origin/main`: `3c040f9527b9ad2bf4e27f8fea6be510e542aa83`.
