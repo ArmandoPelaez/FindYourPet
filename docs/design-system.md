@@ -25,15 +25,15 @@ Centralizar:
 - PetStatusColors
 
 The authenticated bottom navigation uses five shared destinations in this order:
-`Inicio`, `Perfil`, `Publicar`, `Mensajes`, `Alertas`. Active items use the theme
-primary color, inactive items use `onSurfaceVariant`, and `Publicar` uses the
+`Inicio`, `Perfil`, `Reportar`, `Mensajes`, `Alertas`. Active items use the theme
+primary color, inactive items use `onSurfaceVariant`, and `Reportar` uses the
 filled circular action treatment. Alert badges belong to the bottom navigation;
 screens must not duplicate the alert action in their top bars.
 
 The bottom navigation uses a responsive, centered floating surface. It keeps
 tokenized horizontal margins on small, medium, and large phones, and uses a
 centered maximum width on tablets. The surface uses the shared rounded button
-shape rather than a full-width card. The `Publicar` action uses
+shape rather than a full-width card. The `Reportar` action uses
 `AppSpacing.bottomNavigationWellSize` and `AppSpacing.bottomNavigationActionLift`
 (18 dp)
 for its circular emphasis; secondary navigation content uses its native slot

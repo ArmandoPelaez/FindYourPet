@@ -244,13 +244,6 @@ fun EmptyState(
     }
 }
 
-data class BottomNavigationContextualAction(
-    val label: String,
-    val enabled: Boolean,
-    val isBusy: Boolean,
-    val onClick: () -> Unit,
-)
-
 @Composable
 fun BottomPrimaryActionBanner(
     onHomeClick: () -> Unit,
@@ -260,7 +253,6 @@ fun BottomPrimaryActionBanner(
     onNotificationsClick: () -> Unit = {},
     unreadNotificationsCount: Int = 0,
     selectedDestination: BottomNavigationDestination = BottomNavigationDestination.Home,
-    contextualCreateAction: BottomNavigationContextualAction? = null,
     modifier: Modifier = Modifier
 ) {
     val navigationSurfaceColor = bottomNavigationSurfaceColor()
@@ -314,20 +306,14 @@ fun BottomPrimaryActionBanner(
                                 icon = Icons.Outlined.Person,
                                 onClick = onProfileClick,
                             )
-                            if (contextualCreateAction == null) {
-                                BottomNavigationItem(
-                                    selected = selectedDestination == BottomNavigationDestination.Create,
-                                    label = "Publicar",
-                                    contentDescription = "Crear publicacion",
-                                    icon = Icons.Filled.Add,
-                                    isCreateAction = true,
-                                    onClick = onCreatePostClick,
-                                )
-                            } else {
-                                BottomNavigationContextualActionItem(
-                                    action = contextualCreateAction,
-                                )
-                            }
+                            BottomNavigationItem(
+                                selected = selectedDestination == BottomNavigationDestination.Create,
+                                label = "Reportar",
+                                contentDescription = "Reportar",
+                                icon = Icons.Filled.Pets,
+                                isCreateAction = true,
+                                onClick = onCreatePostClick,
+                            )
                             BottomNavigationItem(
                                 selected = selectedDestination == BottomNavigationDestination.Chats,
                                 label = "Mensajes",
@@ -407,46 +393,6 @@ private fun RowScope.BottomNavigationItem(
                     unreadCount = unreadCount,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun RowScope.BottomNavigationContextualActionItem(
-    action: BottomNavigationContextualAction,
-) {
-    AppButton(
-        onClick = action.onClick,
-        enabled = action.enabled && !action.isBusy,
-        variant = AppButtonVariant.CompactPrimary,
-        modifier = Modifier
-            .weight(2f)
-            .height(AppSpacing.bannerHeight),
-        contentDescription = action.label,
-        contentPaddingOverride = PaddingValues(
-            horizontal = AppSpacing.none,
-            vertical = AppSpacing.xs,
-        ),
-    ) {
-        if (action.isBusy) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(AppSpacing.progressIndicator),
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Filled.Publish,
-                contentDescription = null,
-                modifier = Modifier.size(AppSpacing.iconSmall),
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
-            Text(
-                text = action.label,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Clip,
-            )
         }
     }
 }

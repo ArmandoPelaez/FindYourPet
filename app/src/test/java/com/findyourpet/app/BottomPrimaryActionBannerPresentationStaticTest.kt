@@ -44,7 +44,7 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerSource.contains("bottomNavigationCreateActionSize"))
     assertTrue(bannerSource.contains("AppElevation.bottomNavigation"))
     assertTrue(bannerSource.contains("bottomNavigationIconSlotHeight"))
-    val labels = listOf("Inicio", "Perfil", "Publicar", "Mensajes", "Alertas")
+    val labels = listOf("Inicio", "Perfil", "Reportar", "Mensajes", "Alertas")
     var previousIndex = -1
     labels.forEach { label ->
       val index = bannerSource.indexOf("label = \"$label\"")
@@ -52,22 +52,19 @@ class BottomPrimaryActionBannerPresentationStaticTest {
       assertTrue("Bottom navigation order is incorrect at $label", index > previousIndex)
       previousIndex = index
     }
+    assertTrue(!bannerSource.contains("label = \"Publicar\""))
+    assertTrue(bannerSource.contains("contentDescription = \"Reportar\""))
+    assertTrue(bannerSource.contains("icon = Icons.Filled.Pets"))
     assertTrue(bannerSource.contains("onNotificationsClick"))
     assertTrue(bannerSource.contains("unreadNotificationsCount"))
     assertTrue(bannerSource.contains("Icons.Outlined.NotificationsNone"))
     assertTrue(bannerSource.contains("Icons.Filled.Home"))
     assertTrue(bannerSource.contains("AppSpacing.bottomNavigationCreateActionSize"))
     assertTrue(bannerSource.contains("radius = AppSpacing.bottomNavigationWellSize.toPx() / 2f"))
-    assertTrue(bannerSource.contains("BottomNavigationContextualAction"))
-    assertTrue(bannerSource.contains("contextualCreateAction"))
-    assertTrue(bannerSource.contains(".weight(2f)"))
-    assertTrue(bannerSource.contains("contentPaddingOverride = PaddingValues("))
-    assertTrue(bannerSource.contains("horizontal = AppSpacing.none"))
-    assertTrue(bannerSource.contains("modifier = Modifier.size(AppSpacing.iconSmall)"))
+    assertTrue(!bannerSource.contains("BottomNavigationContextualAction"))
+    assertTrue(!bannerSource.contains("contextualCreateAction"))
     assertTrue(bannerSource.contains("overflow = TextOverflow.Clip"))
     assertTrue(!bannerSource.contains("overflow = TextOverflow.Ellipsis"))
-    assertTrue(bannerSource.contains("action.enabled && !action.isBusy"))
-    assertTrue(bannerSource.contains("if (action.isBusy)"))
   }
 
   private fun source(relativePath: String): String = File(root, relativePath).readText()
