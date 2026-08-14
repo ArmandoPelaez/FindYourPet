@@ -54,17 +54,32 @@ class PrimaryNavigationShellStaticTest {
   }
 
   @Test
-  fun createPostRegistersContextualActionAndRestoresRegularCreateAction() {
+  fun reportActionKeepsExistingCreateDestinationAndOtherNavigationRoutesIndependent() {
+    val mainActivity = mainActivitySource()
+    val banner = source("app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt")
+
+    assertTrue(banner.contains("label = \"Reportar\""))
+    assertTrue(banner.contains("contentDescription = \"Reportar\""))
+    assertTrue(banner.contains("onClick = onCreatePostClick"))
+    assertTrue(mainActivity.contains("onCreatePostClick = { navController.navigateToCreatePost() }"))
+    assertTrue(mainActivity.contains("onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) }"))
+    assertTrue(mainActivity.contains("onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) }"))
+    assertTrue(mainActivity.contains("onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) }"))
+    assertTrue(mainActivity.contains("onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) }"))
+    assertTrue(!banner.contains("label = \"Publicar\""))
+  }
+
+  @Test
+  fun createPostKeepsPublishCtaInsideFormAndReportActionInNavigation() {
     val mainActivity = mainActivitySource()
     val createPost = source("app/src/main/java/com/findyourpet/app/ui/screens/CreatePetPostScreen.kt")
 
-    assertTrue(mainActivity.contains("var contextualCreateAction by remember"))
-    assertTrue(mainActivity.contains("contextualCreateAction = contextualCreateAction"))
-    assertTrue(mainActivity.contains("onContextualActionChanged = { contextualCreateAction = it }"))
-    assertTrue(mainActivity.contains("if (!currentRoute.startsWith(ROUTE_CREATE))"))
-    assertTrue(mainActivity.contains("contextualCreateAction = null"))
-    assertTrue(createPost.contains("DisposableEffect(Unit)"))
-    assertTrue(createPost.contains("onDispose { onContextualActionChanged(null) }"))
+    assertTrue(mainActivity.contains("onCreatePostClick = { navController.navigateToCreatePost() }"))
+    assertTrue(!mainActivity.contains("contextualCreateAction"))
+    assertTrue(!mainActivity.contains("onContextualActionChanged"))
+    assertTrue(createPost.contains("contentDescription = \"Publicar ficha\""))
+    assertTrue(createPost.contains("Text(\"Publicar ficha\")"))
+    assertTrue(!createPost.contains("BottomNavigationContextualAction"))
   }
 
   @Test

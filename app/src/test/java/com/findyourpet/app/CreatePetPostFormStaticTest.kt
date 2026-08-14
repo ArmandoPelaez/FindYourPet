@@ -94,15 +94,16 @@ class CreatePetPostFormStaticTest {
     val normalized = source.replace(Regex("\\s+"), " ")
     assertTrue(normalized.contains("val canSubmit = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting"))
     assertTrue(normalized.contains("enabled = canSubmit"))
-    assertTrue(source.contains("onContextualActionChanged"))
-    assertTrue(source.contains("DisposableEffect(Unit)"))
-    assertTrue(!source.contains("contentDescription = \"Publicar ficha\""))
+    assertTrue(source.contains("contentDescription = \"Publicar ficha\""))
+    assertTrue(source.contains("Text(\"Publicar ficha\")"))
+    assertTrue(!source.contains("onContextualActionChanged"))
+    assertTrue(!source.contains("BottomNavigationContextualAction"))
     assertTrue(source.contains("if (selectedMediaSource == null)"))
     assertTrue(source.contains("Adjunta una foto real desde camara o galeria."))
     assertTrue(source.contains("if (locationSelection?.isValid != true)"))
     assertTrue(source.contains("if (isSubmitting) return"))
     assertTrue(source.contains("isSubmitting = true"))
-    assertTrue(source.contains("isBusy = isSubmitting"))
+    assertTrue(source.contains("if (isSubmitting)"))
   }
 
   @Test

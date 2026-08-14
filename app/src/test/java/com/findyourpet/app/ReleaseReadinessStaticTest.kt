@@ -138,7 +138,7 @@ class ReleaseReadinessStaticTest {
       "contentDescription = \"Alertas\"",
       "contentDescription = \"Chats Privados\"",
       "contentDescription = \"Perfil\"",
-      "contentDescription = \"Crear publicacion\"",
+      "contentDescription = \"Reportar\"",
       "contentDescription = \"Enviar\"",
       "Foto de la mascota",
       "Foto del avistamiento",
