@@ -122,7 +122,6 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             composable(ROUTE_CREATE) {
                 CreatePetPostScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() },
                     onPostCreated = { navController.popBackStack() }
                 )
             }

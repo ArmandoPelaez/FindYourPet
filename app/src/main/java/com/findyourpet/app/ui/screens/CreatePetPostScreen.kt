@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Place
@@ -33,7 +32,6 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -41,7 +39,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -81,7 +78,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun CreatePetPostScreen(
     viewModel: PetViewModel,
-    onBackClick: () -> Unit,
     onPostCreated: () -> Unit
 ) {
     val context = LocalContext.current
@@ -293,18 +289,7 @@ fun CreatePetPostScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets.safeDrawing,
-                title = { Text("Publicar Mascota Perdida") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        }
+        contentWindowInsets = WindowInsets.safeDrawing
     ) { padding ->
         Column(
             modifier = Modifier
@@ -315,6 +300,11 @@ fun CreatePetPostScreen(
                 .padding(AppSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
+            Text(
+                text = "Publicar mascota perdida",
+                style = MaterialTheme.typography.titleLarge
+            )
+
             FormPhotoUploadSurface(
                 selectedPhotoUri = photoUri,
                 emptyTitle = "Toca para agregar foto",
