@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -16,7 +17,11 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.test.core.app.ApplicationProvider
+import com.findyourpet.app.ui.components.BottomNavigationContextualAction
+import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.screens.CreatePetPostScreen
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
 import com.findyourpet.app.ui.viewmodel.PetViewModel
@@ -63,6 +68,7 @@ class CreatePetPostScreenScreenshotTest {
 
     composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
     composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Publicar ficha").assertCountEquals(1)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-compact-scrolled.png"
@@ -96,6 +102,7 @@ class CreatePetPostScreenScreenshotTest {
 
     composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
     composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Publicar ficha").assertCountEquals(1)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-tall-scrolled.png"
@@ -107,6 +114,7 @@ class CreatePetPostScreenScreenshotTest {
 
     composeTestRule.setContent {
       MascotasPerdidasTheme(darkTheme = darkTheme) {
+        val contextualAction = remember { mutableStateOf<BottomNavigationContextualAction?>(null) }
         Box(
           modifier = Modifier
             .width(width.dp)
@@ -115,8 +123,19 @@ class CreatePetPostScreenScreenshotTest {
         ) {
           CreatePetPostScreen(
             viewModel = viewModel,
-            onPostCreated = {}
+            onPostCreated = {},
+            onContextualActionChanged = { contextualAction.value = it },
           )
+          contextualAction.value?.let { action ->
+            BottomPrimaryActionBanner(
+              onHomeClick = {},
+              onProfileClick = {},
+              onCreatePostClick = {},
+              onChatClick = {},
+              contextualCreateAction = action,
+              modifier = Modifier.align(Alignment.BottomCenter),
+            )
+          }
         }
       }
     }

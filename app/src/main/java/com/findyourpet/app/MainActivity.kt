@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -25,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
+import com.findyourpet.app.ui.components.BottomNavigationContextualAction
 import com.findyourpet.app.ui.components.BottomNavigationDestination
 import com.findyourpet.app.ui.screens.AuthScreen
 import com.findyourpet.app.ui.screens.ChatDetailScreen
@@ -80,9 +85,15 @@ fun PetAppNavigation(viewModel: PetViewModel) {
 @Composable
 private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
     val navController = rememberNavController()
+    var contextualCreateAction by remember { mutableStateOf<BottomNavigationContextualAction?>(null) }
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val notifications by viewModel.allNotifications.collectAsState()
     val currentRoute = currentBackStackEntry?.destination?.route.orEmpty()
+    LaunchedEffect(currentRoute) {
+        if (!currentRoute.startsWith(ROUTE_CREATE)) {
+            contextualCreateAction = null
+        }
+    }
     val selectedDestination = when {
         currentRoute.startsWith(ROUTE_PROFILE) -> BottomNavigationDestination.Profile
         currentRoute.startsWith(ROUTE_CREATE) -> BottomNavigationDestination.Create
@@ -102,6 +113,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) },
                 unreadNotificationsCount = notifications.count { !it.isRead },
                 selectedDestination = selectedDestination,
+                contextualCreateAction = contextualCreateAction,
             )
         }
     ) { shellPadding ->
@@ -122,7 +134,8 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             composable(ROUTE_CREATE) {
                 CreatePetPostScreen(
                     viewModel = viewModel,
-                    onPostCreated = { navController.popBackStack() }
+                    onPostCreated = { navController.popBackStack() },
+                    onContextualActionChanged = { contextualCreateAction = it },
                 )
             }
 

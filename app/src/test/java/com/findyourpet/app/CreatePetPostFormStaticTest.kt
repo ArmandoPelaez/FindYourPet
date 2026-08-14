@@ -92,18 +92,27 @@ class CreatePetPostFormStaticTest {
   @Test
   fun simplifiedForm_keepsPublishDisabledUntilPhotoNameAndLocationArePresent() {
     val normalized = source.replace(Regex("\\s+"), " ")
-    assertTrue(normalized.contains("enabled = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting"))
+    assertTrue(normalized.contains("val canSubmit = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting"))
+    assertTrue(normalized.contains("enabled = canSubmit"))
+    assertTrue(source.contains("onContextualActionChanged"))
+    assertTrue(source.contains("DisposableEffect(Unit)"))
+    assertTrue(!source.contains("contentDescription = \"Publicar ficha\""))
     assertTrue(source.contains("if (selectedMediaSource == null)"))
     assertTrue(source.contains("Adjunta una foto real desde camara o galeria."))
+    assertTrue(source.contains("if (locationSelection?.isValid != true)"))
+    assertTrue(source.contains("if (isSubmitting) return"))
+    assertTrue(source.contains("isSubmitting = true"))
+    assertTrue(source.contains("isBusy = isSubmitting"))
   }
 
   @Test
   fun missingPetName_isRejectedBeforePublicationPath() {
     val normalized = source.replace(Regex("\\s+"), " ")
     assertTrue(normalized.contains("val petNameError = requiredPetNameMessage(petName)"))
-    assertTrue(normalized.contains("if (petNameError != null) { formMessage = petNameError return@AppButton }"))
+    assertTrue(normalized.contains("if (petNameError != null) { formMessage = petNameError return"))
     assertTrue(source.contains("if (petName.isBlank()) \"Campo obligatorio\" else null"))
-    assertTrue(source.indexOf("requiredPetNameMessage(petName)") < source.indexOf("viewModel.createNewPetPost"))
+    assertTrue(source.contains("fun submitPost()"))
+    assertTrue(source.indexOf("fun submitPost()") < source.indexOf("viewModel.createNewPetPost"))
     assertTrue(source.contains("formMessage = null"))
   }
 

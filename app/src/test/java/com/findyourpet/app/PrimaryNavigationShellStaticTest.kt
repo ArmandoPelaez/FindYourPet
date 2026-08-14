@@ -54,6 +54,20 @@ class PrimaryNavigationShellStaticTest {
   }
 
   @Test
+  fun createPostRegistersContextualActionAndRestoresRegularCreateAction() {
+    val mainActivity = mainActivitySource()
+    val createPost = source("app/src/main/java/com/findyourpet/app/ui/screens/CreatePetPostScreen.kt")
+
+    assertTrue(mainActivity.contains("var contextualCreateAction by remember"))
+    assertTrue(mainActivity.contains("contextualCreateAction = contextualCreateAction"))
+    assertTrue(mainActivity.contains("onContextualActionChanged = { contextualCreateAction = it }"))
+    assertTrue(mainActivity.contains("if (!currentRoute.startsWith(ROUTE_CREATE))"))
+    assertTrue(mainActivity.contains("contextualCreateAction = null"))
+    assertTrue(createPost.contains("DisposableEffect(Unit)"))
+    assertTrue(createPost.contains("onDispose { onContextualActionChanged(null) }"))
+  }
+
+  @Test
   fun signedInNavigationStartsFreshForAuthenticatedSession() {
     val mainActivity = mainActivitySource()
 
