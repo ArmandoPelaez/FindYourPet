@@ -144,12 +144,27 @@ class HomeFeedPresentationTest {
   }
 
   @Test
-  fun homeHeader_usesCompactHeightAndConsumesStatusBarInset() {
+  fun homeHeader_isRemovedAndFeedKeepsSafeAreaSpacing() {
     val homeSource = File(repoRoot(), "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
 
-    assertTrue(homeSource.contains("AppSpacing.homeHeaderHeight"))
-    assertTrue(homeSource.contains("windowInsetsTopHeight(WindowInsets.statusBars)"))
+    assertTrue(homeSource.contains("contentWindowInsets = WindowInsets.safeDrawing"))
+    assertTrue(homeSource.contains(".padding(top = AppSpacing.md)"))
+    assertFalse(homeSource.contains("topBar ="))
     assertFalse(homeSource.contains("TopAppBar("))
+    assertFalse(homeSource.contains("AppSpacing.homeHeaderHeight"))
+    assertFalse(homeSource.contains("windowInsetsTopHeight(WindowInsets.statusBars)"))
+    assertFalse(homeSource.contains("Mascotas Perdidas"))
+    assertFalse(homeSource.contains("Red Segura de Búsqueda"))
+    assertTrue(homeSource.indexOf(".padding(padding)") < homeSource.indexOf(".padding(top = AppSpacing.md)"))
+  }
+
+  @Test
+  fun homeHeader_removalKeepsBottomNavigationInShell() {
+    val mainActivitySource = File(repoRoot(), "app/src/main/java/com/findyourpet/app/MainActivity.kt").readText()
+
+    assertTrue(mainActivitySource.contains("BottomPrimaryActionBanner("))
+    assertTrue(mainActivitySource.contains("onNotificationsClick ="))
+    assertTrue(mainActivitySource.contains("onCreatePostClick ="))
   }
 
   @Test
