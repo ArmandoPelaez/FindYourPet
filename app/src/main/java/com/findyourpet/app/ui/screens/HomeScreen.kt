@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +25,6 @@ import com.findyourpet.app.ui.components.AppActionChip
 import com.findyourpet.app.ui.components.EmptyState
 import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
-import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
@@ -51,55 +48,12 @@ fun HomeScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(AppSpacing.homeHeaderHeight)
-                            .padding(horizontal = AppSpacing.md)
-                    ) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape,
-                            modifier = Modifier.size(AppSpacing.headerLogo)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Filled.Pets,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(AppSpacing.iconMedium)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(AppSpacing.titleGap))
-                        Column {
-                            Text(
-                                text = "Mascotas Perdidas",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = "Red Segura de Búsqueda",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(top = AppSpacing.md)
                 .imePadding()
         ) {
             SyncStatusBanner(state = feedState)
