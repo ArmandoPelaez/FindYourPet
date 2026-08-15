@@ -11,9 +11,11 @@ import com.findyourpet.app.data.local.AppDatabase
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
+import com.findyourpet.app.data.local.entity.UserBlockEntity
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.data.remote.BackendCollections
@@ -308,6 +310,84 @@ class PetRepository(context: Context) {
         db.collection(BackendCollections.PET_POSTS).document(postId).delete().await()
     }
 
+    suspend fun reportSightingContent(
+        sightingId: String,
+        reportingUserId: String,
+        reason: String
+    ): ContentReportEntity {
+        require(sightingId.isNotBlank()) { "El avistamiento no esta disponible." }
+        require(reportingUserId.isNotBlank()) { "Inicia sesion antes de reportar contenido." }
+        require(reason in MODERATION_REASONS) { "Selecciona un motivo valido." }
+        val sighting = loadSightingForModeration(sightingId)
+        require(sighting.ownerId == reportingUserId) {
+            "Solo el propietario puede reportar este contenido."
+        }
+        val report = ContentReportEntity(
+            id = BackendCollections.contentReportId(sightingId, reportingUserId, reason),
+            sightingId = sightingId,
+            reportedUserId = sighting.reporterId,
+            reportingUserId = reportingUserId,
+            reason = reason,
+            createdAt = System.currentTimeMillis()
+        )
+        firestore?.let { db ->
+            db.collection(BackendCollections.CONTENT_REPORTS)
+                .document(report.id)
+                .set(report.toDocument())
+                .await()
+        }
+        petDao.insertContentReport(report)
+        return report
+    }
+
+    suspend fun blockSightingReporter(
+        sightingId: String,
+        blockerUserId: String
+    ): UserBlockEntity {
+        require(sightingId.isNotBlank()) { "El avistamiento no esta disponible." }
+        require(blockerUserId.isNotBlank()) { "Inicia sesion antes de bloquear usuarios." }
+        val sighting = loadSightingForModeration(sightingId)
+        require(sighting.ownerId == blockerUserId) {
+            "Solo el propietario puede bloquear a este usuario."
+        }
+        require(sighting.reporterId.isNotBlank()) { "El reportante no esta disponible." }
+        require(sighting.reporterId != blockerUserId) { "No puedes bloquearte a ti mismo." }
+        val block = UserBlockEntity(
+            id = BackendCollections.userBlockId(blockerUserId, sighting.reporterId),
+            blockerUserId = blockerUserId,
+            blockedUserId = sighting.reporterId,
+            sourceSightingId = sightingId,
+            createdAt = System.currentTimeMillis()
+        )
+        firestore?.let { db ->
+            db.collection(BackendCollections.USER_BLOCKS)
+                .document(block.id)
+                .set(block.toDocument())
+                .await()
+        }
+        petDao.insertUserBlock(block)
+        return block
+    }
+
+    suspend fun isUserBlocked(blockerUserId: String, blockedUserId: String): Boolean {
+        if (blockerUserId.isBlank() || blockedUserId.isBlank()) return false
+        return firestore?.let { db ->
+            db.collection(BackendCollections.USER_BLOCKS)
+                .document(BackendCollections.userBlockId(blockerUserId, blockedUserId))
+                .get()
+                .await()
+                .exists()
+        } ?: (petDao.getUserBlock(blockerUserId, blockedUserId) != null)
+    }
+
+    private suspend fun loadSightingForModeration(sightingId: String): SightingAlertEntity {
+        val sighting = firestore?.let { db ->
+            val snapshot = db.collection(BackendCollections.SIGHTINGS).document(sightingId).get().await()
+            snapshot.data?.toSightingEntity(snapshot.id)
+        } ?: petDao.getSightingById(sightingId).first()
+        return requireNotNull(sighting) { "El avistamiento no existe." }
+    }
+
     suspend fun submitSightingAlert(
         postId: String,
         petName: String,
@@ -349,6 +429,9 @@ class PetRepository(context: Context) {
         require(notes.length <= 1000) { "Los detalles del avistamiento son demasiado extensos." }
         require(OwnershipPolicy.canReportSighting(reporterId, resolvedOwnerId)) {
             "No puedes reportar avistamientos de tu propia publicacion."
+        }
+        require(!isUserBlocked(resolvedOwnerId, reporterId)) {
+            BLOCKED_SIGHTING_MESSAGE
         }
         val uploadedPhoto = if (photoUri.isBlank() || db == null) {
             UploadedImage(displayUrl = photoUri, provider = "", publicId = "", contentType = "")
@@ -810,5 +893,14 @@ class PetRepository(context: Context) {
 
     private companion object {
         const val RETIRED_CONTACT_NOTIFICATION_TYPE = "CONTACT_SHARED"
+        const val BLOCKED_SIGHTING_MESSAGE =
+            "No puedes enviar un avistamiento para esta publicacion."
+        val MODERATION_REASONS = setOf(
+            "INAPPROPRIATE",
+            "FALSE_INFORMATION",
+            "SPAM",
+            "HARASSMENT",
+            "OTHER"
+        )
     }
 }

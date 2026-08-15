@@ -142,6 +142,48 @@ service cloud.firestore {
         );
     }
 
+    function blockDocumentId(blockerUserId, blockedUserId) {
+      return blockerUserId + '_' + blockedUserId;
+    }
+
+    function hasActiveBlock(blockerUserId, blockedUserId) {
+      return exists(/databases/$(database)/documents/userBlocks/$(blockDocumentId(blockerUserId, blockedUserId)));
+    }
+
+    function validModerationReason(reason) {
+      return reason in ['INAPPROPRIATE', 'FALSE_INFORMATION', 'SPAM', 'HARASSMENT', 'OTHER'];
+    }
+
+    function validContentReportCreate(reportId) {
+      let sighting = get(/databases/$(database)/documents/sightings/$(request.resource.data.sightingId)).data;
+      return request.resource.data.id == reportId
+        && request.resource.data.sightingId is string
+        && request.resource.data.reportingUserId == uid()
+        && request.resource.data.reportingUserId == sighting.ownerId
+        && request.resource.data.reportedUserId is string
+        && (request.resource.data.reportedUserId == ''
+          || request.resource.data.reportedUserId == sighting.reporterId)
+        && validModerationReason(request.resource.data.reason)
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.keys().hasOnly([
+          'id', 'sightingId', 'reportedUserId', 'reportingUserId',
+          'reason', 'createdAt', 'status'
+        ]);
+    }
+
+    function validUserBlockCreate(blockId) {
+      let sighting = get(/databases/$(database)/documents/sightings/$(request.resource.data.sourceSightingId)).data;
+      return request.resource.data.id == blockId
+        && request.resource.data.blockerUserId == uid()
+        && request.resource.data.blockerUserId == sighting.ownerId
+        && request.resource.data.blockedUserId == sighting.reporterId
+        && request.resource.data.blockedUserId != request.resource.data.blockerUserId
+        && request.resource.data.sourceSightingId is string
+        && request.resource.data.keys().hasOnly([
+          'id', 'blockerUserId', 'blockedUserId', 'sourceSightingId', 'createdAt'
+        ]);
+    }
+
     function hasNoSensitiveNotificationFields(data) {
       return !data.keys().hasAny([
         'ownerPhone',
@@ -332,9 +374,25 @@ service cloud.firestore {
         && request.resource.data.postId is string
         && request.resource.data.reporterId != request.resource.data.ownerId
         && request.resource.data.ownerId == get(/databases/$(database)/documents/petPosts/$(request.resource.data.postId)).data.ownerId
+        && !hasActiveBlock(request.resource.data.ownerId, request.resource.data.reporterId)
         && validOptionalMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
         && preciseSightingLocationIsConsented(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /contentReports/{reportId} {
+      allow read: if signedIn() && resource.data.reportingUserId == uid();
+      allow create: if signedIn() && validContentReportCreate(reportId);
+      allow update, delete: if false;
+    }
+
+    match /userBlocks/{blockId} {
+      allow get: if signedIn()
+        && (!exists(/databases/$(database)/documents/userBlocks/$(blockId))
+          || resource.data.blockerUserId == uid());
+      allow list: if false;
+      allow create: if signedIn() && validUserBlockCreate(blockId);
       allow update, delete: if false;
     }
 

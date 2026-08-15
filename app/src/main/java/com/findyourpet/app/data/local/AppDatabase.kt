@@ -10,8 +10,10 @@ import com.findyourpet.app.data.local.dao.PetDao
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.UserBlockEntity
 
 @Database(
     entities = [
@@ -19,9 +21,11 @@ import com.findyourpet.app.data.local.entity.SightingAlertEntity
         SightingAlertEntity::class,
         ChatMessageEntity::class,
         ChatSessionEntity::class,
-        AppNotificationEntity::class
+        AppNotificationEntity::class,
+        ContentReportEntity::class,
+        UserBlockEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -43,7 +47,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
-                    MIGRATION_7_8
+                    MIGRATION_7_8,
+                    MIGRATION_8_9
                 ).build()
                 INSTANCE = instance
                 instance
@@ -131,6 +136,45 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                 db.execSQL("DROP TABLE pet_posts")
                 db.execSQL("ALTER TABLE pet_posts_new RENAME TO pet_posts")
+            }
+        }
+
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS content_reports (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        sightingId TEXT NOT NULL,
+                        reportedUserId TEXT NOT NULL,
+                        reportingUserId TEXT NOT NULL,
+                        reason TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        status TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_content_reports_sightingId_reportingUserId_reason " +
+                        "ON content_reports(sightingId, reportingUserId, reason)"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_content_reports_reportedUserId ON content_reports(reportedUserId)")
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_blocks (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        blockerUserId TEXT NOT NULL,
+                        blockedUserId TEXT NOT NULL,
+                        sourceSightingId TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_user_blocks_blockerUserId_blockedUserId " +
+                        "ON user_blocks(blockerUserId, blockedUserId)"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_user_blocks_blockedUserId ON user_blocks(blockedUserId)")
             }
         }
 

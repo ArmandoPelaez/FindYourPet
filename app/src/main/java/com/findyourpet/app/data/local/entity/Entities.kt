@@ -1,6 +1,7 @@
 ﻿package com.findyourpet.app.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "pet_posts")
@@ -36,6 +37,38 @@ data class SightingAlertEntity(
     val notes: String,
     val timestamp: Long,
     val idempotencyKey: String = ""
+)
+
+@Entity(
+    tableName = "content_reports",
+    indices = [
+        Index(value = ["sightingId", "reportingUserId", "reason"], unique = true),
+        Index(value = ["reportedUserId"])
+    ]
+)
+data class ContentReportEntity(
+    @PrimaryKey val id: String,
+    val sightingId: String,
+    val reportedUserId: String,
+    val reportingUserId: String,
+    val reason: String,
+    val createdAt: Long,
+    val status: String = MODERATION_PENDING_STATUS
+)
+
+@Entity(
+    tableName = "user_blocks",
+    indices = [
+        Index(value = ["blockerUserId", "blockedUserId"], unique = true),
+        Index(value = ["blockedUserId"])
+    ]
+)
+data class UserBlockEntity(
+    @PrimaryKey val id: String,
+    val blockerUserId: String,
+    val blockedUserId: String,
+    val sourceSightingId: String,
+    val createdAt: Long
 )
 
 @Entity(tableName = "chat_messages")
@@ -90,3 +123,4 @@ data class AppNotificationEntity(
 
 const val LEGACY_TEXT_MESSAGE_TYPE = "text"
 const val SIGHTING_ALERT_MESSAGE_TYPE = "sighting_alert"
+const val MODERATION_PENDING_STATUS = "PENDING"
