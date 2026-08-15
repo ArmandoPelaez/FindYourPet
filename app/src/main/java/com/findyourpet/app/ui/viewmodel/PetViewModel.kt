@@ -339,10 +339,9 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     locationSource = locationSource,
                     idempotencyKey = idempotencyKey
                 )
-            }.onSuccess { chatId ->
+            }.onSuccess { sightingId ->
                 _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.SUCCESS)
-                activeChatId.value = chatId
-                onComplete(chatId)
+                onComplete(sightingId)
             }.onFailure { error ->
                 val message = backendWriteErrorMessage(error, "No se pudo enviar el avistamiento.")
                 _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.ERROR, message)

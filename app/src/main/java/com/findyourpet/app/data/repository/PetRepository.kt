@@ -316,47 +316,14 @@ class PetRepository(context: Context) {
             timestamp = timestamp,
             idempotencyKey = stableSubmissionKey
         )
-        val chatId = BackendCollections.chatSessionId(postId, reporterId)
-        val chatSession = ChatSessionEntity(
-            id = chatId,
-            postId = postId,
-            petName = petName,
-            petPhotoUri = derivedPost.photoUri,
-            ownerId = resolvedOwnerId,
-            reporterId = reporterId,
-            reporterName = reporterName,
-            lastMessage = "Nuevo avistamiento",
-            lastMessageTimestamp = timestamp
-        )
-        val alertMessage = ChatMessageEntity(
-            id = "${sightingId}_alert",
-            chatId = chatId,
-            postId = postId,
-            senderId = reporterId,
-            senderName = reporterName,
-            text = "Nuevo avistamiento de ${petName.ifBlank { "mascota" }}",
-            photoUri = null,
-            timestamp = timestamp,
-            isSystemMessage = false,
-            type = SIGHTING_ALERT_MESSAGE_TYPE,
-            sightingId = sightingId,
-            ownerId = resolvedOwnerId,
-            reporterId = reporterId,
-            snapshotPetName = petName,
-            photoAttachmentUri = uploadedPhoto.displayUrl.takeIf { it.isNotBlank() },
-            locationDisplay = locationName,
-            generalDetails = notes.takeIf { it.isNotBlank() },
-            snapshotTimestamp = timestamp
-        )
         val notification = AppNotificationEntity(
             id = "${sightingId}_notification",
             recipientId = resolvedOwnerId,
             title = "Nuevo avistamiento",
             message = "Recibiste un nuevo avistamiento en tu publicacion.",
             type = "ALERT",
-            targetId = chatId,
+            targetId = sightingId,
             timestamp = timestamp,
-            chatId = chatId,
             sightingId = sightingId,
             postId = postId
         )
@@ -364,13 +331,9 @@ class PetRepository(context: Context) {
         if (db == null) {
             database.withTransaction {
                 petDao.insertSighting(sighting)
-                petDao.insertChatSession(chatSession)
-                petDao.insertMessage(alertMessage)
-                petDao.updateChatLastMessage(chatId, "Nuevo avistamiento", timestamp)
                 petDao.insertNotification(notification)
             }
         } else {
-            val chatRef = db.collection(BackendCollections.CHAT_SESSIONS).document(chatId)
             db.runBatch { batch ->
                 batch.set(
                     db.collection(BackendCollections.SIGHTINGS).document(sightingId),
@@ -384,11 +347,6 @@ class PetRepository(context: Context) {
                         preciseLocationConsented = locationSource == LocationSource.DEVICE_GPS
                     )
                 )
-                batch.set(chatRef, chatSession.toDocument(), com.google.firebase.firestore.SetOptions.merge())
-                batch.set(
-                    chatRef.collection(BackendCollections.MESSAGES).document(alertMessage.id),
-                    alertMessage.toDocument()
-                )
                 batch.set(
                     db.collection(BackendCollections.USERS)
                         .document(resolvedOwnerId)
@@ -399,7 +357,7 @@ class PetRepository(context: Context) {
             }.await()
         }
 
-        return chatId
+        return sightingId
     }
 
     suspend fun sendChatMessage(

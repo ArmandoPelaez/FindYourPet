@@ -239,6 +239,30 @@ service cloud.firestore {
         && data.recipientId != uid();
     }
 
+    function validSightingNotificationCreate(data) {
+      return data.type == 'ALERT'
+        && !data.keys().hasAny(['chatId'])
+        && data.sightingId is string
+        && data.postId is string
+        && data.targetId == data.sightingId
+        && data.recipientId == sightingAfter(data.sightingId).ownerId
+        && data.postId == sightingAfter(data.sightingId).postId
+        && sightingAfter(data.sightingId).id == data.sightingId
+        && sightingAfter(data.sightingId).reporterId == uid()
+        && sightingAfter(data.sightingId).reporterId != sightingAfter(data.sightingId).ownerId;
+    }
+
+    function validLegacySightingNotificationCreate(data) {
+      return data.type == 'ALERT'
+        && data.chatId is string
+        && data.sightingId is string
+        && data.postId is string
+        && data.targetId == data.chatId
+        && data.recipientId == sightingAfter(data.sightingId).ownerId
+        && data.postId == sightingAfter(data.sightingId).postId
+        && data.chatId == data.targetId;
+    }
+
     function validMessageCreate(chatId, messageId) {
       return isChatParticipant(chatAfter(chatId))
         && request.resource.data.id == messageId
@@ -267,17 +291,9 @@ service cloud.firestore {
           && request.resource.data.targetId is string
           && request.resource.data.isRead == false
           && hasNoSensitiveNotificationFields(request.resource.data)
-          && (!request.resource.data.keys().hasAny(['sightingId', 'chatId', 'postId'])
-            || (
-              request.resource.data.type == 'ALERT'
-              && request.resource.data.chatId is string
-              && request.resource.data.sightingId is string
-              && request.resource.data.postId is string
-              && request.resource.data.targetId == request.resource.data.chatId
-              && request.resource.data.recipientId == sightingAfter(request.resource.data.sightingId).ownerId
-              && request.resource.data.postId == sightingAfter(request.resource.data.sightingId).postId
-              && request.resource.data.chatId == request.resource.data.targetId
-            )
+          && ((!request.resource.data.keys().hasAny(['sightingId', 'chatId', 'postId']))
+            || validSightingNotificationCreate(request.resource.data)
+            || validLegacySightingNotificationCreate(request.resource.data)
             || validChatNotificationCreate(request.resource.data));
         allow update: if isUser(userId)
           && request.resource.data.recipientId == resource.data.recipientId
