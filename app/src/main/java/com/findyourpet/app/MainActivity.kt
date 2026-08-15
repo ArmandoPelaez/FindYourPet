@@ -1,6 +1,7 @@
 ﻿package com.findyourpet.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.components.BottomNavigationDestination
@@ -63,6 +65,7 @@ private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_ALERT = "alert/{postId}"
 private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
 private const val ROUTE_SIGHTING_DETAIL = "sighting/{sightingId}"
+private const val NOTIFICATION_TAG = "NotificationRouting"
 
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
@@ -178,8 +181,13 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 NotificationsScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
-                    onNotificationClick = { targetId ->
-                        navController.navigate(chatDetailRoute(targetId))
+                    onNotificationClick = { notification ->
+                        resolveNotificationRoute(notification)?.let(navController::navigate)
+                            ?: Log.w(
+                                NOTIFICATION_TAG,
+                                "Ignoring invalid sighting notification " +
+                                    "id=${notification.id}, type=${notification.type}"
+                            )
                     }
                 )
             }
@@ -213,3 +221,16 @@ private fun NavHostController.navigateToCreatePost() {
 private fun alertRoute(postId: String) = "alert/$postId"
 
 private fun chatDetailRoute(chatId: String) = "chat/$chatId"
+
+private fun sightingDetailRoute(sightingId: String) = "sighting/$sightingId"
+
+internal fun resolveNotificationRoute(notification: AppNotificationEntity): String? =
+    if (notification.type == "ALERT") {
+        notification.sightingId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let(::sightingDetailRoute)
+    } else {
+        notification.chatId?.takeIf { it.isNotBlank() }?.let(::chatDetailRoute)
+            ?: notification.targetId.takeIf { it.isNotBlank() }?.let(::chatDetailRoute)
+    }
