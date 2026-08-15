@@ -34,7 +34,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = {},
           onProfileClick = {},
           onCreatePostClick = {},
-          onChatClick = {},
+          onActivityClick = {},
           onNotificationsClick = {}
         )
       }
@@ -44,12 +44,12 @@ class BottomPrimaryActionBannerComposeTest {
     composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Reportar").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Actividad").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Alertas").assertIsDisplayed()
     composeTestRule.onAllNodesWithContentDescription("Inicio").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Perfil").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Reportar").assertCountEquals(1)
-    composeTestRule.onAllNodesWithContentDescription("Chats Privados").assertCountEquals(1)
+    composeTestRule.onAllNodesWithContentDescription("Actividad").assertCountEquals(1)
     composeTestRule.onAllNodesWithContentDescription("Alertas").assertCountEquals(1)
   }
 
@@ -57,7 +57,7 @@ class BottomPrimaryActionBannerComposeTest {
   fun bottomPrimaryActionBanner_invokesPrimaryActionCallbacks() {
     var profileClicks = 0
     var createPostClicks = 0
-    var chatClicks = 0
+    var activityClicks = 0
     var notificationClicks = 0
     var homeClicks = 0
 
@@ -67,7 +67,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = { homeClicks++ },
           onProfileClick = { profileClicks++ },
           onCreatePostClick = { createPostClicks++ },
-          onChatClick = { chatClicks++ },
+          onActivityClick = { activityClicks++ },
           onNotificationsClick = { notificationClicks++ }
         )
       }
@@ -76,13 +76,13 @@ class BottomPrimaryActionBannerComposeTest {
     composeTestRule.onNodeWithContentDescription("Inicio").performClick()
     composeTestRule.onNodeWithContentDescription("Perfil").performClick()
     composeTestRule.onNodeWithContentDescription("Reportar").performClick()
-    composeTestRule.onNodeWithContentDescription("Chats Privados").performClick()
+    composeTestRule.onNodeWithContentDescription("Actividad").performClick()
     composeTestRule.onNodeWithContentDescription("Alertas").performClick()
 
     assertEquals(1, homeClicks)
     assertEquals(1, profileClicks)
     assertEquals(1, createPostClicks)
-    assertEquals(1, chatClicks)
+    assertEquals(1, activityClicks)
     assertEquals(1, notificationClicks)
   }
 
@@ -94,7 +94,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = {},
           onProfileClick = {},
           onCreatePostClick = {},
-          onChatClick = {}
+          onActivityClick = {}
         )
       }
     }
@@ -103,7 +103,7 @@ class BottomPrimaryActionBannerComposeTest {
     composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Reportar").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Actividad").assertIsDisplayed()
   }
 
   @Test
@@ -114,7 +114,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = {},
           onProfileClick = {},
           onCreatePostClick = {},
-          onChatClick = {}
+          onActivityClick = {}
         )
       }
     }
@@ -123,7 +123,7 @@ class BottomPrimaryActionBannerComposeTest {
     composeTestRule.onNodeWithContentDescription("Inicio").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Perfil").assertIsDisplayed()
     composeTestRule.onNodeWithContentDescription("Reportar").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Chats Privados").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Actividad").assertIsDisplayed()
     assertTrue(AppOpacity.bottomNavigation in 0f..1f)
     assertTrue(AppOpacity.bottomNavigation < 1f)
   }
@@ -136,7 +136,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = {},
           onProfileClick = {},
           onCreatePostClick = {},
-          onChatClick = {},
+          onActivityClick = {},
         )
       }
     }
@@ -151,7 +151,7 @@ class BottomPrimaryActionBannerComposeTest {
     var reportClicks = 0
     var homeClicks = 0
     var profileClicks = 0
-    var chatClicks = 0
+    var activityClicks = 0
     var notificationClicks = 0
 
     composeTestRule.setContent {
@@ -160,7 +160,7 @@ class BottomPrimaryActionBannerComposeTest {
           onHomeClick = { homeClicks++ },
           onProfileClick = { profileClicks++ },
           onCreatePostClick = { reportClicks++ },
-          onChatClick = { chatClicks++ },
+          onActivityClick = { activityClicks++ },
           onNotificationsClick = { notificationClicks++ },
         )
       }
@@ -169,13 +169,13 @@ class BottomPrimaryActionBannerComposeTest {
     composeTestRule.onNodeWithContentDescription("Reportar").performClick()
     composeTestRule.onNodeWithContentDescription("Inicio").performClick()
     composeTestRule.onNodeWithContentDescription("Perfil").performClick()
-    composeTestRule.onNodeWithContentDescription("Chats Privados").performClick()
+    composeTestRule.onNodeWithContentDescription("Actividad").performClick()
     composeTestRule.onNodeWithContentDescription("Alertas").performClick()
 
     assertEquals(1, reportClicks)
     assertEquals(1, homeClicks)
     assertEquals(1, profileClicks)
-    assertEquals(1, chatClicks)
+    assertEquals(1, activityClicks)
     assertEquals(1, notificationClicks)
   }
 }

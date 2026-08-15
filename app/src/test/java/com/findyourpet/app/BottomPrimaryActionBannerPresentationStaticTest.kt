@@ -44,7 +44,7 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerSource.contains("bottomNavigationCreateActionSize"))
     assertTrue(bannerSource.contains("AppElevation.bottomNavigation"))
     assertTrue(bannerSource.contains("bottomNavigationIconSlotHeight"))
-    val labels = listOf("Inicio", "Perfil", "Reportar", "Mensajes", "Alertas")
+    val labels = listOf("Inicio", "Perfil", "Reportar", "Actividad", "Alertas")
     var previousIndex = -1
     labels.forEach { label ->
       val index = bannerSource.indexOf("label = \"$label\"")
@@ -56,6 +56,7 @@ class BottomPrimaryActionBannerPresentationStaticTest {
     assertTrue(bannerSource.contains("contentDescription = \"Reportar\""))
     assertTrue(bannerSource.contains("icon = Icons.Filled.Pets"))
     assertTrue(bannerSource.contains("onNotificationsClick"))
+    assertTrue(bannerSource.contains("onActivityClick"))
     assertTrue(bannerSource.contains("unreadNotificationsCount"))
     assertTrue(bannerSource.contains("Icons.Outlined.NotificationsNone"))
     assertTrue(bannerSource.contains("Icons.Filled.Home"))

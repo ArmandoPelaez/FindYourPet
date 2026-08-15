@@ -41,6 +41,9 @@ interface PetDao {
     @Query("SELECT * FROM sighting_alerts WHERE postId = :postId ORDER BY timestamp DESC")
     fun getSightingsForPost(postId: String): Flow<List<SightingAlertEntity>>
 
+    @Query("SELECT * FROM sighting_alerts WHERE ownerId = :ownerId ORDER BY timestamp DESC")
+    fun getSightingsForOwner(ownerId: String): Flow<List<SightingAlertEntity>>
+
     @Query("SELECT * FROM sighting_alerts WHERE id = :sightingId")
     fun getSightingById(sightingId: String): Flow<SightingAlertEntity?>
 
@@ -52,6 +55,9 @@ interface PetDao {
 
     @Query("DELETE FROM sighting_alerts WHERE postId = :postId")
     suspend fun clearSightingsForPost(postId: String)
+
+    @Query("DELETE FROM sighting_alerts WHERE ownerId = :ownerId")
+    suspend fun clearSightingsForOwner(ownerId: String)
 
     // Chat Messages
     @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")

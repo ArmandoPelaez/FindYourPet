@@ -27,6 +27,7 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("private const val ROUTE_HOME = \"home\""))
     assertTrue(mainActivity.contains("private const val ROUTE_PROFILE = \"profile\""))
     assertTrue(mainActivity.contains("private const val ROUTE_CHATS = \"chats\""))
+    assertTrue(mainActivity.contains("private const val ROUTE_ACTIVITY = \"activity\""))
     assertTrue(mainActivity.contains("BottomPrimaryActionBanner("))
     assertTrue(!mainActivity.contains("PRIMARY_DESTINATION_ROUTES"))
     assertTrue(!mainActivity.contains("currentRoute in"))
@@ -48,7 +49,7 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("restoreState = true"))
     assertTrue(mainActivity.contains("onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) }"))
     assertTrue(mainActivity.contains("onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) }"))
-    assertTrue(mainActivity.contains("onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) }"))
+    assertTrue(mainActivity.contains("onActivityClick = { navController.navigateToPrimaryDestination(ROUTE_ACTIVITY) }"))
     assertTrue(mainActivity.contains("onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) }"))
     assertTrue(mainActivity.contains("fun NavHostController.navigateToCreatePost()"))
   }
@@ -64,7 +65,7 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("onCreatePostClick = { navController.navigateToCreatePost() }"))
     assertTrue(mainActivity.contains("onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) }"))
     assertTrue(mainActivity.contains("onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) }"))
-    assertTrue(mainActivity.contains("onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) }"))
+    assertTrue(mainActivity.contains("onActivityClick = { navController.navigateToPrimaryDestination(ROUTE_ACTIVITY) }"))
     assertTrue(mainActivity.contains("onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) }"))
     assertTrue(!banner.contains("label = \"Publicar\""))
   }
@@ -105,6 +106,7 @@ class PrimaryNavigationShellStaticTest {
 
     assertTrue(mainActivity.contains("ProfileScreen(viewModel = viewModel)"))
     assertTrue(mainActivity.contains("ChatListScreen("))
+    assertTrue(mainActivity.contains("ActivityScreen("))
     assertTrue(!mainActivity.contains("ProfileScreen(\n                viewModel = viewModel,\n                onBackClick"))
     assertTrue(profileScreen.contains("onBackClick: (() -> Unit)? = null"))
     assertTrue(chatListScreen.contains("onBackClick: (() -> Unit)? = null"))
@@ -123,6 +125,7 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains(".padding(shellPadding)"))
     assertTrue(mainActivity.contains("composable(ROUTE_PROFILE) {\n                ProfileScreen(viewModel = viewModel)\n            }"))
     assertTrue(mainActivity.contains("composable(ROUTE_CHATS) {\n                ChatListScreen("))
+    assertTrue(mainActivity.contains("composable(ROUTE_ACTIVITY) {\n                ActivityScreen("))
     assertTrue(profileScreen.contains("bottom = AppSpacing.actionBottom"))
     assertTrue(chatListScreen.contains("bottom = AppSpacing.actionBottom"))
   }

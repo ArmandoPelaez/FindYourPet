@@ -4,9 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -249,7 +248,7 @@ fun BottomPrimaryActionBanner(
     onHomeClick: () -> Unit,
     onProfileClick: () -> Unit,
     onCreatePostClick: () -> Unit,
-    onChatClick: () -> Unit,
+    onActivityClick: () -> Unit,
     onNotificationsClick: () -> Unit = {},
     unreadNotificationsCount: Int = 0,
     selectedDestination: BottomNavigationDestination = BottomNavigationDestination.Home,
@@ -315,11 +314,11 @@ fun BottomPrimaryActionBanner(
                                 onClick = onCreatePostClick,
                             )
                             BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Chats,
-                                label = "Mensajes",
-                                contentDescription = "Chats Privados",
-                                icon = Icons.AutoMirrored.Outlined.Chat,
-                                onClick = onChatClick,
+                                selected = selectedDestination == BottomNavigationDestination.Activity,
+                                label = "Actividad",
+                                contentDescription = "Actividad",
+                                icon = Icons.AutoMirrored.Outlined.EventNote,
+                                onClick = onActivityClick,
                             )
                             BottomNavigationItem(
                                 selected = selectedDestination == BottomNavigationDestination.Notifications,
@@ -341,7 +340,7 @@ enum class BottomNavigationDestination {
     Home,
     Profile,
     Create,
-    Chats,
+    Activity,
     Notifications,
 }
 

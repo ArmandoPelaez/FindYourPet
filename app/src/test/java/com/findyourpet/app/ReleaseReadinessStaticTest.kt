@@ -136,7 +136,7 @@ class ReleaseReadinessStaticTest {
     listOf(
       "contentDescription = \"Volver\"",
       "contentDescription = \"Alertas\"",
-      "contentDescription = \"Chats Privados\"",
+      "contentDescription = \"Actividad\"",
       "contentDescription = \"Perfil\"",
       "contentDescription = \"Reportar\"",
       "contentDescription = \"Enviar\"",
