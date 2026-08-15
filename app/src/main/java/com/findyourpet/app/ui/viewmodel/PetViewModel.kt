@@ -198,6 +198,31 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             BackendSyncState.loading<PetPostEntity?>(null, repository.usesRemoteBackend)
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val receivedSightingsState: StateFlow<BackendSyncState<List<SightingAlertEntity>>> =
+        currentUser.flatMapLatest { user ->
+            if (user.id.isBlank()) {
+                flowOf(
+                    BackendSyncState.data(
+                        emptyList(),
+                        isFromCache = false,
+                        hasPendingWrites = false,
+                        isRemoteBackend = repository.usesRemoteBackend
+                    )
+                )
+            } else {
+                repository.getSightingsForOwnerState(user.id)
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+        )
+
+    val receivedSightings: StateFlow<List<SightingAlertEntity>> = receivedSightingsState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Active Chat State
     val activeChatId = MutableStateFlow<String?>(null)
 

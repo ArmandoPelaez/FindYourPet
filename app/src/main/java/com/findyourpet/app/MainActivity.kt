@@ -29,6 +29,7 @@ import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.components.BottomNavigationDestination
 import com.findyourpet.app.ui.screens.AuthScreen
+import com.findyourpet.app.ui.screens.ActivityScreen
 import com.findyourpet.app.ui.screens.ChatDetailScreen
 import com.findyourpet.app.ui.screens.ChatListScreen
 import com.findyourpet.app.ui.screens.CreatePetPostScreen
@@ -61,6 +62,7 @@ private const val ROUTE_HOME = "home"
 private const val ROUTE_CREATE = "create"
 private const val ROUTE_PROFILE = "profile"
 private const val ROUTE_CHATS = "chats"
+private const val ROUTE_ACTIVITY = "activity"
 private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_ALERT = "alert/{postId}"
 private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
@@ -91,7 +93,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
     val selectedDestination = when {
         currentRoute.startsWith(ROUTE_PROFILE) -> BottomNavigationDestination.Profile
         currentRoute.startsWith(ROUTE_CREATE) -> BottomNavigationDestination.Create
-        currentRoute.startsWith(ROUTE_CHATS) || currentRoute.startsWith("chat/") -> BottomNavigationDestination.Chats
+        currentRoute.startsWith(ROUTE_ACTIVITY) -> BottomNavigationDestination.Activity
         currentRoute.startsWith(ROUTE_NOTIFICATIONS) || currentRoute.startsWith(ROUTE_ALERT.substringBefore("{")) -> BottomNavigationDestination.Notifications
         else -> BottomNavigationDestination.Home
     }
@@ -103,7 +105,7 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 onHomeClick = { navController.navigateToPrimaryDestination(ROUTE_HOME) },
                 onProfileClick = { navController.navigateToPrimaryDestination(ROUTE_PROFILE) },
                 onCreatePostClick = { navController.navigateToCreatePost() },
-                onChatClick = { navController.navigateToPrimaryDestination(ROUTE_CHATS) },
+                onActivityClick = { navController.navigateToPrimaryDestination(ROUTE_ACTIVITY) },
                 onNotificationsClick = { navController.navigateToPrimaryDestination(ROUTE_NOTIFICATIONS) },
                 unreadNotificationsCount = notifications.count { !it.isRead },
                 selectedDestination = selectedDestination,
@@ -175,6 +177,10 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                     viewModel = viewModel,
                     onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
                 )
+            }
+
+            composable(ROUTE_ACTIVITY) {
+                ActivityScreen(viewModel = viewModel)
             }
 
             composable(ROUTE_NOTIFICATIONS) {

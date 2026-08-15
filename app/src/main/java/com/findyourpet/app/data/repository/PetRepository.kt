@@ -126,6 +126,30 @@ class PetRepository(context: Context) {
             }
         } ?: petDao.getSightingsForPost(postId).toLocalState(emptyList())
 
+    fun getSightingsForOwner(ownerId: String): Flow<List<SightingAlertEntity>> =
+        getSightingsForOwnerState(ownerId).map { it.data }
+
+    fun getSightingsForOwnerState(ownerId: String): Flow<BackendSyncState<List<SightingAlertEntity>>> {
+        require(ownerId.isNotBlank()) { "El propietario del avistamiento es obligatorio." }
+        return firestore?.let { db ->
+            observeQuery(
+                query = db.collection(BackendCollections.SIGHTINGS)
+                    .whereEqualTo("ownerId", ownerId)
+                    .orderBy("timestamp", Query.Direction.DESCENDING),
+                initialData = emptyList()
+            ) { snapshot ->
+                snapshot.documents
+                    .mapNotNull { it.data?.toSightingEntity(it.id) }
+                    .sortedByDescending { it.timestamp }
+            }.onEach { state ->
+                if (!state.hasError) {
+                    petDao.clearSightingsForOwner(ownerId)
+                    petDao.insertSightings(state.data)
+                }
+            }
+        } ?: petDao.getSightingsForOwner(ownerId).toLocalState(emptyList())
+    }
+
     fun getSightingById(sightingId: String): Flow<SightingAlertEntity?> =
         getSightingByIdState(sightingId).map { it.data }
 
