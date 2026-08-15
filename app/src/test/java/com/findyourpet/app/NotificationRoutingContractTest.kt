@@ -66,6 +66,37 @@ class NotificationRoutingContractTest {
     assertTrue(mainActivity.contains("chatDetailRoute"))
   }
 
+  @Test
+  fun activitySelectionNormalizesOnlyItsSightingIdentifier() {
+    val mainActivity = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
+
+    assertEquals("sighting/sighting_123", resolveActivitySightingRoute(" sighting_123 "))
+    assertNull(resolveActivitySightingRoute(null))
+    assertNull(resolveActivitySightingRoute(""))
+    assertNull(resolveActivitySightingRoute("   "))
+    assertTrue(mainActivity.contains("onSightingClick = { sightingId ->"))
+    assertTrue(mainActivity.contains("resolveActivitySightingRoute(sightingId)"))
+    assertTrue(mainActivity.contains("launchSingleTop = true"))
+    assertTrue(mainActivity.contains("ACTIVITY_TAG"))
+    assertTrue(mainActivity.contains("sightingDetailRoute"))
+  }
+
+  @Test
+  fun activityDetailNavigationKeepsActivityInBackStackAndLeavesOtherRoutesUntouched() {
+    val mainActivity = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
+    val detailBlock = mainActivity
+      .substringAfter("onSightingClick = { sightingId ->")
+      .substringBefore("                )\n            }")
+
+    assertTrue(detailBlock.contains("navController.navigate(route)"))
+    assertTrue(detailBlock.contains("launchSingleTop = true"))
+    assertTrue(!detailBlock.contains("popUpTo"))
+    assertTrue(mainActivity.contains("onAlertSent = {"))
+    assertTrue(mainActivity.contains("resolveNotificationRoute(notification)"))
+    assertTrue(mainActivity.contains("composable(ROUTE_NOTIFICATIONS)"))
+    assertTrue(mainActivity.contains("route = ROUTE_SIGHTING_DETAIL"))
+  }
+
   private fun notification(
     type: String,
     targetId: String = "target",

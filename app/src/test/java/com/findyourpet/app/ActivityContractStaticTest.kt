@@ -59,6 +59,22 @@ class ActivityContractStaticTest {
   }
 
   @Test
+  fun activityItemsExposeStableSelectionCallbackAndMaterialInteraction() {
+    val activity = source("app/src/main/java/com/findyourpet/app/ui/screens/ActivityScreen.kt")
+
+    assertTrue(activity.contains("onSightingClick: (String) -> Unit"))
+    assertTrue(activity.contains("onClick = { onSightingClick(sighting.id) }"))
+    assertTrue(activity.contains("onClick = onClick"))
+    assertTrue(activity.contains("Card("))
+    assertTrue(activity.contains("shape = AppShapes.content"))
+    assertTrue(activity.contains("AppSpacing.compactCardPadding"))
+    assertTrue(activity.contains("MaterialTheme.colorScheme.surface"))
+    assertTrue(!activity.contains("Color("))
+    assertTrue(!Regex("\\d+\\.dp").containsMatchIn(activity))
+    assertTrue(!Regex("\\d+\\.sp").containsMatchIn(activity))
+  }
+
+  @Test
   fun primaryNavigationReplacesOnlyTheFourthDestinationAndKeepsLegacyChatRoute() {
     val main = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
     val banner = source("app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt")
