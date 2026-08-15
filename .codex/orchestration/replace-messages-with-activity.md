@@ -1,15 +1,15 @@
 change: replace-messages-with-activity
 issue: SCRUM-23
 title: Reemplazar sección Mensajes por Actividad y listar avistamientos recibidos
-status: BLOCKED
-phase: VERIFYING
+status: INTEGRATED
+phase: INTEGRATED
 base_branch: main
 base_commit: e7303bc1d2209d340b0e23c6fed43f455158cbb8
 remote_base_commit: e7303bc1d2209d340b0e23c6fed43f455158cbb8
 branch: ops/replace-messages-with-activity
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 9b93782f574fd6fed1866bba6accd20b0bdcf0e6
+integration_evidence: PR #43 merged into main; manual tests confirmed by user.
 
 ## Preflight and synchronization
 
@@ -69,9 +69,17 @@ delegation_error:
 - `git diff --check`: passed.
 - Diff review: changes are limited to owner-scoped sighting access, Activity Compose UI, primary navigation replacement, related tests, and OpenSpec/orchestration artifacts. Chat legacy code/routes remain present.
 
-## Blocker
+## Manual validation and closure
 
-Manual tasks 5.5 and 5.6 require an authorized authenticated test account plus sighting fixtures to validate the real Activity list, ordering, themes, safe-area, accessibility, and unaffected navigation on a device. No credentials, backend fixtures, or production data were provided or created.
+- The user confirmed that the manual tests were completed after the Firestore composite index for `sightings(ownerId ASC, timestamp DESC)` finished compiling.
+- Manual tasks 5.5 and 5.6 are therefore considered completed based on the user's confirmation.
+- No credentials or production data were recorded in this bitácora.
+
+## Integration
+
+- PR #43 (`ops/replace-messages-with-activity`) was merged into `main`.
+- `origin/main` is at `9b93782f574fd6fed1866bba6accd20b0bdcf0e6`.
+- The implementation commit `c35918a200000b0e2adb7df6e6fc7ce0843e8548` is an ancestor of the integrated commit.
 
 ## Branch creation
 
