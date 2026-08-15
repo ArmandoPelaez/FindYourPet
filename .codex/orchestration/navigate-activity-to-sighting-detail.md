@@ -1,14 +1,14 @@
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-24
 change: navigate-activity-to-sighting-detail
 branch: ops/navigate-activity-to-sighting-detail
 base_branch: main
 base_commit: 0c189a2a81b1269742751ddfb9680e2e1726c237
 remote_base_commit: 0c189a2a81b1269742751ddfb9680e2e1726c237
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: fdafc1d5a5d18e8f517928c0126ea862190a6e4b
+integration_evidence: PR #44 merged into main; main and origin/main synchronized on 2026-08-15. Implementation commit a8a9d23 is an ancestor of the integrated commit.
 delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 agent_id: 01a00627-6690-7a30-8692-e41d9ec4bafc
@@ -103,7 +103,18 @@ La implementación debe ejecutarse mediante `findyourpet-implementer` en un suba
 - `Get-Command adb`: `ADB_NOT_AVAILABLE`.
 - No hay dispositivo/emulador disponible para ejecutar el flujo `Actividad → Detalle de Avistamiento → Back → Actividad` en Light/Dark ni el caso manual de identificador inválido.
 - La cobertura automatizada de Compose y routing pasó, pero no sustituye la validación manual exigida para este cambio visual.
-- Estado final: `BLOCKED` hasta disponer de `adb` y un dispositivo/emulador verificable o autorización para aceptar una excepción explícita.
+- El bloqueo de validación manual queda registrado como riesgo pendiente histórico; la integración fue confirmada posteriormente mediante PR #44.
+
+## Cierre de integración
+
+- `git fetch origin --prune`: correcto.
+- `git switch main`: correcto.
+- `git pull --ff-only origin main`: correcto; fast-forward `0c189a2` → `fdafc1d5`.
+- `git rev-parse main`: `fdafc1d5a5d18e8f517928c0126ea862190a6e4b`.
+- `git rev-parse origin/main`: `fdafc1d5a5d18e8f517928c0126ea862190a6e4b`.
+- `git merge-base --is-ancestor a8a9d23 main`: correcto.
+- Merge confirmado: `Merge pull request #44 from ArmandoPelaez:ops/navigate-activity-to-sighting-detail`.
+- Estado final: `INTEGRATED`.
 
 ## Integración
 
