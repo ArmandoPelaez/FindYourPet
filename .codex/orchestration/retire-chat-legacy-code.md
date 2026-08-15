@@ -1,14 +1,14 @@
-state: BLOCKED
-phase: VERIFICATION_BLOCKED
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-26
 change: retire-chat-legacy-code
 branch: ops/retire-chat-legacy-code
 base_branch: main
 base_commit: ed763f059d5d5c71adfa3a52dc78d2455e960891
 remote_base_commit: ed763f059d5d5c71adfa3a52dc78d2455e960891
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: cc9106a9a9fc343193d6d519657efc5272088774
+integration_evidence: PR #46 merged at cc9106a9a9fc343193d6d519657efc5272088774; main synchronized with origin/main on 2026-08-15.
 delegation_status: COMPLETED_BLOCKED
 handoff_mode: SUBAGENT
 delegation_required: true
@@ -125,3 +125,9 @@ Los artefactos se generaran con el CLI de OpenSpec siguiendo el orden indicado p
 ## Integracion
 
 Despues de implementar y verificar, el change quedara `PASSED_PENDING_INTEGRATION` hasta contar con merge autorizado a `main` y sincronizacion con `origin/main`.
+- PR: https://github.com/ArmandoPelaez/FindYourPet/pull/46
+- Merge commit: `cc9106a9a9fc343193d6d519657efc5272088774`.
+- `git rev-parse main`: `cc9106a9a9fc343193d6d519657efc5272088774`.
+- `git rev-parse origin/main`: `cc9106a9a9fc343193d6d519657efc5272088774`.
+- El commit de implementacion `34aac4b` esta contenido en `main`.
+- La bitacora queda integrada como parte del historial de SCRUM-26.
