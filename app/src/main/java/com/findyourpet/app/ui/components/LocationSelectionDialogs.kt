@@ -18,6 +18,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
 import com.findyourpet.app.BuildConfig
 import com.findyourpet.app.data.location.LocationSelection
 import com.findyourpet.app.data.location.reverseGeocode
@@ -266,6 +268,87 @@ fun MapLocationSheet(
             }
         }
     }
+}
+
+@Composable
+fun ReadOnlyMapSheet(
+    locationName: String,
+    latitude: Double?,
+    longitude: Double?,
+    onDismiss: () -> Unit
+) {
+    val initialPoint = latitude?.let { lat ->
+        longitude?.let { lon -> LatLng(lat, lon) }
+    }
+    val mapsConfigured = BuildConfig.MAPS_API_KEY.isNotBlank() && BuildConfig.MAPS_API_KEY != DefaultApiKey
+    val cameraPositionState = initialPoint?.let { point ->
+        rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(point, DefaultMapZoom)
+        }
+    }
+    val markerState = initialPoint?.let { point -> remember(point) { MarkerState(position = point) } }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppSpacing.md),
+            shape = AppShapes.content,
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+            ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Ubicación del avistamiento", style = MaterialTheme.typography.titleMedium)
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Filled.Close, contentDescription = "Cerrar")
+                }
+            }
+            if (locationName.isNotBlank()) {
+                Text(
+                    text = locationName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (initialPoint == null) {
+                Text(
+                    text = "La ubicación solo está disponible como referencia.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                return@Column
+            }
+            if (!mapsConfigured) {
+                Text(
+                    "El mapa no está configurado. La referencia sigue disponible arriba.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                return@Column
+            }
+            if (cameraPositionState != null && markerState != null) {
+                Box(modifier = Modifier.fillMaxWidth().height(AppSpacing.mediaHeight)) {
+                    GoogleMap(
+                        modifier = Modifier.fillMaxWidth(),
+                        cameraPositionState = cameraPositionState,
+                        properties = MapProperties(isBuildingEnabled = false),
+                        uiSettings = MapUiSettings(zoomControlsEnabled = true)
+                    ) {
+                        Marker(state = markerState, title = locationName.ifBlank { "Avistamiento" })
+                    }
+                }
+            }
+        }
+    }
+}
+
 }
 
 private const val DefaultApiKey = "DEFAULT_API_KEY"

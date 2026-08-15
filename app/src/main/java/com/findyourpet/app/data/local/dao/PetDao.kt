@@ -41,6 +41,9 @@ interface PetDao {
     @Query("SELECT * FROM sighting_alerts WHERE postId = :postId ORDER BY timestamp DESC")
     fun getSightingsForPost(postId: String): Flow<List<SightingAlertEntity>>
 
+    @Query("SELECT * FROM sighting_alerts WHERE id = :sightingId")
+    fun getSightingById(sightingId: String): Flow<SightingAlertEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSighting(sighting: SightingAlertEntity)
 
