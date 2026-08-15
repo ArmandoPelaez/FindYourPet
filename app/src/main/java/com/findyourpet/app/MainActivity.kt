@@ -68,6 +68,7 @@ private const val ROUTE_ALERT = "alert/{postId}"
 private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
 private const val ROUTE_SIGHTING_DETAIL = "sighting/{sightingId}"
 private const val NOTIFICATION_TAG = "NotificationRouting"
+private const val ACTIVITY_TAG = "ActivityRouting"
 
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
@@ -180,7 +181,19 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(ROUTE_ACTIVITY) {
-                ActivityScreen(viewModel = viewModel)
+                ActivityScreen(
+                    viewModel = viewModel,
+                    onSightingClick = { sightingId ->
+                        resolveActivitySightingRoute(sightingId)?.let { route ->
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                            }
+                        } ?: Log.w(
+                            ACTIVITY_TAG,
+                            "Ignoring invalid Activity sighting selection id=$sightingId"
+                        )
+                    }
+                )
             }
 
             composable(ROUTE_NOTIFICATIONS) {
@@ -229,6 +242,12 @@ private fun alertRoute(postId: String) = "alert/$postId"
 private fun chatDetailRoute(chatId: String) = "chat/$chatId"
 
 private fun sightingDetailRoute(sightingId: String) = "sighting/$sightingId"
+
+internal fun resolveActivitySightingRoute(sightingId: String?): String? =
+    sightingId
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.let(::sightingDetailRoute)
 
 internal fun resolveNotificationRoute(notification: AppNotificationEntity): String? =
     if (notification.type == "ALERT") {

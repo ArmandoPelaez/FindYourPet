@@ -62,6 +62,7 @@ import java.util.Locale
 fun ActivityScreen(
     viewModel: PetViewModel,
     onBackClick: (() -> Unit)? = null,
+    onSightingClick: (String) -> Unit = {},
 ) {
     val sightingsState by viewModel.receivedSightingsState.collectAsState()
     val sightings = sightingsState.data
@@ -124,6 +125,7 @@ fun ActivityScreen(
                         ActivityItem(
                             sighting = sighting,
                             petPost = postsById[sighting.postId],
+                            onClick = { onSightingClick(sighting.id) },
                         )
                     }
                 }
@@ -163,9 +165,10 @@ private fun ActivityEmptyState(
 }
 
 @Composable
-private fun ActivityItem(
+internal fun ActivityItem(
     sighting: SightingAlertEntity,
     petPost: PetPostEntity?,
+    onClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val imageUri = sighting.photoUri.ifBlank { petPost?.photoUri.orEmpty() }
@@ -174,6 +177,7 @@ private fun ActivityItem(
     }
 
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("activity-item-${sighting.id}"),
