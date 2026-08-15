@@ -1,5 +1,5 @@
-state: BLOCKED
-phase: VERIFICATION_BLOCKED
+state: PASSED_PENDING_INTEGRATION
+phase: COMMIT_PUSH_PR
 issue: SCRUM-25
 change: add-moderation-actions-to-sighting-detail
 branch: ops/add-moderation-actions-to-sighting-detail
@@ -9,7 +9,7 @@ remote_base_commit: 2c578c3d7b575798e3b85a7b699d7c58017e21a6
 integration_status: PENDING
 integrated_commit:
 integration_evidence:
-delegation_status: COMPLETED_BLOCKED
+delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 delegation_required: true
 agent_id: 01a0065e-fb1a-7681-90cb-41fadcf65d28
@@ -130,3 +130,6 @@ Los artefactos se generarán mediante las instrucciones del CLI de OpenSpec en e
 ## Integración
 
 Después de implementar y verificar, el change quedará `PASSED_PENDING_INTEGRATION` hasta contar con merge autorizado a `main` y sincronización con `origin/main`.
+- El usuario confirmo las pruebas requeridas el 2026-08-15 y autorizo commit, push, PR, merge e integracion.
+- OpenSpec: 18/18 tareas completas.
+- Estado operativo: `PASSED_PENDING_INTEGRATION` hasta confirmar el merge en `main`.
