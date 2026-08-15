@@ -125,6 +125,23 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("validChatNotificationCreate(request.resource.data)"))
   }
 
+  @Test
+  fun sightingNotificationsValidateSightingReferencesWithoutChat() {
+    assertTrue(rulesText.contains("function validSightingNotificationCreate(data)"))
+    assertTrue(rulesText.contains("data.targetId == data.sightingId"))
+    assertTrue(rulesText.contains("!data.keys().hasAny(['chatId'])"))
+    assertTrue(rulesText.contains("sightingAfter(data.sightingId).reporterId == uid()"))
+    assertTrue(rulesText.contains("validSightingNotificationCreate(request.resource.data)"))
+  }
+
+  @Test
+  fun legacySightingNotificationsKeepChatRoutingCompatibility() {
+    assertTrue(rulesText.contains("function validLegacySightingNotificationCreate(data)"))
+    assertTrue(rulesText.contains("data.chatId is string"))
+    assertTrue(rulesText.contains("data.targetId == data.chatId"))
+    assertTrue(rulesText.contains("validLegacySightingNotificationCreate(request.resource.data)"))
+  }
+
   private fun repoRoot(): File {
     val userDir = requireNotNull(System.getProperty("user.dir"))
     return generateSequence(File(userDir).absoluteFile) { it.parentFile }

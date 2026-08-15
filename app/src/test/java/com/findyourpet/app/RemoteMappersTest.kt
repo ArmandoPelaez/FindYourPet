@@ -291,21 +291,37 @@ class RemoteMappersTest {
       title = "Nuevo avistamiento",
       message = "Recibiste un nuevo avistamiento en tu publicacion.",
       type = "ALERT",
-      targetId = "chat_1",
+      targetId = "sighting_1",
       timestamp = 123L,
-      chatId = "chat_1",
       sightingId = "sighting_1",
       postId = "post_1"
     )
 
     val document = notification.toDocument(createdAt = 100L)
 
-    assertEquals("chat_1", document["chatId"])
     assertEquals("sighting_1", document["sightingId"])
     assertEquals("post_1", document["postId"])
+    assertEquals("sighting_1", document["targetId"])
+    assertNull(document["chatId"])
     assertEquals("Recibiste un nuevo avistamiento en tu publicacion.", document["message"])
     assertNull(document["photoUri"])
     assertNull(document["latitude"])
+  }
+
+  @Test
+  fun legacyChatNotificationStillMapsChatReference() {
+    val mapped = mapOf(
+      "id" to "notification_legacy",
+      "recipientId" to "uid_owner",
+      "title" to "Nuevo mensaje",
+      "type" to "CHAT",
+      "targetId" to "chat_1",
+      "chatId" to "chat_1",
+      "postId" to "post_1"
+    ).toNotificationEntity()
+
+    assertEquals("chat_1", mapped.chatId)
+    assertEquals("chat_1", mapped.targetId)
   }
 
   @Test
