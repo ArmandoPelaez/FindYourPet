@@ -1,7 +1,7 @@
 # Orchestration: decouple-sightings-from-chat
 
-state: PASSED_PENDING_INTEGRATION
-phase: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-20
 change: decouple-sightings-from-chat
 branch: ops/decouple-sightings-from-chat
@@ -13,9 +13,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a002c6-0f81-73e3-a305-721e0a48095b
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: c478ff5427f20f5dc207a93ae79671abfee52a7e
+integration_evidence: PR #40 mergeado en main; main y origin/main sincronizadas.
 superseded_change: optimize-sighting-messaging-flow
 superseded_change_decision: Usuario autorizó cancelar/superseder el change y usar SCRUM-20 como alcance implementable.
 
@@ -108,4 +108,20 @@ El change queda listo para delegación al implementador.
 - `Get-Command adb` => `ADB_NOT_AVAILABLE`; no fue posible ejecutar validación manual en dispositivo/emulador.
 - Firebase config local => `app/google-services.json` presente; no se ejecutó una prueba remota por falta de dispositivo/flujo autenticado disponible.
 
-Resultado: `PASSED_PENDING_INTEGRATION`. La rama `ops/decouple-sightings-from-chat` queda pendiente de integración autorizada en `main`.
+## Verificación manual reportada por el usuario
+
+- Avistamiento válido: exactamente un documento en `sightings` y una notificación para el propietario.
+- Referencias de notificación: `sightingId` y `postId` coincidentes, `targetId == sightingId` y ausencia de `chatId`.
+- Ausencia de Chat: no se crearon nuevas sesiones ni mensajes y `activeChatId` permaneció sin cambios.
+- Avistamiento propio/inválido: escritura y notificación rechazadas, sin escrituras parciales.
+- Chat normal: lectura, envío y restricción participant-only preservados.
+
+## Integración
+
+- `git fetch origin --prune` => correcto.
+- `git switch main` => correcto.
+- `git pull --ff-only origin main` => fast-forward hasta `c478ff5`.
+- `git rev-parse main` y `git rev-parse origin/main` => `c478ff5427f20f5dc207a93ae79671abfee52a7e`.
+- Estado final: `main` limpia y sincronizada con `origin/main`.
+
+Resultado: `INTEGRATED`. La rama `ops/decouple-sightings-from-chat` fue incorporada mediante el PR #40.
