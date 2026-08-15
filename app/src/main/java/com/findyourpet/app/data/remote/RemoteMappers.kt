@@ -3,8 +3,10 @@ package com.findyourpet.app.data.remote
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.UserBlockEntity
 import com.findyourpet.app.data.local.entity.LEGACY_TEXT_MESSAGE_TYPE
 import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.google.firebase.Timestamp
@@ -12,6 +14,46 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 
 object RemoteMappers {
+    fun ContentReportEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
+        mapOf(
+            "id" to id,
+            "sightingId" to sightingId,
+            "reportedUserId" to reportedUserId,
+            "reportingUserId" to reportingUserId,
+            "reason" to reason,
+            "createdAt" to createdAt,
+            "status" to status
+        )
+
+    fun Map<String, Any?>.toContentReportEntity(documentId: String = string("id")): ContentReportEntity =
+        ContentReportEntity(
+            id = string("id").ifBlank { documentId },
+            sightingId = string("sightingId"),
+            reportedUserId = string("reportedUserId"),
+            reportingUserId = string("reportingUserId"),
+            reason = string("reason"),
+            createdAt = long("createdAt"),
+            status = string("status")
+        )
+
+    fun UserBlockEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
+        mapOf(
+            "id" to id,
+            "blockerUserId" to blockerUserId,
+            "blockedUserId" to blockedUserId,
+            "sourceSightingId" to sourceSightingId,
+            "createdAt" to createdAt
+        )
+
+    fun Map<String, Any?>.toUserBlockEntity(documentId: String = string("id")): UserBlockEntity =
+        UserBlockEntity(
+            id = string("id").ifBlank { documentId },
+            blockerUserId = string("blockerUserId"),
+            blockedUserId = string("blockedUserId"),
+            sourceSightingId = string("sourceSightingId"),
+            createdAt = long("createdAt")
+        )
+
     fun PetPostEntity.toDocument(
         createdAt: Any = FieldValue.serverTimestamp(),
         mediaProvider: String = "",

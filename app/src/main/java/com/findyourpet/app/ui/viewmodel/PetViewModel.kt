@@ -9,8 +9,10 @@ import com.findyourpet.app.data.auth.UnavailableAuthRepository
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.UserBlockEntity
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.data.product.RealProductValidators
@@ -48,6 +50,21 @@ data class SightingSubmissionState(
     val message: String? = null
 )
 
+enum class ModerationOperationStatus { IDLE, SUBMITTING, SUCCESS, ERROR }
+
+data class ModerationOperationState(
+    val status: ModerationOperationStatus = ModerationOperationStatus.IDLE,
+    val message: String? = null
+)
+
+enum class ContentReportReason(val storageValue: String, val label: String) {
+    INAPPROPRIATE("INAPPROPRIATE", "Contenido inapropiado"),
+    FALSE_INFORMATION("FALSE_INFORMATION", "Informacion falsa"),
+    SPAM("SPAM", "Spam"),
+    HARASSMENT("HARASSMENT", "Acoso o comportamiento abusivo"),
+    OTHER("OTHER", "Otro")
+}
+
 class PetViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = PetRepository(application)
     private val authRepository = FirebaseAuthRepository.createOrNull(application) ?: UnavailableAuthRepository()
@@ -56,10 +73,16 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     private val activeProfile = MutableStateFlow<UserProfileDocument?>(null)
     private val _authMessage = MutableStateFlow<String?>(null)
     private val _sightingSubmissionState = MutableStateFlow(SightingSubmissionState())
+    private val _reportOperationState = MutableStateFlow(ModerationOperationState())
+    private val _blockOperationState = MutableStateFlow(ModerationOperationState())
+    private val _sightingReporterBlocked = MutableStateFlow(false)
 
     val authState: StateFlow<AuthUiState> = authRepository.authState
     val authMessage: StateFlow<String?> = _authMessage
     val sightingSubmissionState: StateFlow<SightingSubmissionState> = _sightingSubmissionState
+    val reportOperationState: StateFlow<ModerationOperationState> = _reportOperationState
+    val blockOperationState: StateFlow<ModerationOperationState> = _blockOperationState
+    val sightingReporterBlocked: StateFlow<Boolean> = _sightingReporterBlocked
     val isAuthenticated: StateFlow<Boolean> = authState
         .map(AuthSessionMapper::isAuthenticated)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthSessionMapper.isAuthenticated(authState.value))
@@ -353,6 +376,83 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         selectedSightingId.value = sightingId
     }
 
+    fun refreshSightingModeration(sighting: SightingAlertEntity) {
+        val user = currentAuthenticatedUser() ?: return
+        val isOwner = user.id == sighting.ownerId
+        if (!isOwner || sighting.reporterId.isBlank()) {
+            _sightingReporterBlocked.value = false
+            return
+        }
+        viewModelScope.launch {
+            _sightingReporterBlocked.value = runCatching {
+                repository.isUserBlocked(sighting.ownerId, sighting.reporterId)
+            }.getOrDefault(false)
+        }
+    }
+
+    fun resetReportOperationState() {
+        _reportOperationState.value = ModerationOperationState()
+    }
+
+    fun resetBlockOperationState() {
+        _blockOperationState.value = ModerationOperationState()
+    }
+
+    fun reportSightingContent(sightingId: String, reason: ContentReportReason) {
+        if (_reportOperationState.value.status == ModerationOperationStatus.SUBMITTING) return
+        val user = currentAuthenticatedUser() ?: run {
+            _reportOperationState.value = ModerationOperationState(
+                ModerationOperationStatus.ERROR,
+                "Inicia sesion antes de reportar contenido."
+            )
+            return
+        }
+        _reportOperationState.value = ModerationOperationState(ModerationOperationStatus.SUBMITTING)
+        viewModelScope.launch {
+            runCatching {
+                repository.reportSightingContent(sightingId, user.id, reason.storageValue)
+            }.onSuccess { _: ContentReportEntity ->
+                _reportOperationState.value = ModerationOperationState(
+                    ModerationOperationStatus.SUCCESS,
+                    "El contenido fue reportado."
+                )
+            }.onFailure { error ->
+                _reportOperationState.value = ModerationOperationState(
+                    ModerationOperationStatus.ERROR,
+                    moderationErrorMessage(error, "No se pudo reportar el contenido.")
+                )
+            }
+        }
+    }
+
+    fun blockSightingReporter(sightingId: String) {
+        if (_blockOperationState.value.status == ModerationOperationStatus.SUBMITTING) return
+        val user = currentAuthenticatedUser() ?: run {
+            _blockOperationState.value = ModerationOperationState(
+                ModerationOperationStatus.ERROR,
+                "Inicia sesion antes de bloquear usuarios."
+            )
+            return
+        }
+        _blockOperationState.value = ModerationOperationState(ModerationOperationStatus.SUBMITTING)
+        viewModelScope.launch {
+            runCatching {
+                repository.blockSightingReporter(sightingId, user.id)
+            }.onSuccess { _: UserBlockEntity ->
+                _sightingReporterBlocked.value = true
+                _blockOperationState.value = ModerationOperationState(
+                    ModerationOperationStatus.SUCCESS,
+                    "El usuario fue bloqueado para futuras publicaciones."
+                )
+            }.onFailure { error ->
+                _blockOperationState.value = ModerationOperationState(
+                    ModerationOperationStatus.ERROR,
+                    moderationErrorMessage(error, "No se pudo bloquear al usuario.")
+                )
+            }
+        }
+    }
+
     fun selectChat(chatId: String) {
         activeChatId.value = chatId
     }
@@ -588,6 +688,19 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             "Firestore rechazo la escritura. Revisa que firestore.rules este publicado en el proyecto Firebase de prueba."
         } else {
             rawMessage.ifBlank { fallback }
+        }
+    }
+
+    private fun moderationErrorMessage(error: Throwable, fallback: String): String {
+        val rawMessage = error.message.orEmpty()
+        return when {
+            rawMessage.contains("PERMISSION_DENIED", ignoreCase = true) ||
+                rawMessage.contains("Missing or insufficient permissions", ignoreCase = true) ->
+                "No se pudo completar la accion. Intenta nuevamente."
+            rawMessage.startsWith("Solo el propietario") ||
+                rawMessage.startsWith("El reportante") ||
+                rawMessage.startsWith("El avistamiento") -> rawMessage
+            else -> fallback
         }
     }
 

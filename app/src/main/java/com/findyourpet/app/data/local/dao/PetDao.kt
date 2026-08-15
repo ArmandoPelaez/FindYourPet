@@ -8,8 +8,10 @@ import androidx.room.Update
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
 import com.findyourpet.app.data.local.entity.ChatMessageEntity
 import com.findyourpet.app.data.local.entity.ChatSessionEntity
+import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
+import com.findyourpet.app.data.local.entity.UserBlockEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -58,6 +60,19 @@ interface PetDao {
 
     @Query("DELETE FROM sighting_alerts WHERE ownerId = :ownerId")
     suspend fun clearSightingsForOwner(ownerId: String)
+
+    // Moderation
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertContentReport(report: ContentReportEntity)
+
+    @Query("SELECT * FROM content_reports WHERE id = :reportId")
+    suspend fun getContentReport(reportId: String): ContentReportEntity?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertUserBlock(block: UserBlockEntity)
+
+    @Query("SELECT * FROM user_blocks WHERE blockerUserId = :blockerUserId AND blockedUserId = :blockedUserId LIMIT 1")
+    suspend fun getUserBlock(blockerUserId: String, blockedUserId: String): UserBlockEntity?
 
     // Chat Messages
     @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")

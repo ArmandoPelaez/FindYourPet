@@ -23,16 +23,24 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,6 +67,8 @@ import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
+import com.findyourpet.app.ui.viewmodel.ContentReportReason
+import com.findyourpet.app.ui.viewmodel.ModerationOperationStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,15 +83,53 @@ fun SightingDetailScreen(
     val petContextState by viewModel.sightingDetailPostState.collectAsState()
     val sighting = sightingState.data
     val petPost = petContextState.data
+    val currentUser by viewModel.currentUser.collectAsState()
+    val reporterBlocked by viewModel.sightingReporterBlocked.collectAsState()
+    val reportState by viewModel.reportOperationState.collectAsState()
+    val blockState by viewModel.blockOperationState.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     var showLocation by remember(sightingId) { mutableStateOf(false) }
+    var showActionsMenu by remember(sightingId) { mutableStateOf(false) }
+    var showReportDialog by remember(sightingId) { mutableStateOf(false) }
+    var showBlockDialog by remember(sightingId) { mutableStateOf(false) }
+    var selectedReason by remember(sightingId) { mutableStateOf<ContentReportReason?>(null) }
+    val canModerate = sighting?.ownerId == currentUser.id
+    val canBlock = canModerate && sighting?.reporterId?.isNotBlank() == true && !reporterBlocked
 
     LaunchedEffect(sightingId) {
         viewModel.selectSightingDetail(sightingId)
     }
 
+    LaunchedEffect(sighting?.id, currentUser.id, sighting?.reporterId) {
+        sighting?.let(viewModel::refreshSightingModeration)
+    }
+
+    LaunchedEffect(reportState.status, reportState.message) {
+        if (reportState.status != ModerationOperationStatus.SUBMITTING && reportState.message != null) {
+            snackbarHostState.showSnackbar(reportState.message!!)
+            if (reportState.status == ModerationOperationStatus.SUCCESS) {
+                showReportDialog = false
+                selectedReason = null
+            }
+            viewModel.resetReportOperationState()
+        }
+    }
+
+    LaunchedEffect(blockState.status, blockState.message) {
+        if (blockState.status != ModerationOperationStatus.SUBMITTING && blockState.message != null) {
+            snackbarHostState.showSnackbar(blockState.message!!)
+            if (blockState.status == ModerationOperationStatus.SUCCESS) {
+                showBlockDialog = false
+                showActionsMenu = false
+            }
+            viewModel.resetBlockOperationState()
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.topBar),
@@ -102,6 +150,41 @@ fun SightingDetailScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(horizontal = AppSpacing.sm)
                     )
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (canModerate) {
+                        Box {
+                            IconButton(
+                                onClick = { showActionsMenu = true },
+                                modifier = Modifier.testTag("sighting-detail-moderation-menu")
+                            ) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "Acciones de moderacion")
+                            }
+                            DropdownMenu(
+                                expanded = showActionsMenu,
+                                onDismissRequest = { showActionsMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Reportar contenido") },
+                                    onClick = {
+                                        showActionsMenu = false
+                                        selectedReason = null
+                                        showReportDialog = true
+                                    },
+                                    modifier = Modifier.testTag("sighting-detail-report-action")
+                                )
+                                if (canBlock) {
+                                    DropdownMenuItem(
+                                        text = { Text("Bloquear usuario") },
+                                        onClick = {
+                                            showActionsMenu = false
+                                            showBlockDialog = true
+                                        },
+                                        modifier = Modifier.testTag("sighting-detail-block-action")
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -135,6 +218,86 @@ fun SightingDetailScreen(
             latitude = sighting.latitude.takeIf { sighting.hasUsableCoordinates() },
             longitude = sighting.longitude.takeIf { sighting.hasUsableCoordinates() },
             onDismiss = { showLocation = false }
+        )
+    }
+
+    if (showReportDialog && sighting != null) {
+        AlertDialog(
+            onDismissRequest = {
+                if (reportState.status != ModerationOperationStatus.SUBMITTING) {
+                    showReportDialog = false
+                    selectedReason = null
+                }
+            },
+            title = { Text("Reportar contenido") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                    Text("Selecciona un motivo para este reporte.")
+                    ContentReportReason.entries.forEach { reason ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = selectedReason == reason,
+                                onClick = { selectedReason = reason },
+                                enabled = reportState.status != ModerationOperationStatus.SUBMITTING
+                            )
+                            Text(reason.label)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedReason?.let { viewModel.reportSightingContent(sighting.id, it) }
+                    },
+                    enabled = selectedReason != null && reportState.status != ModerationOperationStatus.SUBMITTING
+                ) {
+                    if (reportState.status == ModerationOperationStatus.SUBMITTING) {
+                        CircularProgressIndicator(modifier = Modifier.size(AppSpacing.iconMedium))
+                    } else {
+                        Text("Confirmar")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (reportState.status != ModerationOperationStatus.SUBMITTING) {
+                            showReportDialog = false
+                            selectedReason = null
+                        }
+                    },
+                    enabled = reportState.status != ModerationOperationStatus.SUBMITTING
+                ) { Text("Cancelar") }
+            }
+        )
+    }
+
+    if (showBlockDialog && sighting != null && canBlock) {
+        AlertDialog(
+            onDismissRequest = {
+                if (blockState.status != ModerationOperationStatus.SUBMITTING) showBlockDialog = false
+            },
+            title = { Text("Bloquear usuario") },
+            text = { Text("No recibiras nuevos avistamientos de este usuario para tus publicaciones.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.blockSightingReporter(sighting.id) },
+                    enabled = blockState.status != ModerationOperationStatus.SUBMITTING
+                ) {
+                    if (blockState.status == ModerationOperationStatus.SUBMITTING) {
+                        CircularProgressIndicator(modifier = Modifier.size(AppSpacing.iconMedium))
+                    } else {
+                        Text("Bloquear")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { if (blockState.status != ModerationOperationStatus.SUBMITTING) showBlockDialog = false },
+                    enabled = blockState.status != ModerationOperationStatus.SUBMITTING
+                ) { Text("Cancelar") }
+            }
         )
     }
 }
