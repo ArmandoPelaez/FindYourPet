@@ -71,56 +71,20 @@ data class UserBlockEntity(
     val createdAt: Long
 )
 
-@Entity(tableName = "chat_messages")
-data class ChatMessageEntity(
-    @PrimaryKey val id: String,
-    val chatId: String,
-    val postId: String,
-    val senderId: String,
-    val senderName: String,
-    val text: String,
-    val photoUri: String?,
-    val timestamp: Long,
-    val isSystemMessage: Boolean = false,
-    val type: String = LEGACY_TEXT_MESSAGE_TYPE,
-    val sightingId: String? = null,
-    val ownerId: String? = null,
-    val reporterId: String? = null,
-    val snapshotPetName: String? = null,
-    val photoAttachmentUri: String? = null,
-    val locationDisplay: String? = null,
-    val generalDetails: String? = null,
-    val snapshotTimestamp: Long? = null
-)
-
-@Entity(tableName = "chat_sessions")
-data class ChatSessionEntity(
-    @PrimaryKey val id: String,
-    val postId: String,
-    val petName: String,
-    val petPhotoUri: String,
-    val ownerId: String,
-    val reporterId: String,
-    val reporterName: String,
-    val lastMessage: String,
-    val lastMessageTimestamp: Long
-)
-
 @Entity(tableName = "app_notifications")
 data class AppNotificationEntity(
     @PrimaryKey val id: String,
     val recipientId: String = "",
     val title: String,
     val message: String,
-    val type: String, // ALERT, CHAT
+    val type: String, // ALERT; CHAT is retained only when decoding historical notifications.
     val targetId: String,
     val timestamp: Long,
     val isRead: Boolean = false,
+    // Nullable legacy field retained solely for historical notification decoding.
     val chatId: String? = null,
     val sightingId: String? = null,
     val postId: String? = null
 )
 
-const val LEGACY_TEXT_MESSAGE_TYPE = "text"
-const val SIGHTING_ALERT_MESSAGE_TYPE = "sighting_alert"
 const val MODERATION_PENDING_STATUS = "PENDING"

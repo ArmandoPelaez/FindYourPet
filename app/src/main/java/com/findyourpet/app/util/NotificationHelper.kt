@@ -14,7 +14,7 @@ import com.findyourpet.app.R
 object NotificationHelper {
     private const val CHANNEL_ID = "lost_pets_alerts"
     private const val CHANNEL_NAME = "Alertas de Mascotas Perdidas"
-    private const val CHANNEL_DESC = "Notificaciones locales de avistamientos y mensajes privados"
+    private const val CHANNEL_DESC = "Notificaciones locales de avistamientos"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -42,7 +42,7 @@ object NotificationHelper {
         createNotificationChannel(context)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

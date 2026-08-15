@@ -10,6 +10,4 @@ object OwnershipPolicy {
     fun canAppearInDiscoveryFeed(currentUid: String, ownerId: String): Boolean =
         currentUid.isBlank() || ownerId.isBlank() || currentUid != ownerId
 
-    fun isChatParticipant(currentUid: String, ownerId: String, reporterId: String): Boolean =
-        currentUid.isNotBlank() && (currentUid == ownerId || currentUid == reporterId)
 }

@@ -75,7 +75,7 @@ class ActivityContractStaticTest {
   }
 
   @Test
-  fun primaryNavigationReplacesOnlyTheFourthDestinationAndKeepsLegacyChatRoute() {
+  fun primaryNavigationKeepsActivityWithoutLegacyChatRoute() {
     val main = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
     val banner = source("app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt")
 
@@ -83,8 +83,8 @@ class ActivityContractStaticTest {
     assertTrue(main.contains("onActivityClick = { navController.navigateToPrimaryDestination(ROUTE_ACTIVITY) }"))
     assertTrue(main.contains("composable(ROUTE_ACTIVITY)"))
     assertTrue(main.contains("ActivityScreen("))
-    assertTrue(main.contains("composable(ROUTE_CHATS)"))
-    assertTrue(main.contains("ChatListScreen("))
+    assertTrue(!main.contains("ROUTE_CHATS"))
+    assertTrue(!main.contains("ChatListScreen"))
     assertTrue(banner.contains("label = \"Actividad\""))
     assertTrue(banner.contains("contentDescription = \"Actividad\""))
     assertTrue(!banner.contains("label = \"Mensajes\""))

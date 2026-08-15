@@ -33,14 +33,14 @@
   <body>
     <h1>Politica de Privacidad de FindYourPet</h1>
     <p><strong>Ultima actualizacion:</strong> 2026-07-31</p>
-    <p>FindYourPet ayuda a publicar mascotas perdidas, reportar avistamientos y comunicar a personas involucradas mediante chat interno autenticado. Esta politica describe los datos que trata la app en su primera publicacion controlada para Google Play Internal testing.</p>
+    <p>FindYourPet ayuda a publicar mascotas perdidas y reportar avistamientos. Esta politica describe los datos que trata la app en su primera publicacion controlada para Google Play Internal testing.</p>
 
     <h2>Datos que tratamos</h2>
     <ul>
       <li>Datos de cuenta: nombre visible, correo y proveedor de inicio de sesion.</li>
       <li>Publicaciones de mascotas: nombre de mascota, especie, raza, color, rasgos, foto, zona de referencia, recompensa opcional y estado de la publicacion.</li>
       <li>Avistamientos: foto, zona o referencia indicada, ubicacion aproximada o coordenadas si el usuario acepta usar GPS, notas y usuario reportante.</li>
-      <li>Chats: mensajes, participantes y publicacion relacionada.</li>
+      <li>Datos de moderacion: reportes de contenido y relaciones de bloqueo asociadas a avistamientos.</li>
       <li>Notificaciones dentro de la app: tipo de evento, destinatario, texto breve y destino dentro de la app.</li>
       <li>Diagnostico tecnico: version de app, flujo tecnico y estado acotado para investigar fallos mediante Firebase Crashlytics.</li>
     </ul>
@@ -49,8 +49,8 @@
     <ul>
       <li>Crear y mostrar publicaciones de mascotas perdidas.</li>
       <li>Permitir que usuarios autenticados reporten avistamientos.</li>
-      <li>Mantener conversaciones privadas asociadas a publicaciones.</li>
-      <li>Avisar dentro de la app sobre avistamientos y mensajes.</li>
+      <li>Mantener el historial de avistamientos y las acciones de moderacion autorizadas.</li>
+      <li>Avisar dentro de la app sobre avistamientos.</li>
       <li>Diagnosticar errores, caidas y problemas de compatibilidad.</li>
       <li>Cumplir revisiones tecnicas y de seguridad necesarias para publicar la app.</li>
     </ul>
@@ -60,18 +60,18 @@
       <li>Internet: conectar la app con Firebase, Cloudinary y servicios asociados.</li>
       <li>Camara: tomar fotos para publicaciones o avistamientos cuando el usuario elige esa accion.</li>
       <li>Ubicacion aproximada y precisa: completar la referencia del avistamiento o publicacion cuando el usuario acepta usar su ubicacion actual.</li>
-      <li>Notificaciones: mostrar avisos locales de avistamientos y mensajes cuando el usuario concede el permiso.</li>
+      <li>Notificaciones: mostrar avisos locales de avistamientos cuando el usuario concede el permiso.</li>
     </ul>
     <p>Si un permiso se deniega, la app debe permitir continuar con alternativas manuales cuando el flujo lo admita.</p>
 
-    <h2>Contacto, ubicacion y chats</h2>
-    <p>La app facilita contacto entre dueno y reportero solo mediante chat interno. FindYourPet no solicita ni comparte telefono, email, direccion u otros datos personales de contacto entre usuarios. Si las personas usuarias deciden escribir telefono, email, direccion u otros datos personales dentro de mensajes, esa decision es voluntaria y bajo su responsabilidad.</p>
+    <h2>Contacto, ubicacion y datos historicos</h2>
+    <p>FindYourPet no ofrece mensajeria ni solicita o comparte telefono, email, direccion u otros datos personales de contacto entre usuarios. Los documentos remotos historicos de Chat pueden conservarse por retencion, pero la app actual no los abre, modifica ni crea.</p>
     <p>La ubicacion precisa no es publica por defecto y solo se usa cuando el usuario acepta capturarla para publicaciones o avistamientos. Las notificaciones y los reportes de fallos no deben incluir telefono, email, direccion, coordenadas exactas, URLs privadas de fotos, notas completas ni cuerpos completos de mensajes privados.</p>
 
     <h2>Proveedores</h2>
     <ul>
       <li>Firebase Authentication: autenticacion de usuarios.</li>
-      <li>Cloud Firestore: almacenamiento de publicaciones, avistamientos, chats, perfiles y notificaciones.</li>
+      <li>Cloud Firestore: almacenamiento de publicaciones, avistamientos, moderacion, perfiles y notificaciones; los documentos historicos de Chat se conservan sin nuevos writes.</li>
       <li>Firebase Crashlytics: diagnostico de errores de la app.</li>
       <li>Cloudinary: carga y entrega de imagenes.</li>
       <li>Google Play Services Location: captura de ubicacion si el usuario lo autoriza.</li>

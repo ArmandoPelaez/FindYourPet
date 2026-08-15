@@ -28,7 +28,7 @@ class SightingNavigationContractTest {
     assertTrue(mainActivity.contains("onAlertSent = {"))
     assertTrue(mainActivity.contains("navController.navigateToPrimaryDestination(ROUTE_HOME)"))
     assertTrue(mainActivity.contains("popBackStack(ROUTE_HOME, inclusive = false)"))
-    assertTrue(screen.contains("finishAlert(chatId)"))
+    assertTrue(screen.contains("finishAlert(sightingId)"))
     assertTrue(screen.contains("status != com.findyourpet.app.ui.viewmodel.SightingSubmissionStatus.SUCCESS"))
     assertTrue(screen.contains("onError = { message ->"))
     assertTrue(screen.contains("formMessage = message"))

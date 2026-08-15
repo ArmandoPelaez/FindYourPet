@@ -46,39 +46,6 @@ data class SightingDocument(
     val createdAt: Long = 0L
 )
 
-data class ChatSessionDocument(
-    val id: String = "",
-    val postId: String = "",
-    val petName: String = "",
-    val petPhotoUri: String = "",
-    val ownerId: String = "",
-    val reporterId: String = "",
-    val reporterName: String = "",
-    val participantIds: List<String> = emptyList(),
-    val lastMessage: String = "",
-    val lastMessageTimestamp: Long = 0L,
-    val createdAt: Long = 0L,
-    val updatedAt: Long = 0L
-)
-
-data class ChatMessageDocument(
-    val id: String = "",
-    val chatId: String = "",
-    val postId: String = "",
-    val senderId: String = "",
-    val senderName: String = "",
-    val text: String = "",
-    val photoUri: String? = null,
-    val timestamp: Long = 0L,
-    val isSystemMessage: Boolean = false,
-    val type: String = "text",
-    val sightingId: String = "",
-    val ownerId: String = "",
-    val reporterId: String = "",
-    val snapshot: Map<String, Any?> = emptyMap(),
-    val createdAt: Long = 0L
-)
-
 data class AppNotificationDocument(
     val id: String = "",
     val recipientId: String = "",
@@ -88,7 +55,8 @@ data class AppNotificationDocument(
     val targetId: String = "",
     val timestamp: Long = 0L,
     val isRead: Boolean = false,
-    val chatId: String = "",
+    // Nullable legacy field for historical notification decoding; never written by active flows.
+    val chatId: String? = null,
     val sightingId: String = "",
     val postId: String = "",
     val createdAt: Long = 0L

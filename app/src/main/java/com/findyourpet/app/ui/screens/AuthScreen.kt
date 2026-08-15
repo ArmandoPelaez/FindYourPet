@@ -149,9 +149,9 @@ fun AuthScreen(viewModel: PetViewModel) {
 
                             Text(
                                 text = if (isSignUp) {
-                                    "Únete a FindYourPet para publicar avisos y contactar con otros usuarios."
+                                    "Únete a FindYourPet para publicar avisos y ayudar a reencontrar mascotas."
                                 } else {
-                                    "Accede para seguir avisos, chatear y ayudar a reencontrar mascotas."
+                                    "Accede para seguir avisos y ayudar a reencontrar mascotas."
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -23,10 +23,8 @@ class PetViewModelStateTest {
     assertFalse(viewModel.isAuthenticated.value)
     assertEquals("", viewModel.currentUser.value.id)
     assertTrue(viewModel.filteredPosts.value.isEmpty())
-    assertTrue(viewModel.userChatSessions.value.isEmpty())
     assertTrue(viewModel.allNotifications.value.isEmpty())
     assertEquals(null, viewModel.selectedPost.value)
-    assertEquals(null, viewModel.activeChatSession.value)
   }
 
   @Test
@@ -59,7 +57,7 @@ class PetViewModelStateTest {
   @Test
   fun submitSightingWithoutAuthentication_returnsValidationError() {
     val viewModel = PetViewModel(ApplicationProvider.getApplicationContext<Application>())
-    var chatId = ""
+    var sightingId = ""
     var errorMessage = ""
 
     viewModel.submitSightingAlert(
@@ -73,11 +71,11 @@ class PetViewModelStateTest {
       ownerId = "owner_uid",
       mediaSource = MediaSource.GALLERY,
       locationSource = LocationSource.MANUAL_COARSE,
-      onComplete = { chatId = it },
+      onComplete = { sightingId = it },
       onError = { errorMessage = it }
     )
 
-    assertEquals("", chatId)
+    assertEquals("", sightingId)
     assertEquals("Inicia sesion antes de reportar.", errorMessage)
   }
 }

@@ -7,8 +7,6 @@ import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.data.auth.FirebaseAuthRepository
 import com.findyourpet.app.data.auth.UnavailableAuthRepository
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
-import com.findyourpet.app.data.local.entity.ChatMessageEntity
-import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
@@ -171,7 +169,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Sighting detail state is intentionally independent from all Chat state.
+    // Sighting detail state remains independent from retired communication features.
     val selectedSightingId = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -243,60 +241,6 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         )
 
     val receivedSightings: StateFlow<List<SightingAlertEntity>> = receivedSightingsState
-        .map { it.data }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // Active Chat State
-    val activeChatId = MutableStateFlow<String?>(null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val activeChatMessagesState: StateFlow<BackendSyncState<List<ChatMessageEntity>>> = activeChatId.flatMapLatest { id ->
-        if (id == null) {
-            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
-        } else {
-            repository.getMessagesForChatState(id)
-        }
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
-    )
-
-    val activeChatMessages: StateFlow<List<ChatMessageEntity>> = activeChatMessagesState
-        .map { it.data }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val activeChatSessionState: StateFlow<BackendSyncState<ChatSessionEntity?>> = activeChatId.flatMapLatest { id ->
-        if (id == null) {
-            flowOf(BackendSyncState.data<ChatSessionEntity?>(null, isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
-        } else {
-            repository.getChatSessionByIdState(id)
-        }
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        BackendSyncState.loading<ChatSessionEntity?>(null, repository.usesRemoteBackend)
-    )
-
-    val activeChatSession: StateFlow<ChatSessionEntity?> = activeChatSessionState
-        .map { it.data }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val userChatSessionsState: StateFlow<BackendSyncState<List<ChatSessionEntity>>> = currentUser.flatMapLatest { user ->
-        if (user.id.isBlank()) {
-            flowOf(BackendSyncState.data(emptyList(), isFromCache = false, hasPendingWrites = false, repository.usesRemoteBackend))
-        } else {
-            repository.getChatSessionsForUserState(user.id)
-        }
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
-    )
-
-    val userChatSessions: StateFlow<List<ChatSessionEntity>> = userChatSessionsState
         .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -453,10 +397,6 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun selectChat(chatId: String) {
-        activeChatId.value = chatId
-    }
-
     fun resetSightingSubmissionState() {
         _sightingSubmissionState.value = SightingSubmissionState()
     }
@@ -524,53 +464,6 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             }.onFailure { error ->
                 val message = backendWriteErrorMessage(error, "No se pudo enviar el avistamiento.")
                 _sightingSubmissionState.value = SightingSubmissionState(SightingSubmissionStatus.ERROR, message)
-                onError(message)
-            }
-        }
-    }
-
-    fun sendChatMessage(
-        text: String,
-        photoUri: String? = null,
-        onComplete: () -> Unit = {},
-        onError: (String) -> Unit = {}
-    ) {
-        val chatId = activeChatId.value ?: run {
-            onError("La conversacion no esta disponible.")
-            return
-        }
-        val post = selectedPost.value
-        val session = activeChatSession.value
-        val postId = post?.id ?: session?.postId ?: run {
-            onError("La publicacion asociada no esta disponible.")
-            return
-        }
-        val user = currentAuthenticatedUser() ?: run {
-            onError("Inicia sesion antes de enviar mensajes.")
-            return
-        }
-        if (session != null && !OwnershipPolicy.isChatParticipant(user.id, session.ownerId, session.reporterId)) {
-            val message = "Solo los participantes pueden enviar mensajes."
-            _authMessage.value = message
-            onError(message)
-            return
-        }
-
-        viewModelScope.launch {
-            runCatching {
-                repository.sendChatMessage(
-                    chatId = chatId,
-                    postId = postId,
-                    senderId = user.id,
-                    senderName = user.name,
-                    text = text,
-                    photoUri = photoUri
-                )
-            }.onSuccess {
-                onComplete()
-            }.onFailure { error ->
-                val message = backendWriteErrorMessage(error, "No se pudo enviar el mensaje.")
-                _authMessage.value = message
                 onError(message)
             }
         }

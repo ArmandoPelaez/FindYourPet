@@ -8,8 +8,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.findyourpet.app.data.local.dao.PetDao
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
-import com.findyourpet.app.data.local.entity.ChatMessageEntity
-import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
@@ -19,13 +17,11 @@ import com.findyourpet.app.data.local.entity.UserBlockEntity
     entities = [
         PetPostEntity::class,
         SightingAlertEntity::class,
-        ChatMessageEntity::class,
-        ChatSessionEntity::class,
         AppNotificationEntity::class,
         ContentReportEntity::class,
         UserBlockEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,7 +44,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
-                    MIGRATION_8_9
+                    MIGRATION_8_9,
+                    MIGRATION_9_10
                 ).build()
                 INSTANCE = instance
                 instance
@@ -70,6 +67,7 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE sighting_alerts ADD COLUMN idempotencyKey TEXT NOT NULL DEFAULT ''")
+                // Historical migrations must still be able to open pre-retirement databases.
                 db.execSQL("ALTER TABLE chat_messages ADD COLUMN type TEXT NOT NULL DEFAULT 'text'")
                 db.execSQL("ALTER TABLE chat_messages ADD COLUMN sightingId TEXT")
                 db.execSQL("ALTER TABLE chat_messages ADD COLUMN ownerId TEXT")
@@ -175,6 +173,14 @@ abstract class AppDatabase : RoomDatabase() {
                         "ON user_blocks(blockerUserId, blockedUserId)"
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_user_blocks_blockedUserId ON user_blocks(blockedUserId)")
+            }
+        }
+
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // SCRUM-26 removes only the retired local cache; remote documents are untouched.
+                db.execSQL("DROP TABLE IF EXISTS chat_messages")
+                db.execSQL("DROP TABLE IF EXISTS chat_sessions")
             }
         }
 

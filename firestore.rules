@@ -238,47 +238,8 @@ service cloud.firestore {
           || data.snapshot.photoAttachmentUri.matches('https://res.cloudinary.com/.*'));
     }
 
-    function chatAfter(chatId) {
-      return getAfter(/databases/$(database)/documents/chatSessions/$(chatId)).data;
-    }
-
     function sightingAfter(sightingId) {
       return getAfter(/databases/$(database)/documents/sightings/$(sightingId)).data;
-    }
-
-    function validChatSessionReferences(data) {
-      return data.reporterId == uid()
-        && data.ownerId == get(/databases/$(database)/documents/petPosts/$(data.postId)).data.ownerId;
-    }
-
-    function validSightingAlertCreate(chatId) {
-      return request.resource.data.type == 'sighting_alert'
-        && hasNoSensitiveAlertFields(request.resource.data)
-        && validAlertSnapshot(request.resource.data)
-        && request.resource.data.sightingId is string
-        && request.resource.data.postId is string
-        && request.resource.data.ownerId is string
-        && request.resource.data.reporterId is string
-        && request.resource.data.senderId == uid()
-        && request.resource.data.senderId == request.resource.data.reporterId
-        && request.resource.data.ownerId == chatAfter(chatId).ownerId
-        && request.resource.data.reporterId == chatAfter(chatId).reporterId
-        && request.resource.data.postId == chatAfter(chatId).postId
-        && sightingAfter(request.resource.data.sightingId).id == request.resource.data.sightingId
-        && sightingAfter(request.resource.data.sightingId).postId == request.resource.data.postId
-        && sightingAfter(request.resource.data.sightingId).ownerId == request.resource.data.ownerId
-        && sightingAfter(request.resource.data.sightingId).reporterId == request.resource.data.reporterId
-        && sightingAfter(request.resource.data.sightingId).reporterId != sightingAfter(request.resource.data.sightingId).ownerId;
-    }
-
-    function validChatNotificationCreate(data) {
-      return data.type == 'CHAT'
-        && data.chatId is string
-        && data.postId is string
-        && data.targetId == data.chatId
-        && data.postId == chatAfter(data.chatId).postId
-        && data.recipientId in chatAfter(data.chatId).participantIds
-        && data.recipientId != uid();
     }
 
     function validSightingNotificationCreate(data) {
@@ -294,28 +255,6 @@ service cloud.firestore {
         && sightingAfter(data.sightingId).reporterId != sightingAfter(data.sightingId).ownerId;
     }
 
-    function validLegacySightingNotificationCreate(data) {
-      return data.type == 'ALERT'
-        && data.chatId is string
-        && data.sightingId is string
-        && data.postId is string
-        && data.targetId == data.chatId
-        && data.recipientId == sightingAfter(data.sightingId).ownerId
-        && data.postId == sightingAfter(data.sightingId).postId
-        && data.chatId == data.targetId;
-    }
-
-    function validMessageCreate(chatId, messageId) {
-      return isChatParticipant(chatAfter(chatId))
-        && request.resource.data.id == messageId
-        && request.resource.data.chatId == chatId
-        && request.resource.data.senderId == uid()
-        && request.resource.data.senderId in chatAfter(chatId).participantIds
-        && (!request.resource.data.keys().hasAny(['type'])
-          || request.resource.data.type == 'text'
-          || validSightingAlertCreate(chatId));
-    }
-
     match /users/{userId} {
       allow create: if isUser(userId) && request.resource.data.uid == userId;
       allow read, delete: if isUser(userId);
@@ -329,14 +268,13 @@ service cloud.firestore {
           && request.resource.data.recipientId == userId
           && request.resource.data.title is string
           && request.resource.data.message is string
-          && request.resource.data.type in ['ALERT', 'CHAT']
+          && request.resource.data.type == 'ALERT'
           && request.resource.data.targetId is string
           && request.resource.data.isRead == false
           && hasNoSensitiveNotificationFields(request.resource.data)
           && ((!request.resource.data.keys().hasAny(['sightingId', 'chatId', 'postId']))
             || validSightingNotificationCreate(request.resource.data)
-            || validLegacySightingNotificationCreate(request.resource.data)
-            || validChatNotificationCreate(request.resource.data));
+            || validSightingNotificationCreate(request.resource.data));
         allow update: if isUser(userId)
           && request.resource.data.recipientId == resource.data.recipientId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
@@ -400,24 +338,11 @@ service cloud.firestore {
       allow get: if isChatParticipant(resource.data);
       allow list: if signedIn()
         && uid() in resource.data.participantIds;
-      allow create: if isChatParticipant(request.resource.data)
-        && request.resource.data.id == chatId
-        && request.resource.data.ownerId is string
-        && request.resource.data.reporterId is string
-        && request.resource.data.postId is string
-        && validParticipantIds(request.resource.data)
-        && validChatSessionReferences(request.resource.data)
-        && hasNoChatContactFields(request.resource.data);
-      allow update: if isChatParticipant(resource.data)
-        && keepsChatParticipants()
-        && request.resource.data.id == resource.data.id
-        && !chatContactFieldsChanged();
-      allow delete: if signedIn() && resource.data.ownerId == uid();
+      allow create, update, delete: if false;
 
       match /messages/{messageId} {
         allow read: if isChatParticipant(get(/databases/$(database)/documents/chatSessions/$(chatId)).data);
-        allow create: if validMessageCreate(chatId, messageId);
-        allow update, delete: if false;
+        allow create, update, delete: if false;
       }
 
       match /contactGrants/{grantId} {

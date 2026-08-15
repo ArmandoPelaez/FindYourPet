@@ -1,14 +1,10 @@
 package com.findyourpet.app.data.remote
 
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
-import com.findyourpet.app.data.local.entity.ChatMessageEntity
-import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
 import com.findyourpet.app.data.local.entity.UserBlockEntity
-import com.findyourpet.app.data.local.entity.LEGACY_TEXT_MESSAGE_TYPE
-import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -158,95 +154,6 @@ object RemoteMappers {
             idempotencyKey = string("idempotencyKey")
         )
 
-    fun ChatSessionEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
-        mapOf(
-            "id" to id,
-            "postId" to postId,
-            "petName" to petName,
-            "petPhotoUri" to petPhotoUri,
-            "ownerId" to ownerId,
-            "reporterId" to reporterId,
-            "reporterName" to reporterName,
-            "participantIds" to listOf(ownerId, reporterId).distinct(),
-            "lastMessage" to lastMessage,
-            "lastMessageTimestamp" to lastMessageTimestamp,
-            "createdAt" to createdAt,
-            "updatedAt" to FieldValue.serverTimestamp()
-        )
-
-    fun Map<String, Any?>.toChatSessionEntity(documentId: String = string("id")): ChatSessionEntity =
-        ChatSessionEntity(
-            id = string("id").ifBlank { documentId },
-            postId = string("postId"),
-            petName = string("petName"),
-            petPhotoUri = string("petPhotoUri"),
-            ownerId = string("ownerId"),
-            reporterId = string("reporterId"),
-            reporterName = string("reporterName"),
-            lastMessage = string("lastMessage").let { value ->
-                if (value.isBlank()) "" else "Actividad en la conversacion"
-            },
-            lastMessageTimestamp = long("lastMessageTimestamp")
-        )
-
-    fun ChatMessageEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> =
-        buildMap {
-            put("id", id)
-            put("chatId", chatId)
-            put("postId", postId)
-            put("senderId", senderId)
-            put("senderName", senderName)
-            put("text", text)
-            put("photoUri", photoUri)
-            put("timestamp", timestamp)
-            put("isSystemMessage", isSystemMessage)
-            put("type", type)
-            put("createdAt", createdAt)
-            if (type == SIGHTING_ALERT_MESSAGE_TYPE) {
-                require(!sightingId.isNullOrBlank()) { "A sighting alert requires sightingId." }
-                require(!ownerId.isNullOrBlank() && !reporterId.isNullOrBlank()) {
-                    "A sighting alert requires immutable participant identities."
-                }
-                put("sightingId", sightingId)
-                put("ownerId", ownerId)
-                put("reporterId", reporterId)
-                put(
-                    "snapshot",
-                    mapOf(
-                        "petName" to snapshotPetName.orEmpty(),
-                        "photoAttachmentUri" to photoAttachmentUri,
-                        "locationDisplay" to locationDisplay.orEmpty(),
-                        "generalDetails" to generalDetails.orEmpty(),
-                        "timestamp" to (snapshotTimestamp ?: timestamp)
-                    )
-                )
-            } else if (type.isBlank()) {
-                put("type", LEGACY_TEXT_MESSAGE_TYPE)
-            }
-        }
-
-    fun Map<String, Any?>.toChatMessageEntity(documentId: String = string("id")): ChatMessageEntity =
-        ChatMessageEntity(
-            id = string("id").ifBlank { documentId },
-            chatId = string("chatId"),
-            postId = string("postId"),
-            senderId = string("senderId"),
-            senderName = string("senderName"),
-            text = string("text"),
-            photoUri = this["photoUri"] as? String,
-            timestamp = long("timestamp"),
-            isSystemMessage = bool("isSystemMessage"),
-            type = string("type").ifBlank { LEGACY_TEXT_MESSAGE_TYPE },
-            sightingId = string("sightingId").ifBlank { null },
-            ownerId = string("ownerId").ifBlank { null },
-            reporterId = string("reporterId").ifBlank { null },
-            snapshotPetName = snapshotString("petName").ifBlank { null },
-            photoAttachmentUri = snapshotString("photoAttachmentUri").ifBlank { null },
-            locationDisplay = snapshotString("locationDisplay").ifBlank { null },
-            generalDetails = snapshotString("generalDetails").ifBlank { null },
-            snapshotTimestamp = snapshotLong("timestamp")?.takeIf { it > 0L }
-        )
-
     fun AppNotificationEntity.toDocument(createdAt: Any = FieldValue.serverTimestamp()): Map<String, Any?> {
         require(type in supportedNotificationTypes) { "Notification type is retired." }
         return buildMap {
@@ -259,7 +166,6 @@ object RemoteMappers {
             put("timestamp", timestamp)
             put("isRead", isRead)
             put("createdAt", createdAt)
-            chatId?.let { put("chatId", it) }
             sightingId?.let { put("sightingId", it) }
             postId?.let { put("postId", it) }
         }
@@ -272,7 +178,7 @@ object RemoteMappers {
             title = string("title"),
             message = when (string("type")) {
                 "ALERT" -> "Recibiste un nuevo avistamiento en tu publicacion."
-                "CHAT" -> "Tienes un nuevo mensaje en una conversacion."
+                "CHAT" -> "Esta notificacion historica ya no tiene una accion disponible."
                 else -> "Tienes una nueva notificacion."
             },
             type = string("type"),
@@ -306,20 +212,5 @@ object RemoteMappers {
             else -> 0.0
         }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any?>.snapshot(): Map<String, Any?> =
-        this["snapshot"] as? Map<String, Any?> ?: emptyMap()
-
-    private fun Map<String, Any?>.snapshotString(key: String): String = snapshot()[key] as? String ?: ""
-
-    private fun Map<String, Any?>.snapshotLong(key: String): Long? =
-        when (val value = snapshot()[key]) {
-            is Long -> value
-            is Int -> value.toLong()
-            is Double -> value.toLong()
-            is Timestamp -> value.toDate().time
-            else -> null
-        }
-
-    private val supportedNotificationTypes = setOf("ALERT", "CHAT")
+    private val supportedNotificationTypes = setOf("ALERT")
 }
