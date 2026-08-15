@@ -44,4 +44,31 @@ class ProductionDataPathContractsTest {
     assertEquals("notification_empty", notification.id)
     assertFalse(notification.isRead)
   }
+
+  @Test
+  fun sightingDetailMappingPreservesDirectReadFields() {
+    val sighting = mapOf<String, Any?>(
+      "id" to "sighting_21",
+      "postId" to "post_7",
+      "ownerId" to "owner_7",
+      "reporterId" to "reporter_3",
+      "reporterName" to "Ana",
+      "photoUri" to "https://example.test/sighting.jpg",
+      "locationName" to "Plaza Italia",
+      "latitude" to -34.5811,
+      "longitude" to -58.4233,
+      "notes" to "Lo vi junto a la entrada norte.",
+      "timestamp" to 1_723_456_789_000L,
+      "idempotencyKey" to "submission-21"
+    ).toSightingEntity("sighting_21")
+
+    assertEquals("sighting_21", sighting.id)
+    assertEquals("post_7", sighting.postId)
+    assertEquals("Plaza Italia", sighting.locationName)
+    assertEquals(-34.5811, sighting.latitude, 0.0)
+    assertEquals(-58.4233, sighting.longitude, 0.0)
+    assertEquals("Lo vi junto a la entrada norte.", sighting.notes)
+    assertEquals(1_723_456_789_000L, sighting.timestamp)
+    assertEquals("https://example.test/sighting.jpg", sighting.photoUri)
+  }
 }

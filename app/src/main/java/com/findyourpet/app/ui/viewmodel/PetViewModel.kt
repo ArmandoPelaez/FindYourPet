@@ -148,6 +148,56 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Sighting detail state is intentionally independent from all Chat state.
+    val selectedSightingId = MutableStateFlow<String?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val sightingDetailState: StateFlow<BackendSyncState<SightingAlertEntity?>> =
+        selectedSightingId.flatMapLatest { id ->
+            if (id.isNullOrBlank()) {
+                flowOf(
+                    BackendSyncState.data<SightingAlertEntity?>(
+                        data = null,
+                        isFromCache = false,
+                        hasPendingWrites = false,
+                        isRemoteBackend = repository.usesRemoteBackend
+                    )
+                )
+            } else {
+                repository.getSightingByIdState(id)
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            BackendSyncState.loading<SightingAlertEntity?>(null, repository.usesRemoteBackend)
+        )
+
+    val sightingDetail: StateFlow<SightingAlertEntity?> = sightingDetailState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val sightingDetailPostState: StateFlow<BackendSyncState<PetPostEntity?>> =
+        sightingDetailState.flatMapLatest { sightingState ->
+            val postId = sightingState.data?.postId
+            if (postId.isNullOrBlank()) {
+                flowOf(
+                    BackendSyncState.data<PetPostEntity?>(
+                        data = null,
+                        isFromCache = false,
+                        hasPendingWrites = false,
+                        isRemoteBackend = repository.usesRemoteBackend
+                    )
+                )
+            } else {
+                repository.getPostByIdState(postId)
+            }
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            BackendSyncState.loading<PetPostEntity?>(null, repository.usesRemoteBackend)
+        )
+
     // Active Chat State
     val activeChatId = MutableStateFlow<String?>(null)
 
@@ -272,6 +322,10 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectPost(postId: String) {
         selectedPostId.value = postId
+    }
+
+    fun selectSightingDetail(sightingId: String) {
+        selectedSightingId.value = sightingId
     }
 
     fun selectChat(chatId: String) {

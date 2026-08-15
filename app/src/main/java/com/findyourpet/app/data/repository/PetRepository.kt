@@ -126,6 +126,36 @@ class PetRepository(context: Context) {
             }
         } ?: petDao.getSightingsForPost(postId).toLocalState(emptyList())
 
+    fun getSightingById(sightingId: String): Flow<SightingAlertEntity?> =
+        getSightingByIdState(sightingId).map { it.data }
+
+    fun getSightingByIdState(sightingId: String): Flow<BackendSyncState<SightingAlertEntity?>> {
+        require(sightingId.isNotBlank()) { "El identificador del avistamiento es obligatorio." }
+        return firestore?.let { db ->
+            observeDocument(
+                document = db.collection(BackendCollections.SIGHTINGS).document(sightingId),
+                initialData = null,
+                required = true,
+                validator = { snapshot ->
+                    val data = snapshot.data
+                    when {
+                        data == null -> "El avistamiento no existe."
+                        data["postId"] !is String || (data["postId"] as String).isBlank() ->
+                            "El avistamiento no tiene una publicacion valida."
+                        data["ownerId"] !is String || (data["ownerId"] as String).isBlank() ->
+                            "El avistamiento no tiene un propietario valido."
+                        data["reporterId"] !is String || (data["reporterId"] as String).isBlank() ->
+                            "El avistamiento no tiene un reportante valido."
+                        else -> null
+                    }
+                }
+            ) { snapshot -> snapshot.data?.toSightingEntity(snapshot.id) }
+                .onEach { state ->
+                    state.data?.let { petDao.insertSighting(it) }
+                }
+        } ?: petDao.getSightingById(sightingId).toLocalState(null)
+    }
+
     fun getMessagesForChat(chatId: String): Flow<List<ChatMessageEntity>> =
         getMessagesForChatState(chatId).map { it.data }
 
@@ -629,6 +659,8 @@ class PetRepository(context: Context) {
     private fun <T> observeDocument(
         document: com.google.firebase.firestore.DocumentReference,
         initialData: T,
+        required: Boolean = false,
+        validator: ((DocumentSnapshot) -> String?)? = null,
         mapper: (DocumentSnapshot) -> T
     ): Flow<BackendSyncState<T>> =
         callbackFlow {
@@ -639,13 +671,29 @@ class PetRepository(context: Context) {
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    trySend(
-                        BackendSyncState.data(
-                            data = mapper(snapshot),
-                            isFromCache = snapshot.metadata.isFromCache,
-                            hasPendingWrites = snapshot.metadata.hasPendingWrites()
-                        )
-                    )
+                    val validationError = validator?.invoke(snapshot)
+                    when {
+                        required && !snapshot.exists() -> {
+                            trySend(BackendSyncState.error(initialData, "El documento solicitado no existe."))
+                        }
+                        validationError != null -> {
+                            trySend(
+                                BackendSyncState.error(
+                                    initialData,
+                                    validationError
+                                )
+                            )
+                        }
+                        else -> {
+                            trySend(
+                                BackendSyncState.data(
+                                    data = mapper(snapshot),
+                                    isFromCache = snapshot.metadata.isFromCache,
+                                    hasPendingWrites = snapshot.metadata.hasPendingWrites()
+                                )
+                            )
+                        }
+                    }
                 }
             }
             awaitClose { registration.remove() }

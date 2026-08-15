@@ -34,6 +34,7 @@ import com.findyourpet.app.ui.screens.HomeScreen
 import com.findyourpet.app.ui.screens.NotificationsScreen
 import com.findyourpet.app.ui.screens.ProfileScreen
 import com.findyourpet.app.ui.screens.SightingAlertScreen
+import com.findyourpet.app.ui.screens.SightingDetailScreen
 import com.findyourpet.app.ui.theme.MascotasPerdidasTheme
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.viewmodel.PetViewModel
@@ -61,6 +62,7 @@ private const val ROUTE_CHATS = "chats"
 private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_ALERT = "alert/{postId}"
 private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
+private const val ROUTE_SIGHTING_DETAIL = "sighting/{sightingId}"
 
 @Composable
 fun PetAppNavigation(viewModel: PetViewModel) {
@@ -149,6 +151,18 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                 ChatDetailScreen(
                     viewModel = viewModel,
                     chatId = chatId,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = ROUTE_SIGHTING_DETAIL,
+                arguments = listOf(navArgument("sightingId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val sightingId = backStackEntry.arguments?.getString("sightingId").orEmpty()
+                SightingDetailScreen(
+                    viewModel = viewModel,
+                    sightingId = sightingId,
                     onBackClick = { navController.popBackStack() }
                 )
             }
