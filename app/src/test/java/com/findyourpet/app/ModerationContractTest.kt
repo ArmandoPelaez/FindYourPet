@@ -17,7 +17,7 @@ class ModerationContractTest {
     assertTrue(entities.contains("Index(value = [\"sightingId\", \"reportingUserId\", \"reason\"], unique = true)"))
     assertTrue(entities.contains("Index(value = [\"blockerUserId\", \"blockedUserId\"], unique = true)"))
     assertTrue(dao.contains("getUserBlock(blockerUserId: String, blockedUserId: String)"))
-    assertTrue(database.contains("version = 9"))
+    assertTrue(database.contains("version = 10"))
     assertTrue(database.contains("Migration(8, 9)"))
     assertTrue(collections.contains("const val CONTENT_REPORTS = \"contentReports\""))
     assertTrue(collections.contains("const val USER_BLOCKS = \"userBlocks\""))

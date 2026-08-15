@@ -139,7 +139,7 @@ class ReleaseReadinessStaticTest {
       "contentDescription = \"Actividad\"",
       "contentDescription = \"Perfil\"",
       "contentDescription = \"Reportar\"",
-      "contentDescription = \"Enviar\"",
+      "contentDescription = \"Enviar alerta\"",
       "Foto de la mascota",
       "Foto del avistamiento",
       "Usar ubicacion actual",

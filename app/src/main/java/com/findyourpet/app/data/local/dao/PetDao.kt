@@ -6,8 +6,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
-import com.findyourpet.app.data.local.entity.ChatMessageEntity
-import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
@@ -74,38 +72,6 @@ interface PetDao {
     @Query("SELECT * FROM user_blocks WHERE blockerUserId = :blockerUserId AND blockedUserId = :blockedUserId LIMIT 1")
     suspend fun getUserBlock(blockerUserId: String, blockedUserId: String): UserBlockEntity?
 
-    // Chat Messages
-    @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")
-    fun getMessagesForChat(chatId: String): Flow<List<ChatMessageEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMessage(message: ChatMessageEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMessages(messages: List<ChatMessageEntity>)
-
-    @Query("DELETE FROM chat_messages WHERE chatId = :chatId")
-    suspend fun clearMessagesForChat(chatId: String)
-
-    // Chat Sessions
-    @Query("SELECT * FROM chat_sessions WHERE ownerId = :userId OR reporterId = :userId ORDER BY lastMessageTimestamp DESC")
-    fun getChatSessionsForUser(userId: String): Flow<List<ChatSessionEntity>>
-
-    @Query("SELECT * FROM chat_sessions WHERE id = :chatId")
-    fun getChatSessionById(chatId: String): Flow<ChatSessionEntity?>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChatSession(session: ChatSessionEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChatSessions(sessions: List<ChatSessionEntity>)
-
-    @Query("DELETE FROM chat_sessions")
-    suspend fun clearChatSessions()
-
-    @Query("UPDATE chat_sessions SET lastMessage = :lastMessage, lastMessageTimestamp = :timestamp WHERE id = :chatId")
-    suspend fun updateChatLastMessage(chatId: String, lastMessage: String, timestamp: Long)
-
     // Notifications
     @Query("SELECT * FROM app_notifications ORDER BY timestamp DESC")
     fun getAllNotifications(): Flow<List<AppNotificationEntity>>
@@ -124,12 +90,6 @@ interface PetDao {
 
     @Query("DELETE FROM sighting_alerts")
     suspend fun clearSightings()
-
-    @Query("DELETE FROM chat_messages")
-    suspend fun clearMessages()
-
-    @Query("DELETE FROM chat_sessions WHERE ownerId != :userId AND reporterId != :userId")
-    suspend fun clearChatSessionsNotForUser(userId: String)
 
     @Query("DELETE FROM app_notifications WHERE recipientId != :userId")
     suspend fun clearNotificationsNotForUser(userId: String)

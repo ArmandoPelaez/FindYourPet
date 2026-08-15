@@ -12,7 +12,7 @@ class PetPostRetiredAttributesStaticTest {
   fun roomMigration_reconstructsVersionSevenWithoutRetiredColumns() {
     val source = File(root, "app/src/main/java/com/findyourpet/app/data/local/AppDatabase.kt").readText()
 
-    assertTrue(source.contains("version = 9"))
+    assertTrue(source.contains("version = 10"))
     assertTrue(source.contains("Migration(6, 7)"))
     assertTrue(source.contains("Migration(7, 8)"))
     assertTrue(source.contains("MIGRATION_7_8"))

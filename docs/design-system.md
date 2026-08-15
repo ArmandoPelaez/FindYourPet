@@ -25,7 +25,7 @@ Centralizar:
 - PetStatusColors
 
 The authenticated bottom navigation uses five shared destinations in this order:
-`Inicio`, `Perfil`, `Reportar`, `Mensajes`, `Alertas`. Active items use the theme
+`Inicio`, `Perfil`, `Reportar`, `Actividad`, `Alertas`. Active items use the theme
 primary color, inactive items use `onSurfaceVariant`, and `Reportar` uses the
 filled circular action treatment. Alert badges belong to the bottom navigation;
 screens must not duplicate the alert action in their top bars.

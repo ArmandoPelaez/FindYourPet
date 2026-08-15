@@ -33,28 +33,26 @@ class NotificationRoutingContractTest {
   }
 
   @Test
-  fun chatNotificationKeepsExistingChatRoute() {
+  fun historicalChatNotificationHasNoActiveRoute() {
     val notification = notification(
       type = "CHAT",
       targetId = "legacy_target",
       chatId = "chat_123"
     )
 
-    assertEquals("chat/chat_123", resolveNotificationRoute(notification))
+    assertNull(resolveNotificationRoute(notification))
   }
 
   @Test
   fun invalidSightingNotificationDoesNotNavigateToChat() {
     val mainActivity = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
-    val chatDetail = source("app/src/main/java/com/findyourpet/app/ui/screens/ChatDetailScreen.kt")
 
     assertNull(resolveNotificationRoute(notification(type = "ALERT", sightingId = null)))
     assertNull(resolveNotificationRoute(notification(type = "ALERT", sightingId = "   ")))
     assertTrue(mainActivity.contains("Log.w("))
     assertTrue(mainActivity.contains("NOTIFICATION_TAG"))
     assertTrue(mainActivity.contains("id=${'$'}{notification.id}, type=${'$'}{notification.type}"))
-    assertTrue(chatDetail.contains("Esta conversacion no esta disponible."))
-    assertTrue(chatDetail.contains("!isAuthorizedParticipant"))
+    assertTrue(!mainActivity.contains("ChatDetailScreen"))
   }
 
   @Test
@@ -63,7 +61,7 @@ class NotificationRoutingContractTest {
 
     assertTrue(mainActivity.contains("resolveNotificationRoute(notification)"))
     assertTrue(mainActivity.contains("sightingDetailRoute"))
-    assertTrue(mainActivity.contains("chatDetailRoute"))
+    assertTrue(!mainActivity.contains("chatDetailRoute"))
   }
 
   @Test
@@ -86,7 +84,7 @@ class NotificationRoutingContractTest {
     val mainActivity = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
     val detailBlock = mainActivity
       .substringAfter("onSightingClick = { sightingId ->")
-      .substringBefore("                )\n            }")
+      .substringBefore("private fun NavHostController.navigateToPrimaryDestination")
 
     assertTrue(detailBlock.contains("navController.navigate(route)"))
     assertTrue(detailBlock.contains("launchSingleTop = true"))

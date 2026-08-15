@@ -1,8 +1,8 @@
 # FindYourPet / Mascotas Perdidas
 
-FindYourPet es una aplicacion Android nativa para publicar mascotas perdidas, reportar avistamientos y facilitar la comunicacion por chat interno entre la persona que busca a su mascota y quien puede aportar informacion.
+FindYourPet es una aplicacion Android nativa para publicar mascotas perdidas y reportar avistamientos.
 
-El objetivo del proyecto es convertir un prototipo local en un MVP productivo verificable: con autenticacion real, datos compartidos en backend, privacidad por diseno, carga real de imagenes, ubicacion consentida, chat entre participantes y una base preparada para Google Play Internal testing.
+El objetivo del proyecto es convertir un prototipo local en un MVP productivo verificable: con autenticacion real, datos compartidos en backend, privacidad por diseno, carga real de imagenes, ubicacion consentida, moderacion y una base preparada para Google Play Internal testing.
 
 ## Proposito
 
@@ -10,7 +10,7 @@ La perdida de una mascota suele depender de difusion rapida, datos claros y comu
 
 - Publicar fichas de mascotas perdidas con foto, descripcion, zona de referencia y recompensa opcional.
 - Permitir que otros usuarios autenticados reporten avistamientos.
-- Crear una conversacion privada entre dueno y reportante cuando hay un avistamiento.
+- Mostrar el avistamiento al propietario mediante Alertas y Actividad, con navegacion al Detalle por `sightingId`.
 - No publicar ni compartir telefono, email, direccion o datos personales de contacto mediante flujos administrados por la app.
 - Evitar que los datos sensibles aparezcan en tarjetas publicas, previews o notificaciones.
 - Mantener reglas tecnicas claras para avanzar hacia una publicacion controlada.
@@ -26,7 +26,7 @@ Ya cuenta con:
 - Email/password y Google Sign-In.
 - Cloud Firestore como fuente de verdad para flujos autenticados.
 - Room como almacenamiento local/cache y soporte demo cuando no hay backend configurado.
-- Publicaciones de mascotas, avistamientos, chats, notificaciones internas y perfil.
+- Publicaciones de mascotas, avistamientos, moderacion, notificaciones internas y perfil.
 - Reglas de Firestore en `firestore.rules`.
 - Carga de imagenes a Cloudinary mediante unsigned upload preset.
 - Captura/uso de ubicacion con consentimiento y fallback manual/coarse.
@@ -40,9 +40,8 @@ Todavia requiere validacion manual final para release firmado, Play Console, acc
 - **Feed de publicaciones:** lista de mascotas publicadas desde backend o cache local.
 - **Crear publicacion:** formulario para publicar una mascota asociada al `uid` autenticado.
 - **Reportar avistamiento:** flujo para enviar foto opcional, zona/ubicacion y notas sobre una mascota vista.
-- **Chat privado:** conversacion entre dueno y reportante derivada de un avistamiento.
-- **Contacto por chat interno:** la app no ofrece telefono, email, direccion ni acciones externas de contacto entre dueno y reportante.
-- **Notificaciones internas:** avisos de avistamientos y mensajes sin exponer datos sensibles.
+- **Moderacion:** reportar contenido y bloquear usuarios desde el Detalle de Avistamiento.
+- **Notificaciones internas:** avisos de avistamientos sin exponer datos sensibles.
 - **Perfil:** datos basicos del usuario autenticado.
 
 ## Principios de producto y privacidad
@@ -51,18 +50,15 @@ El proyecto trata como sensibles:
 
 - Nombre del dueno.
 - Email de cuenta.
-- Datos personales que una persona decida escribir voluntariamente dentro de mensajes.
 - Coordenadas GPS.
 - Fotos.
-- Mensajes privados.
+- Documentos remotos historicos de Chat retenidos sin acceso activo desde la app.
 - Historial de avistamientos.
 - Datos legacy de grants/contacto, que la app actual ignora o elimina de caches locales.
 
 Reglas base:
 
-- La app solo media contacto mediante chat interno entre participantes.
-- La app no solicita, revela, autoriza, revoca ni notifica telefono, email o direccion como datos de contacto.
-- Si las personas usuarias escriben telefono, email, direccion u otros datos personales dentro del chat, lo hacen voluntariamente y bajo su responsabilidad.
+- La app no ofrece mensajeria ni solicita, revela, autoriza, revoca ni notifica telefono, email o direccion como datos de contacto.
 - Las notificaciones no deben incluir telefono, email, direccion, coordenadas exactas, URLs privadas, notas completas ni cuerpos completos de mensajes.
 - Las acciones de dueno se basan en el `uid` real de Firebase, no en ids hardcodeados.
 - Room no otorga autoridad productiva; funciona como cache/local demo.
@@ -187,8 +183,7 @@ Colecciones/modelos principales:
 - `users/{uid}`: perfil del usuario autenticado.
 - `petPosts/{postId}`: publicaciones de mascotas.
 - `sightings/{sightingId}`: avistamientos.
-- `chatSessions/{chatId}`: conversaciones entre dueno y reportante.
-- `chatSessions/{chatId}/messages/{messageId}`: mensajes del chat.
+- `chatSessions/{chatId}` y `messages/{messageId}`: documentos remotos historicos retenidos; las reglas bloquean nuevos writes y la app no los enruta.
 - `users/{uid}/notifications/{notificationId}`: notificaciones internas.
 
 Las reglas viven en `firestore.rules` y deben validarse antes de usar datos reales.
@@ -233,7 +228,7 @@ El proyecto usa OpenSpec para ordenar cambios funcionales y tecnicos. Las capabi
 - `auth`
 - `pet-posts`
 - `sightings`
-- `private-chat`
+- `chat-retirement`
 - `contact-privacy`
 - `notifications`
 - `local-storage`
@@ -251,7 +246,7 @@ Cada cambio relevante deberia tener:
 ## Roadmap cercano
 
 - Completar validacion manual de permisos en dispositivo/emulador.
-- Confirmar flujos reales de foto, ubicacion, avistamiento y chat sobre backend.
+- Confirmar flujos reales de foto, ubicacion y avistamiento sobre backend.
 - Validar reglas Firestore en emulador o proyecto no productivo.
 - Generar artifact firmado para Internal testing.
 - Confirmar Crashlytics y mapping de release.

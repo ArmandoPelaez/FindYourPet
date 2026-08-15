@@ -30,8 +30,6 @@ import com.findyourpet.app.ui.components.BottomPrimaryActionBanner
 import com.findyourpet.app.ui.components.BottomNavigationDestination
 import com.findyourpet.app.ui.screens.AuthScreen
 import com.findyourpet.app.ui.screens.ActivityScreen
-import com.findyourpet.app.ui.screens.ChatDetailScreen
-import com.findyourpet.app.ui.screens.ChatListScreen
 import com.findyourpet.app.ui.screens.CreatePetPostScreen
 import com.findyourpet.app.ui.screens.HomeScreen
 import com.findyourpet.app.ui.screens.NotificationsScreen
@@ -61,11 +59,9 @@ class MainActivity : ComponentActivity() {
 private const val ROUTE_HOME = "home"
 private const val ROUTE_CREATE = "create"
 private const val ROUTE_PROFILE = "profile"
-private const val ROUTE_CHATS = "chats"
 private const val ROUTE_ACTIVITY = "activity"
 private const val ROUTE_NOTIFICATIONS = "notifications"
 private const val ROUTE_ALERT = "alert/{postId}"
-private const val ROUTE_CHAT_DETAIL = "chat/{chatId}"
 private const val ROUTE_SIGHTING_DETAIL = "sighting/{sightingId}"
 private const val NOTIFICATION_TAG = "NotificationRouting"
 private const val ACTIVITY_TAG = "ActivityRouting"
@@ -150,18 +146,6 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
             }
 
             composable(
-                route = ROUTE_CHAT_DETAIL,
-                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-                ChatDetailScreen(
-                    viewModel = viewModel,
-                    chatId = chatId,
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
-
-            composable(
                 route = ROUTE_SIGHTING_DETAIL,
                 arguments = listOf(navArgument("sightingId") { type = NavType.StringType })
             ) { backStackEntry ->
@@ -170,13 +154,6 @@ private fun SignedInPetAppNavigation(viewModel: PetViewModel) {
                     viewModel = viewModel,
                     sightingId = sightingId,
                     onBackClick = { navController.popBackStack() }
-                )
-            }
-
-            composable(ROUTE_CHATS) {
-                ChatListScreen(
-                    viewModel = viewModel,
-                    onChatSelect = { chatId -> navController.navigate(chatDetailRoute(chatId)) }
                 )
             }
 
@@ -239,8 +216,6 @@ private fun NavHostController.navigateToCreatePost() {
 
 private fun alertRoute(postId: String) = "alert/$postId"
 
-private fun chatDetailRoute(chatId: String) = "chat/$chatId"
-
 private fun sightingDetailRoute(sightingId: String) = "sighting/$sightingId"
 
 internal fun resolveActivitySightingRoute(sightingId: String?): String? =
@@ -256,6 +231,5 @@ internal fun resolveNotificationRoute(notification: AppNotificationEntity): Stri
             ?.takeIf { it.isNotEmpty() }
             ?.let(::sightingDetailRoute)
     } else {
-        notification.chatId?.takeIf { it.isNotBlank() }?.let(::chatDetailRoute)
-            ?: notification.targetId.takeIf { it.isNotBlank() }?.let(::chatDetailRoute)
+        null
     }

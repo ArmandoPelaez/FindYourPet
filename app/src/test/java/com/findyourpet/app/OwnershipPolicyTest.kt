@@ -14,14 +14,6 @@ class OwnershipPolicyTest {
   }
 
   @Test
-  fun chatAccessRequiresOwnerOrReporterParticipant() {
-    assertTrue(OwnershipPolicy.isChatParticipant("owner_uid", "owner_uid", "reporter_uid"))
-    assertTrue(OwnershipPolicy.isChatParticipant("reporter_uid", "owner_uid", "reporter_uid"))
-    assertFalse(OwnershipPolicy.isChatParticipant("other_uid", "owner_uid", "reporter_uid"))
-    assertFalse(OwnershipPolicy.isChatParticipant("", "owner_uid", "reporter_uid"))
-  }
-
-  @Test
   fun sightingReportsRequireNonOwnerReporter() {
     assertTrue(OwnershipPolicy.canReportSighting("reporter_uid", "owner_uid"))
     assertFalse(OwnershipPolicy.canReportSighting("owner_uid", "owner_uid"))
@@ -40,7 +32,6 @@ class OwnershipPolicyTest {
   @Test
   fun cachedDemoIdsCannotGrantProductionAccessToFirebaseUid() {
     assertFalse(OwnershipPolicy.canManagePost("firebase_uid", "owner_1"))
-    assertFalse(OwnershipPolicy.isChatParticipant("firebase_uid", "owner_1", "finder_1"))
     assertTrue(OwnershipPolicy.canReportSighting("firebase_uid", "owner_1"))
   }
 }

@@ -33,9 +33,7 @@ object AppSpacing {
     val cardImageMaxHeight: Dp = 320.dp
     const val cardImageAspectRatio: Float = 1.58f
     val mediaHeight: Dp = 220.dp
-    val messageImageHeight: Dp = 120.dp
     val formFieldHeight: Dp = 120.dp
-    val messageMaxWidth: Dp = 280.dp
     val authMaxWidth: Dp = 480.dp
     val expandedContentMaxWidth: Dp = 720.dp
     val contentMaxWidth: Dp = 640.dp
@@ -61,8 +59,6 @@ object AppSpacing {
     val contentInset: Dp = 16.dp
     val narrowInset: Dp = 12.dp
     val textFieldInset: Dp = 4.dp
-    val chatHeaderAvatar: Dp = 38.dp
-    val sendIcon: Dp = 18.dp
     val submitIcon: Dp = 22.dp
     val progressIndicator: Dp = 24.dp
     val submitButtonHeight: Dp = 56.dp

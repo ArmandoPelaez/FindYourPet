@@ -169,7 +169,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.microGap))
                             Text(
-                                text = "El contacto entre dueno y reportero ocurre por chat interno. El email de cuenta no se muestra en fichas, chats ni notificaciones como metodo de contacto.",
+                                text = "FindYourPet no ofrece mensajeria ni comparte datos de contacto entre usuarios. Las notificaciones solo informan sobre avistamientos.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )

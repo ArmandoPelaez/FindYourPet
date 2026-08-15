@@ -94,10 +94,10 @@ fun SightingAlertScreen(
     val idempotencyKey = remember(postId) { UUID.randomUUID().toString() }
     var hasNavigatedHome by remember(postId) { mutableStateOf(false) }
 
-    fun finishAlert(chatId: String) {
+    fun finishAlert(sightingId: String) {
         if (hasNavigatedHome) return
         hasNavigatedHome = true
-        onAlertSent(chatId)
+        onAlertSent(sightingId)
     }
 
     LaunchedEffect(postId) {
@@ -284,9 +284,9 @@ fun SightingAlertScreen(
             mediaSource = mediaSource,
             locationSource = locationSource,
             idempotencyKey = idempotencyKey,
-            onComplete = { chatId ->
+            onComplete = { sightingId ->
                 isSubmitting = false
-                finishAlert(chatId)
+                finishAlert(sightingId)
             },
             onError = { message ->
                 isSubmitting = false

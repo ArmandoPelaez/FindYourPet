@@ -9,19 +9,14 @@ import com.cloudinary.android.callback.UploadCallback
 import com.findyourpet.app.BuildConfig
 import com.findyourpet.app.data.local.AppDatabase
 import com.findyourpet.app.data.local.entity.AppNotificationEntity
-import com.findyourpet.app.data.local.entity.ChatMessageEntity
-import com.findyourpet.app.data.local.entity.ChatSessionEntity
 import com.findyourpet.app.data.local.entity.ContentReportEntity
 import com.findyourpet.app.data.local.entity.PetPostEntity
 import com.findyourpet.app.data.local.entity.SightingAlertEntity
-import com.findyourpet.app.data.local.entity.SIGHTING_ALERT_MESSAGE_TYPE
 import com.findyourpet.app.data.local.entity.UserBlockEntity
 import com.findyourpet.app.data.product.LocationSource
 import com.findyourpet.app.data.product.MediaSource
 import com.findyourpet.app.data.remote.BackendCollections
 import com.findyourpet.app.data.remote.BackendSyncState
-import com.findyourpet.app.data.remote.RemoteMappers.toChatMessageEntity
-import com.findyourpet.app.data.remote.RemoteMappers.toChatSessionEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toDocument
 import com.findyourpet.app.data.remote.RemoteMappers.toNotificationEntity
 import com.findyourpet.app.data.remote.RemoteMappers.toPetPostEntity
@@ -181,63 +176,6 @@ class PetRepository(context: Context) {
                 }
         } ?: petDao.getSightingById(sightingId).toLocalState(null)
     }
-
-    fun getMessagesForChat(chatId: String): Flow<List<ChatMessageEntity>> =
-        getMessagesForChatState(chatId).map { it.data }
-
-    fun getMessagesForChatState(chatId: String): Flow<BackendSyncState<List<ChatMessageEntity>>> =
-        firestore?.let { db ->
-            observeQuery(
-                query = db.collection(BackendCollections.CHAT_SESSIONS)
-                    .document(chatId)
-                    .collection(BackendCollections.MESSAGES)
-                    .orderBy("timestamp", Query.Direction.ASCENDING),
-                initialData = emptyList()
-            ) { snapshot ->
-                snapshot.documents.mapNotNull { it.data?.toChatMessageEntity(it.id) }
-            }.onEach { state ->
-                if (!state.hasError) {
-                    petDao.clearMessagesForChat(chatId)
-                    petDao.insertMessages(state.data)
-                }
-            }
-        } ?: petDao.getMessagesForChat(chatId).toLocalState(emptyList())
-
-    fun getChatSessionsForUser(userId: String): Flow<List<ChatSessionEntity>> =
-        getChatSessionsForUserState(userId).map { it.data }
-
-    fun getChatSessionsForUserState(userId: String): Flow<BackendSyncState<List<ChatSessionEntity>>> =
-        firestore?.let { db ->
-            observeQuery(
-                query = db.collection(BackendCollections.CHAT_SESSIONS)
-                    .whereArrayContains("participantIds", userId),
-                initialData = emptyList()
-            ) { snapshot ->
-                snapshot.documents
-                    .mapNotNull { it.data?.toChatSessionEntity(it.id) }
-                    .sortedByDescending { it.lastMessageTimestamp }
-            }.onEach { state ->
-                if (!state.hasError) {
-                    petDao.clearChatSessionsNotForUser(userId)
-                    petDao.insertChatSessions(state.data)
-                }
-            }
-        } ?: petDao.getChatSessionsForUser(userId).toLocalState(emptyList())
-
-    fun getChatSessionById(chatId: String): Flow<ChatSessionEntity?> =
-        getChatSessionByIdState(chatId).map { it.data }
-
-    fun getChatSessionByIdState(chatId: String): Flow<BackendSyncState<ChatSessionEntity?>> =
-        firestore?.let { db ->
-            observeDocument(
-                document = db.collection(BackendCollections.CHAT_SESSIONS).document(chatId),
-                initialData = null
-            ) { snapshot ->
-                snapshot.data?.toChatSessionEntity(snapshot.id)
-            }.onEach { state ->
-                state.data?.let { petDao.insertChatSession(it) }
-            }
-        } ?: petDao.getChatSessionById(chatId).toLocalState(null)
 
     fun getNotificationsForUser(userId: String): Flow<BackendSyncState<List<AppNotificationEntity>>> =
         firestore?.let { db ->
@@ -497,78 +435,6 @@ class PetRepository(context: Context) {
         return sightingId
     }
 
-    suspend fun sendChatMessage(
-        chatId: String,
-        postId: String,
-        senderId: String,
-        senderName: String,
-        text: String,
-        photoUri: String? = null
-    ) {
-        val db = firestore
-        val timestamp = System.currentTimeMillis()
-        val msg = ChatMessageEntity(
-            id = UUID.randomUUID().toString(),
-            chatId = chatId,
-            postId = postId,
-            senderId = senderId,
-            senderName = senderName,
-            text = text,
-            photoUri = photoUri,
-            timestamp = timestamp,
-            isSystemMessage = false,
-            type = "text"
-        )
-
-        if (db == null) {
-            petDao.insertMessage(msg)
-            petDao.updateChatLastMessage(chatId, "Nuevo mensaje en el chat", timestamp)
-            return
-        }
-
-        val chatRef = db.collection(BackendCollections.CHAT_SESSIONS).document(chatId)
-        val session = requireNotNull(
-            chatRef.get().await().data?.toChatSessionEntity(chatId)
-        ) { "La conversacion no existe." }
-        require(senderId == session.ownerId || senderId == session.reporterId) {
-            "Solo participantes pueden enviar mensajes."
-        }
-        val recipientId = if (senderId == session.ownerId) session.reporterId else session.ownerId
-        val notification = AppNotificationEntity(
-            id = UUID.randomUUID().toString(),
-            recipientId = recipientId,
-            title = "Nuevo mensaje",
-            message = "Tienes un nuevo mensaje en una conversacion.",
-            type = "CHAT",
-            targetId = chatId,
-            timestamp = timestamp,
-            chatId = chatId,
-            postId = postId
-        )
-
-        db.runBatch { batch ->
-            batch.set(
-                chatRef.collection(BackendCollections.MESSAGES).document(msg.id),
-                msg.toDocument()
-            )
-            batch.update(
-                chatRef,
-                mapOf(
-                    "lastMessage" to "Nuevo mensaje en el chat",
-                    "lastMessageTimestamp" to timestamp,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-            )
-            batch.set(
-                db.collection(BackendCollections.USERS)
-                    .document(recipientId)
-                    .collection(BackendCollections.NOTIFICATIONS)
-                    .document(notification.id),
-                notification.toDocument()
-            )
-        }.await()
-    }
-
     suspend fun markNotificationAsRead(userId: String, id: String) {
         val db = firestore
         if (db != null) {
@@ -584,13 +450,10 @@ class PetRepository(context: Context) {
 
     suspend fun clearPrivateCache() {
         petDao.clearSightings()
-        petDao.clearMessages()
-        petDao.clearChatSessions()
         petDao.clearNotifications()
     }
 
     suspend fun retainPrivateCacheForUser(userId: String) {
-        petDao.clearChatSessionsNotForUser(userId)
         petDao.clearNotificationsNotForUser(userId)
     }
 
@@ -673,56 +536,6 @@ class PetRepository(context: Context) {
             )
             petDao.insertSighting(alert)
 
-            val chatId = BackendCollections.chatSessionId("post_1", "finder_1")
-            val chatSession = ChatSessionEntity(
-                id = chatId,
-                postId = "post_1",
-                petName = "Max",
-                petPhotoUri = "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80",
-                ownerId = "owner_1",
-                reporterId = "finder_1",
-                reporterName = "Sofia Vargas",
-                lastMessage = "Nuevo mensaje en el chat",
-                lastMessageTimestamp = now - (10 * 3600000L)
-            )
-            petDao.insertChatSession(chatSession)
-
-            petDao.insertMessages(
-                listOf(
-                    ChatMessageEntity(
-                        id = "msg_1",
-                        chatId = chatId,
-                        postId = "post_1",
-                        senderId = "finder_1",
-                        senderName = "Sofia Vargas",
-                        text = "Nuevo avistamiento de Max",
-                        photoUri = null,
-                        timestamp = now - (12 * 3600000L),
-                        isSystemMessage = false,
-                        type = SIGHTING_ALERT_MESSAGE_TYPE,
-                        sightingId = "sighting_1",
-                        ownerId = "owner_1",
-                        reporterId = "finder_1",
-                        snapshotPetName = "Max",
-                        photoAttachmentUri = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
-                        locationDisplay = "Frente a la cafeteria central, Calle 3",
-                        generalDetails = "Vi a un perro parecido tomando agua junto a la entrada.",
-                        snapshotTimestamp = now - (12 * 3600000L)
-                    ),
-                    ChatMessageEntity(
-                        id = "msg_2",
-                        chatId = chatId,
-                        postId = "post_1",
-                        senderId = "finder_1",
-                        senderName = "Sofia Vargas",
-                        text = "Hola Carlos. Acabo de enviar la foto. Crees que sea tu perrito?",
-                        photoUri = null,
-                        timestamp = now - (10 * 3600000L),
-                        isSystemMessage = false
-                    )
-                )
-            )
-
             petDao.insertNotification(
                 AppNotificationEntity(
                     id = "notif_1",
@@ -730,7 +543,8 @@ class PetRepository(context: Context) {
                     title = "Avistamiento recibido",
                     message = "Recibiste un nuevo avistamiento en tu publicacion.",
                     type = "ALERT",
-                    targetId = chatId,
+                    targetId = "sighting_1",
+                    sightingId = "sighting_1",
                     timestamp = now - (12 * 3600000L),
                     isRead = false
                 )

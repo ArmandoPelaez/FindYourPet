@@ -11,7 +11,7 @@ class SightingFanOutContractTest {
   ).readText()
   private val submissionText = repositoryText.substring(
     repositoryText.indexOf("suspend fun submitSightingAlert"),
-    repositoryText.indexOf("suspend fun sendChatMessage")
+    repositoryText.length
   )
 
   @Test

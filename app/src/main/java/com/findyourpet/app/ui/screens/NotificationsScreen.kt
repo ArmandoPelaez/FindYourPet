@@ -101,7 +101,7 @@ fun NotificationCard(
 
     val (icon, color, contentColor) = when (notification.type) {
         "ALERT" -> Triple(Icons.Filled.NotificationsActive, MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.onError)
-        else -> Triple(Icons.Filled.Chat, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary)
+        else -> Triple(Icons.Filled.NotificationsNone, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary)
     }
 
     Card(

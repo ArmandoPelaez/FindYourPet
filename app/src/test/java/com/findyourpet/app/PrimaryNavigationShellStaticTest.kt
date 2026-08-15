@@ -26,7 +26,6 @@ class PrimaryNavigationShellStaticTest {
 
     assertTrue(mainActivity.contains("private const val ROUTE_HOME = \"home\""))
     assertTrue(mainActivity.contains("private const val ROUTE_PROFILE = \"profile\""))
-    assertTrue(mainActivity.contains("private const val ROUTE_CHATS = \"chats\""))
     assertTrue(mainActivity.contains("private const val ROUTE_ACTIVITY = \"activity\""))
     assertTrue(mainActivity.contains("BottomPrimaryActionBanner("))
     assertTrue(!mainActivity.contains("PRIMARY_DESTINATION_ROUTES"))
@@ -34,8 +33,8 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("private const val ROUTE_CREATE = \"create\""))
     assertTrue(mainActivity.contains("private const val ROUTE_NOTIFICATIONS = \"notifications\""))
     assertTrue(mainActivity.contains("private const val ROUTE_ALERT = \"alert/{postId}\""))
-    assertTrue(mainActivity.contains("private const val ROUTE_CHAT_DETAIL = \"chat/{chatId}\""))
-    assertTrue(!mainActivity.contains("setOf(ROUTE_HOME, ROUTE_PROFILE, ROUTE_CHATS, ROUTE_CREATE"))
+    assertTrue(!mainActivity.contains("ROUTE_CHATS"))
+    assertTrue(!mainActivity.contains("ROUTE_CHAT_DETAIL"))
   }
 
   @Test
@@ -99,35 +98,28 @@ class PrimaryNavigationShellStaticTest {
   }
 
   @Test
-  fun profileAndChatsDoNotRequirePrimaryBackArrows() {
+  fun profileDoesNotRequirePrimaryBackArrow() {
     val mainActivity = mainActivitySource()
     val profileScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ProfileScreen.kt")
-    val chatListScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ChatListScreen.kt")
 
     assertTrue(mainActivity.contains("ProfileScreen(viewModel = viewModel)"))
-    assertTrue(mainActivity.contains("ChatListScreen("))
     assertTrue(mainActivity.contains("ActivityScreen("))
     assertTrue(!mainActivity.contains("ProfileScreen(\n                viewModel = viewModel,\n                onBackClick"))
     assertTrue(profileScreen.contains("onBackClick: (() -> Unit)? = null"))
-    assertTrue(chatListScreen.contains("onBackClick: (() -> Unit)? = null"))
     assertTrue(profileScreen.contains("if (navigateBack != null)"))
-    assertTrue(chatListScreen.contains("if (navigateBack != null)"))
   }
 
   @Test
   fun primaryScrollableDestinationsCanRenderBehindFixedBanner() {
     val mainActivity = mainActivitySource()
     val profileScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ProfileScreen.kt")
-    val chatListScreen = source("app/src/main/java/com/findyourpet/app/ui/screens/ChatListScreen.kt")
 
     assertTrue(mainActivity.contains("contentWindowInsets = WindowInsets(AppSpacing.none)"))
     assertTrue(mainActivity.contains("BottomPrimaryActionBanner("))
     assertTrue(mainActivity.contains(".padding(shellPadding)"))
     assertTrue(mainActivity.contains("composable(ROUTE_PROFILE) {\n                ProfileScreen(viewModel = viewModel)\n            }"))
-    assertTrue(mainActivity.contains("composable(ROUTE_CHATS) {\n                ChatListScreen("))
     assertTrue(mainActivity.contains("composable(ROUTE_ACTIVITY) {\n                ActivityScreen("))
     assertTrue(profileScreen.contains("bottom = AppSpacing.actionBottom"))
-    assertTrue(chatListScreen.contains("bottom = AppSpacing.actionBottom"))
   }
 
   private fun mainActivitySource() = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")

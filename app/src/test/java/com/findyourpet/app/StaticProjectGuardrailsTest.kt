@@ -162,7 +162,6 @@ class StaticProjectGuardrailsTest {
     val repositoryText = File(root, "app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt").readText()
     val viewModelText = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
     val componentText = File(root, "app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt").readText()
-    val chatText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/ChatDetailScreen.kt").readText()
     val homeText = File(root, "app/src/main/java/com/findyourpet/app/ui/screens/HomeScreen.kt").readText()
 
     assertTrue(!repositoryText.contains("CONTACT_GRANTS"))
@@ -172,8 +171,6 @@ class StaticProjectGuardrailsTest {
     assertTrue(!viewModelText.contains("activeContactGrant"))
     assertTrue(!viewModelText.contains("toggleContactSharing"))
     assertTrue(!componentText.contains("ProtectedContactCard"))
-    assertFalse(chatText.contains("FindYourPet no solicita ni comparte telefono, email o direccion"))
-    assertFalse(chatText.contains("esa decision es tu responsabilidad"))
     assertTrue(!homeText.contains("Dueño: ${'$'}{post.ownerName.take(3)}*** (Protegido)"))
     assertTrue(!homeText.contains("post.ownerPhone"))
     assertTrue(!homeText.contains("post.ownerEmail"))
