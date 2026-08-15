@@ -31,4 +31,4 @@
 - [x] 5.1 Add or update unit/repository/ViewModel tests for report persistence, report idempotency, block persistence, block idempotency, owner boundaries, cancellation and controlled failures.
 - [x] 5.2 Add or update UI tests for owner/non-owner menu visibility, missing/already-blocked reporter behavior, report and block confirmation flows, loading/error/success feedback and historical detail preservation.
 - [x] 5.3 Run the relevant automated test suites and a debug build, recording the exact commands and results in the orchestration log.
-- [ ] 5.4 Perform the required manual/emulator verification for the end-to-end report flow and the blocked-reporter submission flow, including the absence of sighting, notification and Chat records.
+- [x] 5.4 Perform the required manual/emulator verification for the end-to-end report flow and the blocked-reporter submission flow, including the absence of sighting, notification and Chat records.
