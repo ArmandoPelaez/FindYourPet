@@ -1,15 +1,15 @@
 change: navigate-sighting-alert-to-detail
 issue: SCRUM-22
 title: Navegar desde alerta de avistamiento al detalle usando sightingId
-status: BLOCKED
-phase: VERIFYING
+status: INTEGRATED
+phase: INTEGRATED
 base_branch: main
 base_commit: d376a02891c025f7978416ffa2f6d9ce6b8852db
 remote_base_commit: d376a02891c025f7978416ffa2f6d9ce6b8852db
 branch: ops/navigate-sighting-alert-to-detail
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 5d0cbab8ec22d227b2877b95edef7968ca89b172
+integration_evidence: PR #42 merged into main; main and origin/main synchronized after fast-forward.
 
 ## Branch creation
 
@@ -98,7 +98,7 @@ delegation_error:
 - APK installation and launch on `emulator-5554`: passed via `android run`; `com.findyourpet.app.MainActivity` launched.
 - Manual flow blocker: the app opens at login and no authenticated test account or sighting-notification fixture is available. Completing the valid/invalid notification taps requires external Firebase data or credentials not provided for this task.
 
-## Blocker
+## Historical blocker at orchestration start
 
 Manual validation tasks 4.4 and 4.5 cannot be completed without an authorized authenticated test session and seeded sighting notification data. No account, backend fixture, or production data was created or modified.
 
@@ -118,3 +118,14 @@ The user confirmed SCRUM-22 and authorized obviating pending branch states. The 
 ## Authorization to continue
 
 The user confirmed SCRUM-22 as the active scope and authorized ignoring the pending branch states. SCRUM-22 is authoritative over the conflicting navigation destination documented by `optimize-sighting-messaging-flow`; that older change is not reused or duplicated.
+
+## Integration
+
+- `git fetch origin --prune`: passed.
+- `git switch main`: passed; `main` was behind `origin/main` by two commits and was fast-forwarded.
+- `git pull --ff-only origin main`: passed; updated `d376a02` to `5d0cbab`.
+- PR: `#42`, `Merge pull request #42 from ArmandoPelaez:ops/navigate-sighting-alert-to-detail`.
+- Integrated commit: `5d0cbab8ec22d227b2877b95edef7968ca89b172`.
+- `git rev-parse main`: `5d0cbab8ec22d227b2877b95edef7968ca89b172`.
+- `git rev-parse origin/main`: `5d0cbab8ec22d227b2877b95edef7968ca89b172`.
+- Final `git status --short --branch`: `## main...origin/main`.
