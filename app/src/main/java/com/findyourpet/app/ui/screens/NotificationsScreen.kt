@@ -28,7 +28,7 @@ import java.util.Locale
 fun NotificationsScreen(
     viewModel: PetViewModel,
     onBackClick: () -> Unit,
-    onNotificationClick: (String) -> Unit
+    onNotificationClick: (AppNotificationEntity) -> Unit
 ) {
     val notifications by viewModel.allNotifications.collectAsState()
     val notificationsState by viewModel.notificationsState.collectAsState()
@@ -79,7 +79,7 @@ fun NotificationsScreen(
                             notification = notif,
                             onClick = {
                                 viewModel.markNotificationAsRead(notif.id)
-                                onNotificationClick(notif.chatId ?: notif.targetId)
+                                onNotificationClick(notif)
                             }
                         )
                     }
