@@ -1,14 +1,14 @@
-state: PASSED_PENDING_INTEGRATION
-phase: COMMIT_PUSH_PR
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-25
 change: add-moderation-actions-to-sighting-detail
 branch: ops/add-moderation-actions-to-sighting-detail
 base_branch: main
 base_commit: 2c578c3d7b575798e3b85a7b699d7c58017e21a6
 remote_base_commit: 2c578c3d7b575798e3b85a7b699d7c58017e21a6
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: ac034c9cdbe6f9db3ca03a16c4a4e09463517129
+integration_evidence: PR #45 merged as b32290638ad65d1af671bb77cda3bd688c0b5008; documentation follow-up 3c7676e merged locally in ac034c9 and authorized for push to main.
 delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 delegation_required: true
