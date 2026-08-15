@@ -1,7 +1,7 @@
 # Orchestration State: create-sighting-detail-screen
 
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-21
 change: create-sighting-detail-screen
 branch: ops/create-sighting-detail-screen
@@ -13,9 +13,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a0030c-8ba1-7940-8001-4c730750aada
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 21500411eb34087d6ab2ad617124e87553b24318
+integration_evidence: PR #41 mergeado en main; main y origin/main sincronizadas.
 
 ## Jira
 
@@ -78,7 +78,7 @@ integration_evidence:
 - Implementado: lectura directa de `sightings/{sightingId}`, estado independiente de Chat, ruta y pantalla read-only, mascota/ubicación/fecha/notas/foto, visor Google Maps, estados de carga/error/contexto opcional y tests contractuales.
 - Navegación de notificaciones: sin cambios, conforme al fuera de alcance de SCRUM-21.
 - Validaciones reportadas: OpenSpec estricto, `testDebugUnitTest`, `assembleDebug`, `git diff --check` correctos.
-- Pendiente manual: usuario propietario/reportante con Firebase y dispositivo autenticado; usuario no autorizado; Light/Dark Theme y tamaños teléfono/tablet.
+- Validación manual: las tareas 5.6 y 5.7 quedaron completadas en `tasks.md` y fueron confirmadas por el usuario.
 
 ## Verificación del orquestador
 
@@ -90,7 +90,13 @@ integration_evidence:
 - Revisión de alcance => la pantalla usa `SightingAlertEntity`, no depende de Chat y no modifica la navegación de notificaciones.
 - `Get-Command adb` => `ADB_NOT_AVAILABLE`.
 
-## Bloqueo
+## Integración
 
-- Las tareas 5.6 y 5.7 requieren un proyecto Firebase configurado, usuarios autenticados y un dispositivo/emulador para validar autorización, estados remotos, Light/Dark Theme y tamaños de pantalla.
-- No se realizó commit, merge ni push porque la verificación manual obligatoria no está completa.
+- `git fetch origin --prune` => correcto.
+- `git switch main` => correcto.
+- `git pull --ff-only origin main` => fast-forward hasta `2150041`.
+- `git rev-parse main` y `git rev-parse origin/main` => `21500411eb34087d6ab2ad617124e87553b24318`.
+- `openspec instructions apply --change "create-sighting-detail-screen" --json` => `25/25`, `all_done`.
+- Estado final: `main` limpia y sincronizada con `origin/main`.
+
+Resultado: `INTEGRATED`. SCRUM-21 fue incorporado mediante el PR #41.
