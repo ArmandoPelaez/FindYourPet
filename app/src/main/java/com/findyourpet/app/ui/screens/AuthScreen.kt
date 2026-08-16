@@ -1,9 +1,7 @@
 package com.findyourpet.app.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -20,13 +17,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -96,25 +93,19 @@ fun AuthScreen(viewModel: PetViewModel) {
             )
     ) {
         Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.xl),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.xl)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
         ) {
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = AppSpacing.authMaxWidth),
-                shape = AppShapes.authCard,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.banner)),
-                elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.auth),
-                border = BorderStroke(AppSpacing.borderWidth, MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppOpacity.border))
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
             ) {
-                Column(
-                    modifier = Modifier.padding(AppSpacing.lg),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
-                ) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = AppShapes.authHeader,
@@ -296,7 +287,6 @@ fun AuthScreen(viewModel: PetViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
             }
         }
     }
