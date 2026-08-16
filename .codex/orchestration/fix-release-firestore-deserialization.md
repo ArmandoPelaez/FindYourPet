@@ -1,7 +1,7 @@
 # Orchestration State: fix-release-firestore-deserialization
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-28
 change: fix-release-firestore-deserialization
 base_branch: main
@@ -14,9 +14,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a00b47-b377-78c2-8741-66b5f516439e
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 7349a6ed426c2e6a4d8708078558624186a6d84f
+integration_evidence: Commit de merge 7349a6e en main; main y origin/main sincronizadas; confirmación explícita del usuario el 2026-08-16.
 
 ## Jira
 
@@ -88,4 +88,6 @@ integration_evidence:
 - `openspec validate "fix-release-firestore-deserialization" --strict`: PASS.
 - `openspec instructions apply --change "fix-release-firestore-deserialization" --json`: PASS, 17/17 tasks complete; task 4.5 is explicitly deferred because no signed candidate can be produced in this environment.
 - scope review: expected R8/profile error handling/tests, OpenSpec artifacts, and orchestration evidence only; no schema, UI redesign, permissions, or dependency changes.
-- integration_status: `PENDING`; branch is ready for review/integration, with signed release E2E as the remaining external verification risk.
+- integration_status: `MERGED`; commit de merge `7349a6ed426c2e6a4d8708078558624186a6d84f` confirmado en `main` y `origin/main`.
+- integración autorizada explícitamente por el usuario el 2026-08-16.
+- riesgo pendiente no bloqueante: la validación E2E de un release firmado requiere credenciales de firma y dispositivo.
