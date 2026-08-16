@@ -88,7 +88,7 @@ class AuthScreenPresentationStaticTest {
       "isError = passwordError != null",
       "supportingText = emailError?.let",
       "supportingText = passwordError?.let",
-      "enabled = !isAuthLoading",
+      "enabled = !isAuthOperationInProgress",
       ".semantics { password() }",
       "validateEmail(email)",
       "validatePassword(password)"
@@ -110,6 +110,50 @@ class AuthScreenPresentationStaticTest {
       visibilityDescription.indexOf("\"Ocultar contrase\\u00f1a\"") <
         visibilityDescription.indexOf("\"Mostrar contrase\\u00f1a\"")
     )
+  }
+
+  @Test
+  fun authScreen_exposesActionHierarchyAndConcurrentSubmitProtection() {
+    val source = authScreenSource()
+
+    listOf(
+      "var isGoogleLoading by remember { mutableStateOf(false) }",
+      "val isAuthOperationInProgress = isAuthLoading || isGoogleLoading",
+      "if (isAuthOperationInProgress) return",
+      "enabled = !isAuthOperationInProgress",
+      "variant = AppButtonVariant.Outlined",
+      "contentDescription = \"Continuar con Google\"",
+      "Icons.Outlined.AccountCircle",
+      "CircularProgressIndicator",
+      "isGoogleLoading = true",
+      "finally",
+      "isGoogleLoading = false",
+      "TextButton(",
+      "contentDescription = if (isSignUp)"
+    ).forEach { marker ->
+      assertTrue("AuthScreen must expose action state: $marker", source.contains(marker))
+    }
+
+    assertFalse(source.contains("Color("))
+    assertFalse(Regex("\\b\\d+\\.sp\\b").containsMatchIn(source))
+  }
+
+  @Test
+  fun authScreen_usesOfficialGoogleBrandAssetAndRejectsGenericAccountIcon() {
+    val source = authScreenSource()
+    val googleAction = source
+      .substringAfter("contentDescription = \"Continuar con Google\"")
+      .substringBefore("TextButton(")
+
+    assertTrue(source.contains("painterResource(R.drawable.google_sign_in_g_standard_color)"))
+    assertTrue(source.contains("Official standard-color G asset from the Google Play Services resource bundle"))
+    assertFalse(source.contains("google_sign_in_light_square"))
+    assertFalse(source.contains("google_sign_in_dark_square"))
+    assertTrue(source.contains("https://developers.google.com/identity/branding-guidelines"))
+    assertTrue(googleAction.contains("Image("))
+    assertFalse(googleAction.contains("Icons.Outlined.AccountCircle"))
+    assertFalse(googleAction.contains("Color("))
+    assertFalse(googleAction.contains("alpha ="))
   }
 
   private fun authScreenSource(): String =

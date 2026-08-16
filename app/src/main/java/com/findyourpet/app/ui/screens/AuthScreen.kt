@@ -1,6 +1,7 @@
 package com.findyourpet.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -50,6 +52,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -105,12 +109,15 @@ fun AuthScreen(viewModel: PetViewModel) {
     var localMessage by remember { mutableStateOf<String?>(null) }
     var passwordVisible by remember { mutableStateOf(false) }
     var hasSubmitted by remember { mutableStateOf(false) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
     val passwordFocusRequester = remember { FocusRequester() }
     val isAuthLoading = authState is AuthUiState.Loading
+    val isAuthOperationInProgress = isAuthLoading || isGoogleLoading
     val emailError = if (hasSubmitted) validateEmail(email) else null
     val passwordError = if (hasSubmitted) validatePassword(password) else null
 
     fun submitEmailForm() {
+        if (isAuthOperationInProgress) return
         hasSubmitted = true
         localMessage = null
         if (validateEmail(email) != null || validatePassword(password) != null) return
@@ -228,6 +235,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                             label = { FormFieldLabel("Nombre") },
                             textStyle = AppFormTypography.input,
                             singleLine = true,
+                            enabled = !isAuthOperationInProgress,
                             leadingIcon = {
                                 Icon(Icons.Outlined.AccountCircle, contentDescription = null)
                             },
@@ -243,7 +251,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                         placeholder = { FormFieldPlaceholder("tu@email.com") },
                         textStyle = AppFormTypography.input,
                         singleLine = true,
-                        enabled = !isAuthLoading,
+                        enabled = !isAuthOperationInProgress,
                         isError = emailError != null,
                         supportingText = emailError?.let { error ->
                             { Text(error, style = AppFormTypography.placeholder, color = MaterialTheme.colorScheme.error) }
@@ -265,7 +273,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        enabled = !isAuthLoading,
+                        enabled = !isAuthOperationInProgress,
                         isError = passwordError != null,
                         supportingText = passwordError?.let { error ->
                             { Text(error, style = AppFormTypography.placeholder, color = MaterialTheme.colorScheme.error) }
@@ -280,7 +288,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                         trailingIcon = {
                             IconButton(
                                 onClick = { passwordVisible = !passwordVisible },
-                                enabled = !isAuthLoading
+                                enabled = !isAuthOperationInProgress
                             ) {
                                 Icon(
                                     imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
@@ -314,13 +322,27 @@ fun AuthScreen(viewModel: PetViewModel) {
 
                     AppButton(
                         onClick = { submitEmailForm() },
-                        enabled = !isAuthLoading,
+                        enabled = !isAuthOperationInProgress,
                         modifier = Modifier.fillMaxWidth(),
                         contentDescription = if (isSignUp) "Crear cuenta" else "Entrar"
                     ) {
-                        Icon(Icons.Filled.Login, contentDescription = null)
+                        if (isAuthLoading && !isGoogleLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(AppSpacing.iconMedium)
+                            )
+                        } else {
+                            Icon(Icons.Filled.Login, contentDescription = null)
+                        }
                         Spacer(modifier = Modifier.width(AppSpacing.sm))
-                        Text(if (isSignUp) "Crear cuenta" else "Entrar")
+                        Text(
+                            when {
+                                isAuthLoading && isSignUp -> "Creando cuenta..."
+                                isAuthLoading -> "Ingresando..."
+                                isSignUp -> "Crear cuenta"
+                                else -> "Entrar"
+                            }
+                        )
                     }
 
                     Row(
@@ -339,13 +361,15 @@ fun AuthScreen(viewModel: PetViewModel) {
 
                     AppButton(
                         onClick = {
+                            if (isAuthOperationInProgress) return@AppButton
                             localMessage = null
                             if (webClientId.isBlank() || webClientId == "REPLACE_WITH_WEB_CLIENT_ID") {
                                 localMessage = "Configure firebase_web_client_id before Google Sign-In."
                                 return@AppButton
                             }
+                            isGoogleLoading = true
                             scope.launch {
-                                runCatching {
+                                try {
                                     val googleIdOption = GetGoogleIdOption.Builder()
                                         .setFilterByAuthorizedAccounts(false)
                                         .setServerClientId(webClientId)
@@ -354,33 +378,58 @@ fun AuthScreen(viewModel: PetViewModel) {
                                         .addCredentialOption(googleIdOption)
                                         .build()
                                     val response = CredentialManager.create(context).getCredential(context, request)
-                                    GoogleIdTokenCredential.createFrom(response.credential.data).idToken
-                                }.onSuccess { idToken ->
+                                    val idToken = GoogleIdTokenCredential.createFrom(response.credential.data).idToken
                                     viewModel.signInWithGoogleIdToken(idToken)
-                                }.onFailure { error ->
+                                } catch (error: Exception) {
                                     localMessage = when (error) {
                                         is GetCredentialCancellationException -> "Google Sign-In was cancelled."
                                         is GoogleIdTokenParsingException -> "Google credential could not be read."
                                         else -> error.message ?: "Google Sign-In failed."
                                     }
+                                } finally {
+                                    isGoogleLoading = false
                                 }
                             }
                         },
+                        enabled = !isAuthOperationInProgress,
                         modifier = Modifier.fillMaxWidth(),
                         variant = AppButtonVariant.Outlined,
                         contentDescription = "Continuar con Google"
                     ) {
-                        Icon(Icons.Outlined.AccountCircle, contentDescription = null)
+                        if (isGoogleLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(AppSpacing.iconMedium)
+                            )
+                        } else {
+                            // Official standard-color G asset from the Google Play Services resource bundle:
+                            // https://developers.google.com/identity/branding-guidelines
+                            // Keep its intrinsic ratio and colors; FindYourPet styles only the outer button and text.
+                            Image(
+                                painter = painterResource(R.drawable.google_sign_in_g_standard_color),
+                                contentDescription = null
+                            )
+                        }
                         Spacer(modifier = Modifier.width(AppSpacing.sm))
-                        Text("Continuar con Google")
+                        Text(if (isGoogleLoading) "Conectando..." else "Continuar con Google")
                     }
 
                     TextButton(
                         onClick = {
+                            if (isAuthOperationInProgress) return@TextButton
                             isSignUp = !isSignUp
                             localMessage = null
                         },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        enabled = !isAuthOperationInProgress,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .semantics {
+                                contentDescription = if (isSignUp) {
+                                    "Ya tengo cuenta"
+                                } else {
+                                    "Crear una cuenta"
+                                }
+                            }
                     ) {
                         Text(if (isSignUp) "Ya tengo cuenta" else "Crear una cuenta")
                     }
