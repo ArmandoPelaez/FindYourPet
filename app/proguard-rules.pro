@@ -24,6 +24,25 @@
     public <init>(...);
 }
 
+# Firestore constructs this profile DTO reflectively through toObject().
+# Keep the class identity, empty constructor, readable accessors, and backing
+# fields used to map existing users/{uid} documents in minified releases.
+-keep class com.findyourpet.app.data.profile.UserProfileDocument {
+    public <init>();
+    public java.lang.String getUid();
+    public java.lang.String getDisplayName();
+    public java.lang.String getEmail();
+    public long getCreatedAt();
+    public long getUpdatedAt();
+}
+-keepclassmembers class com.findyourpet.app.data.profile.UserProfileDocument {
+    private java.lang.String uid;
+    private java.lang.String displayName;
+    private java.lang.String email;
+    private long createdAt;
+    private long updatedAt;
+}
+
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile

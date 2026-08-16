@@ -17,11 +17,13 @@ import com.findyourpet.app.data.product.RealProductValidators
 import com.findyourpet.app.data.profile.FirestoreUserProfileRepository
 import com.findyourpet.app.data.profile.UnavailableUserProfileRepository
 import com.findyourpet.app.data.profile.UserProfileDocument
+import com.findyourpet.app.data.profile.UserProfileLoadError
 import com.findyourpet.app.data.profile.UserProfileRepository
 import com.findyourpet.app.data.repository.PetRepository
 import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.domain.AuthSessionMapper
 import com.findyourpet.app.domain.OwnershipPolicy
+import com.findyourpet.app.util.CrashReporter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -269,7 +271,13 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
                     activeProfile.value = profileResult.getOrNull()
                     repository.retainPrivateCacheForUser(state.user.uid)
                     profileResult.exceptionOrNull()?.let { error ->
-                        _authMessage.value = error.message ?: "Profile could not be loaded."
+                        CrashReporter.recordNonFatal(
+                            flow = "auth",
+                            state = "profile_load",
+                            documentType = "UserProfileDocument",
+                            errorType = error::class.java.simpleName
+                        )
+                        _authMessage.value = UserProfileLoadError.userMessage
                     }
                 } else {
                     activeProfile.value = null
