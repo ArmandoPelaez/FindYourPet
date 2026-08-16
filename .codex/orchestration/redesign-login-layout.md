@@ -1,7 +1,7 @@
 # Orchestration State: redesign-login-layout
 
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-31
 change: redesign-login-layout
 base_branch: main
@@ -35,13 +35,12 @@ delegation_error:
 - reparación/verificación: PASS; la corrección queda limitada a `AppIdentityTest.kt`; `app/build.gradle.kts`, `gradle.properties` y `gradle/libs.versions.toml` no fueron modificados.
 - `BuildConfig.java` y `BuildConfig.class` se generan, pero no se incluyen en el classpath de compilación de este test Kotlin; la prueba ahora valida la identidad del paquete desde el contexto de aplicación.
 
-## Bloqueos pendientes
+## Riesgos o validaciones pendientes
 
-- El bloqueo de compilación quedó resuelto. El estado permanece bloqueado únicamente hasta completar la validación manual en emulador o dispositivo.
 - Las tareas 4.1 y 4.2 requieren validación manual en Light/Dark Theme, ventana compacta, teclado visible y Google Sign-In real; se requiere emulador o dispositivo y credenciales disponibles.
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: a126242
+integration_evidence: Merge pull request #49 from ArmandoPelaez:ops/redesign-login-layout; `main` y `origin/main` sincronizadas en `a126242` después de `git fetch origin --prune`, `git switch main` y `git pull --ff-only origin main`.
 
 ## Jira
 
