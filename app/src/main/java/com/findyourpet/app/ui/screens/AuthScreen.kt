@@ -16,15 +16,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -40,10 +45,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.password
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -53,6 +65,7 @@ import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.FormFieldLabel
+import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.components.LoginProximityBackground
 import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppElevation
@@ -64,6 +77,18 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import kotlinx.coroutines.launch
+
+private fun validateEmail(value: String): String? = when {
+    value.isBlank() -> "Ingres\u00e1 un email."
+    !Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$").matches(value) -> "Ingres\u00e1 un email v\u00e1lido."
+    else -> null
+}
+
+private fun validatePassword(value: String): String? = when {
+    value.isBlank() -> "Ingres\u00e1 una contrase\u00f1a."
+    value.length < 6 -> "La contrase\u00f1a debe tener al menos 6 caracteres."
+    else -> null
+}
 
 @Composable
 fun AuthScreen(viewModel: PetViewModel) {
@@ -78,6 +103,24 @@ fun AuthScreen(viewModel: PetViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var localMessage by remember { mutableStateOf<String?>(null) }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var hasSubmitted by remember { mutableStateOf(false) }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val isAuthLoading = authState is AuthUiState.Loading
+    val emailError = if (hasSubmitted) validateEmail(email) else null
+    val passwordError = if (hasSubmitted) validatePassword(password) else null
+
+    fun submitEmailForm() {
+        hasSubmitted = true
+        localMessage = null
+        if (validateEmail(email) != null || validatePassword(password) != null) return
+
+        if (isSignUp) {
+            viewModel.signUpWithEmail(email, password, displayName)
+        } else {
+            viewModel.signInWithEmail(email, password)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -197,11 +240,24 @@ fun AuthScreen(viewModel: PetViewModel) {
                         value = email,
                         onValueChange = { email = it },
                         label = { FormFieldLabel("Email") },
+                        placeholder = { FormFieldPlaceholder("tu@email.com") },
                         textStyle = AppFormTypography.input,
                         singleLine = true,
+                        enabled = !isAuthLoading,
+                        isError = emailError != null,
+                        supportingText = emailError?.let { error ->
+                            { Text(error, style = AppFormTypography.placeholder, color = MaterialTheme.colorScheme.error) }
+                        },
                         leadingIcon = {
                             Icon(Icons.Outlined.Email, contentDescription = null)
                         },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { passwordFocusRequester.requestFocus() }
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                         shape = AppShapes.content
                     )
@@ -209,26 +265,56 @@ fun AuthScreen(viewModel: PetViewModel) {
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
+                        enabled = !isAuthLoading,
+                        isError = passwordError != null,
+                        supportingText = passwordError?.let { error ->
+                            { Text(error, style = AppFormTypography.placeholder, color = MaterialTheme.colorScheme.error) }
+                        },
+                        placeholder = { FormFieldPlaceholder("Tu contrase\u00f1a") },
                         label = { FormFieldLabel("Contraseña") },
                         textStyle = AppFormTypography.input,
                         singleLine = true,
                         leadingIcon = {
                             Icon(Icons.Outlined.Lock, contentDescription = null)
                         },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { passwordVisible = !passwordVisible },
+                                enabled = !isAuthLoading
+                            ) {
+                                Icon(
+                                    imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = if (passwordVisible) {
+                                        "Ocultar contrase\u00f1a"
+                                    } else {
+                                        "Mostrar contrase\u00f1a"
+                                    },
+                                    modifier = Modifier.size(AppSpacing.iconMedium)
+                                )
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { submitEmailForm() }
+                        ),
+                        visualTransformation = if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(passwordFocusRequester)
+                            .semantics { password() },
                         shape = AppShapes.content
                     )
 
                     AppButton(
-                        onClick = {
-                            localMessage = null
-                            if (isSignUp) {
-                                viewModel.signUpWithEmail(email, password, displayName)
-                            } else {
-                                viewModel.signInWithEmail(email, password)
-                            }
-                        },
+                        onClick = { submitEmailForm() },
+                        enabled = !isAuthLoading,
                         modifier = Modifier.fillMaxWidth(),
                         contentDescription = if (isSignUp) "Crear cuenta" else "Entrar"
                     ) {
