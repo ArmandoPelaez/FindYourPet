@@ -1,4 +1,4 @@
-state: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
 issue: SCRUM-35
 requested_reference: SCRUM-34 Work Item 4
 change: redesign-login-form-fields
@@ -6,9 +6,9 @@ branch: ops/redesign-login-form-fields
 base_branch: main
 base_commit: 4e1b9bd9269ab438ea1e4d154461580b23060408
 remote_base_commit: 4e1b9bd9269ab438ea1e4d154461580b23060408
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: a39507cb47ada91d023c9f840ad7762002120208
+integration_evidence: PR #52 merged from ops/redesign-login-form-fields into main; user confirmed merge; origin/main contains the merge commit.
 delegation_status: SPAWNED
 handoff_mode: SUBAGENT
 agent_id: 01a00c33-23ba-7fa0-b42b-a4b9b9e54203
@@ -82,20 +82,21 @@ delegation_error:
 
 ## Current outcome
 
-- Status: `PASSED_PENDING_INTEGRATION`.
-- Integration remains pending; autofill follow-up is intentionally excluded from this change.
+- Status: `INTEGRATED`.
+- PR #52 was merged into `main` as `a39507cb47ada91d023c9f840ad7762002120208`.
+- Autofill follow-up is intentionally excluded from this change.
 
 # Orchestration evidence
 
 ## Repository preflight and synchronization
 
-- `git status --short --branch`: clean, `main...origin/main`.
+- `git status --short --branch`: clean before the bitácora update, `main...origin/main`.
 - `git status --porcelain=v1`: empty.
 - `git switch main`: successful.
 - `git fetch origin --prune`: successful.
-- `git pull --ff-only origin main`: already up to date.
-- `git rev-parse main`: `4e1b9bd9269ab438ea1e4d154461580b23060408`.
-- `git rev-parse origin/main`: `4e1b9bd9269ab438ea1e4d154461580b23060408`.
+- `git pull --ff-only origin main`: fast-forwarded successfully.
+- `git rev-parse main`: `a39507cb47ada91d023c9f840ad7762002120208`.
+- `git rev-parse origin/main`: `a39507cb47ada91d023c9f840ad7762002120208`.
 - Active branch `ops/redesign-lost-pets-feed` remains `READY_FOR_VERIFICATION`; parallel work was explicitly authorized by the user.
 
 ## Jira Scrum normalized
