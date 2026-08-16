@@ -88,7 +88,7 @@ class AuthScreenPresentationStaticTest {
       "isError = passwordError != null",
       "supportingText = emailError?.let",
       "supportingText = passwordError?.let",
-      "enabled = !isAuthLoading",
+      "enabled = !isAuthOperationInProgress",
       ".semantics { password() }",
       "validateEmail(email)",
       "validatePassword(password)"
@@ -110,6 +110,32 @@ class AuthScreenPresentationStaticTest {
       visibilityDescription.indexOf("\"Ocultar contrase\\u00f1a\"") <
         visibilityDescription.indexOf("\"Mostrar contrase\\u00f1a\"")
     )
+  }
+
+  @Test
+  fun authScreen_exposesActionHierarchyAndConcurrentSubmitProtection() {
+    val source = authScreenSource()
+
+    listOf(
+      "var isGoogleLoading by remember { mutableStateOf(false) }",
+      "val isAuthOperationInProgress = isAuthLoading || isGoogleLoading",
+      "if (isAuthOperationInProgress) return",
+      "enabled = !isAuthOperationInProgress",
+      "variant = AppButtonVariant.Outlined",
+      "contentDescription = \"Continuar con Google\"",
+      "Icons.Outlined.AccountCircle",
+      "CircularProgressIndicator",
+      "isGoogleLoading = true",
+      "finally",
+      "isGoogleLoading = false",
+      "TextButton(",
+      "contentDescription = if (isSignUp)"
+    ).forEach { marker ->
+      assertTrue("AuthScreen must expose action state: $marker", source.contains(marker))
+    }
+
+    assertFalse(source.contains("Color("))
+    assertFalse(Regex("\\b\\d+\\.sp\\b").containsMatchIn(source))
   }
 
   private fun authScreenSource(): String =
