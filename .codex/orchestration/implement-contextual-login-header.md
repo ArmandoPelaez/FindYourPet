@@ -1,13 +1,13 @@
-state: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
 issue: SCRUM-33
 change: implement-contextual-login-header
 branch: ops/implement-contextual-login-header
 base_branch: main
 base_commit: d0e859be26edb59eb0fe2a561370d3857f05b4a4
 remote_base_commit: d0e859be26edb59eb0fe2a561370d3857f05b4a4
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 5f8730c398d5e260e8ddaab78286301d0284156b
+integration_evidence: PR #51 merged from ops/implement-contextual-login-header into main; main and origin/main synchronized.
 delegation_status: SPAWNED
 handoff_mode: SUBAGENT
 agent_id: 01a00be9-673c-7a22-9f53-dc610fbedca3
@@ -42,8 +42,15 @@ delegation_error:
 
 ## Integration state
 
-- Status: `PASSED_PENDING_INTEGRATION`.
-- Integration remains pending; no merge, push, branch deletion, or `main` synchronization after implementation was performed.
+- Status: `INTEGRATED`.
+- PR: `#51` (`ops/implement-contextual-login-header` → `main`).
+- Merge commit: `5f8730c398d5e260e8ddaab78286301d0284156b`.
+- PR commit: `0f75888` (`Implementar encabezado contextual del Login`).
+- `git fetch origin --prune`: successful.
+- `git switch main`: successful.
+- `git pull --ff-only origin main`: fast-forwarded from `d0e859b` to `5f8730c`.
+- `git rev-parse main` = `git rev-parse origin/main` = `5f8730c398d5e260e8ddaab78286301d0284156b`.
+- Branch deletion: not performed.
 
 # Orchestration evidence
 
