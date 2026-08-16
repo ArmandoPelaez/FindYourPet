@@ -138,6 +138,24 @@ class AuthScreenPresentationStaticTest {
     assertFalse(Regex("\\b\\d+\\.sp\\b").containsMatchIn(source))
   }
 
+  @Test
+  fun authScreen_usesOfficialGoogleBrandAssetAndRejectsGenericAccountIcon() {
+    val source = authScreenSource()
+    val googleAction = source
+      .substringAfter("contentDescription = \"Continuar con Google\"")
+      .substringBefore("TextButton(")
+
+    assertTrue(source.contains("painterResource(R.drawable.google_sign_in_g_standard_color)"))
+    assertTrue(source.contains("Official standard-color G asset from the Google Play Services resource bundle"))
+    assertFalse(source.contains("google_sign_in_light_square"))
+    assertFalse(source.contains("google_sign_in_dark_square"))
+    assertTrue(source.contains("https://developers.google.com/identity/branding-guidelines"))
+    assertTrue(googleAction.contains("Image("))
+    assertFalse(googleAction.contains("Icons.Outlined.AccountCircle"))
+    assertFalse(googleAction.contains("Color("))
+    assertFalse(googleAction.contains("alpha ="))
+  }
+
   private fun authScreenSource(): String =
     File(root, "app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt").readText()
 

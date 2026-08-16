@@ -9,7 +9,8 @@ La pantalla de Login presenta Entrar, Google y Crear cuenta con una jerarquía v
 - Presentar `Crear una cuenta` como acción terciaria mediante un enlace de texto.
 - Mantener los callbacks actuales de email/password, Google y cambio entre login y registro.
 - Mostrar feedback visual durante autenticación y deshabilitar las acciones mientras una autenticación está en curso.
-- Mantener el identificador visual de Google compatible con el uso actual del flujo.
+- Usar un asset oficial o preaprobado de Sign in with Google para la acción de Google, sin sustituirlo por un icono genérico ni alterar el logotipo.
+- Permitir que el contenedor se integre visualmente con FindYourPet, dando precedencia a las reglas de marca de Google sobre las Design Rules locales dentro de la acción.
 - No modificar ViewModel, Firebase Auth, repositorios ni contratos de dominio.
 
 ## Capabilities

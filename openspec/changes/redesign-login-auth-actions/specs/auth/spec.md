@@ -24,6 +24,30 @@ The Login screen SHALL present authentication actions with one clear primary act
 - **WHEN** the screen is in sign-up mode
 - **THEN** the account creation submit action remains the only primary action, Google remains secondary, and the switch back to sign-in remains tertiary
 
+### Requirement: Google Sign-In Branding Compliance
+
+The Login screen SHALL use an official or pre-approved Sign in with Google branding asset, or an official Google-rendered button, and SHALL preserve the Google logo's approved identity independently of FindYourPet's local visual system.
+
+#### Scenario: Google action uses approved branding
+
+- **WHEN** the Google sign-in action is displayed
+- **THEN** it uses an official/pre-approved asset or Google-rendered button and does not use `Icons.Outlined.AccountCircle`, a generic account icon, a monochrome logo, or a redrawn logo
+
+#### Scenario: Google logo identity is preserved
+
+- **WHEN** the Google action is rendered in any supported theme or size
+- **THEN** the standard-color Google `G` keeps its official proportions, aspect ratio, size relationship, and approved spacing without recoloring, stretching, or alteration
+
+#### Scenario: Local container styling is applied as an explicit exception
+
+- **WHEN** the Google action is composed inside the FindYourPet Login screen
+- **THEN** the surrounding container may use FindYourPet visual tokens, but Google's branding rules take precedence for the logo asset, brand area, and any required Google-specific dimensions or spacing
+
+#### Scenario: Google action remains an identifiable sign-in action
+
+- **WHEN** a user views the Google action
+- **THEN** the approved Google mark appears within a button boundary with clear localized sign-in text and is not presented as an isolated logo
+
 ### Requirement: Authentication Action Feedback And Locking
 
 The Login screen SHALL show recoverable feedback for authentication failures and SHALL prevent simultaneous authentication submissions.

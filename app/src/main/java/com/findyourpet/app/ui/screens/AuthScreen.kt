@@ -1,6 +1,7 @@
 package com.findyourpet.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
@@ -400,7 +402,13 @@ fun AuthScreen(viewModel: PetViewModel) {
                                 modifier = Modifier.size(AppSpacing.iconMedium)
                             )
                         } else {
-                            Icon(Icons.Outlined.AccountCircle, contentDescription = null)
+                            // Official standard-color G asset from the Google Play Services resource bundle:
+                            // https://developers.google.com/identity/branding-guidelines
+                            // Keep its intrinsic ratio and colors; FindYourPet styles only the outer button and text.
+                            Image(
+                                painter = painterResource(R.drawable.google_sign_in_g_standard_color),
+                                contentDescription = null
+                            )
                         }
                         Spacer(modifier = Modifier.width(AppSpacing.sm))
                         Text(if (isGoogleLoading) "Conectando..." else "Continuar con Google")

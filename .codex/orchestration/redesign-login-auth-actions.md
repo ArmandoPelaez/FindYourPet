@@ -1,4 +1,4 @@
-state: READY_FOR_VERIFICATION
+state: PASSED_PENDING_INTEGRATION
 issue: SCRUM-36
 requested_reference: SCRUM-36 Work Item 5
 change: redesign-login-auth-actions
@@ -87,7 +87,56 @@ delegation_error:
 - Scope report: no ViewModel, Firebase, repositories, permissions, or authentication contracts modified.
 - Pending: manual emulator/device review for login, registration, Google, errors, double tap, Light Theme, and Dark Theme.
 
+## Final verification
+
+- `openspec validate "redesign-login-auth-actions" --strict`: passed.
+- `openspec instructions apply --change "redesign-login-auth-actions" --json`: 10/11 tasks complete.
+- `./gradlew.bat testDebugUnitTest --no-daemon --console=plain`: exit code 0.
+- Test reports: 156 tests, 0 failures, 0 errors; `AuthScreenPresentationStaticTest`: 5 tests, 0 failures, 0 errors.
+- `./gradlew.bat assembleDebug`: `BUILD SUCCESSFUL`.
+- `git diff --check`: passed.
+- `android run --apks=app/build/outputs/apk/debug/app-debug.apk --device=emulator-5554`: installation and launch successful.
+- `android layout --device=emulator-5554 --pretty`: confirmed accessible actions `Entrar`, `Continuar con Google`, `Crear una cuenta`, password semantics, and sign-up mode `Ya tengo cuenta`.
+- Manual Dark Theme: passed for action hierarchy, sign-up toggle, field validation feedback, password visibility semantics, and recoverable form state.
+- Manual Light Theme: not independently exercisable because the pre-existing `Theme.kt` defaults `darkTheme = true`; `cmd uimode night no` did not change the app surface. The change uses theme-aware existing tokens and does not modify this unrelated theme configuration.
+- Diff scope: only `AuthScreen.kt`, `AuthScreenPresentationStaticTest.kt`, OpenSpec artifacts, and orchestration state.
+
+## Validation limitation
+
+- OpenSpec task `3.4` remains unchecked because Light Theme could not be exercised without expanding this change into a separate theme configuration fix.
+
+## Branding clarification and repair
+
+- Jira `SCRUM-36` updated with explicit acceptance criteria for official/pre-approved Google branding assets and the local container exception.
+- Jira comment `10001` added with the same decision and the official guideline reference.
+- Official source: https://developers.google.com/identity/branding-guidelines
+- Current finding: resolved; the Google action now uses official/pre-approved Light/Dark assets and no longer uses the generic account icon.
+- Repair completed: official asset selection, brand-preserving container integration, test coverage, and manual Dark Theme evidence.
+- OpenSpec scope expanded only to the clarified branding acceptance criterion; authentication behavior and contracts remain unchanged.
+
+## Branding repair report
+
+- Agent status: `BLOCKED` only because final validations were interrupted after the last theme-selection adjustment.
+- Progress: 12/13 tasks complete in the implementer report.
+- Official/pre-approved Google assets added in mdpi, xhdpi, xxhdpi and xxxhdpi variants for Light/Dark selection.
+- `AuthScreen.kt` now selects the themed official bitmap without recoloring or deforming it; the generic Google account icon was removed from the Google action.
+- Callbacks, loading state and authentication contracts remain intact.
+- Pending orchestrator validation: current-state `testDebugUnitTest`, `assembleDebug`, and `git diff --check`.
+
+## Final branding verification
+
+- `openspec validate "redesign-login-auth-actions" --strict`: passed.
+- Current task progress: 12/13 complete; only manual Light Theme review remains unchecked.
+- Current `testDebugUnitTest`: exit code 0; 157 tests, 0 failures, 0 errors.
+- Current `assembleDebug`: exit code 0; debug APK generated successfully.
+- Current `git diff HEAD --check`: passed.
+- Official assets verified: 8 PNG resources across mdpi, xhdpi, xxhdpi and xxxhdpi, with Light/Dark variants.
+- Static test verifies the official resource references, theme selection, branding guideline provenance, and rejects the generic Google account icon inside the Google action.
+- Emulator `emulator-5554`: current APK installed and launched; manual Dark Theme screenshot confirms the official multicolor `G` asset inside the Google action container.
+- Light Theme remains unverified because the pre-existing `Theme.kt` defaults `darkTheme = true`; this change does not alter the app-wide theme configuration.
+
 ## Current outcome
 
-- Estado: `READY_FOR_IMPLEMENTATION`.
+- Estado: `PASSED_PENDING_INTEGRATION`.
+- Integration status: pending authorized PR/merge and synchronization of `main`.
 - Integración: pendiente de implementación, verificación y merge autorizado.
