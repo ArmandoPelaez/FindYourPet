@@ -135,8 +135,31 @@ fun AuthScreen(viewModel: PetViewModel) {
                             }
 
                             Text(
-                                text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
+                                text = "FindYourPet",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Text(
+                                text = "Conect\u00e1 con avisos cerca tuyo.",
                                 style = MaterialTheme.typography.headlineSmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Text(
+                                text = "Report\u00e1, busc\u00e1 y ayud\u00e1 a reencontrar mascotas.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Text(
+                                text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
+                                style = MaterialTheme.typography.titleMedium,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )

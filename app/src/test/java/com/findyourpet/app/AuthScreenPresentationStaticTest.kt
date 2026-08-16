@@ -45,6 +45,25 @@ class AuthScreenPresentationStaticTest {
     assertFalse(Regex("\\b\\d+\\.sp\\b").containsMatchIn(source))
   }
 
+  @Test
+  fun authScreen_exposesContextualHeaderHierarchy() {
+    val source = authScreenSource()
+
+    val identity = source.indexOf("text = \"FindYourPet\"")
+    val headline = source.indexOf("text = \"Conect\\u00e1 con avisos cerca tuyo.\"")
+    val supportingText = source.indexOf("text = \"Report\\u00e1, busc\\u00e1 y ayud\\u00e1 a reencontrar mascotas.\"")
+    val functionalTitle = source.indexOf("text = if (isSignUp) \"Crear cuenta\" else \"Iniciar sesión\"")
+
+    assertTrue(source.contains("style = MaterialTheme.typography.labelLarge"))
+    assertTrue(source.contains("style = MaterialTheme.typography.headlineSmall"))
+    assertTrue(source.contains("style = MaterialTheme.typography.bodyMedium"))
+    assertTrue(source.contains("color = MaterialTheme.colorScheme.onSurfaceVariant"))
+    assertTrue(identity >= 0)
+    assertTrue(headline > identity)
+    assertTrue(supportingText > headline)
+    assertTrue(functionalTitle > supportingText)
+  }
+
   private fun authScreenSource(): String =
     File(root, "app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt").readText()
 
