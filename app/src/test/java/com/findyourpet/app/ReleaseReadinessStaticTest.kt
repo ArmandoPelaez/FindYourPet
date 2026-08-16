@@ -29,6 +29,40 @@ class ReleaseReadinessStaticTest {
   }
 
   @Test
+  fun firestoreProfileDto_isKeptForReflectiveReleaseDeserialization() {
+    val proguard = File(root, "app/proguard-rules.pro").readText()
+    val repository = File(
+      root,
+      "app/src/main/java/com/findyourpet/app/data/profile/FirestoreUserProfileRepository.kt"
+    ).readText()
+
+    assertTrue(proguard.contains("-keep class com.findyourpet.app.data.profile.UserProfileDocument"))
+    assertTrue(proguard.contains("public <init>();"))
+    listOf("getUid", "getDisplayName", "getEmail", "getCreatedAt", "getUpdatedAt").forEach { getter ->
+      assertTrue("Missing Firestore getter keep rule for $getter", proguard.contains("$getter();"))
+    }
+    listOf("uid", "displayName", "email", "createdAt", "updatedAt").forEach { field ->
+      assertTrue("Missing Firestore field keep rule for $field", proguard.contains(" $field;"))
+    }
+    assertTrue(repository.contains("toObject(UserProfileDocument::class.java)"))
+    assertTrue(!proguard.contains("-keep class com.findyourpet.app.data.profile.**"))
+  }
+
+  @Test
+  fun profileLoadFailure_isTranslatedAndDiagnosedAtViewModelBoundary() {
+    val viewModel = File(root, "app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt").readText()
+    val profileError = File(
+      root,
+      "app/src/main/java/com/findyourpet/app/data/profile/UserProfileLoadError.kt"
+    ).readText()
+
+    assertTrue(viewModel.contains("CrashReporter.recordNonFatal"))
+    assertTrue(viewModel.contains("UserProfileLoadError.userMessage"))
+    assertTrue(profileError.contains("No se pudo cargar tu perfil. Intenta nuevamente."))
+    assertTrue(!viewModel.contains("error.message ?: \"Profile could not be loaded.\""))
+  }
+
+  @Test
   fun crashlytics_isConfiguredForReleaseDiagnostics() {
     val rootGradle = File(root, "build.gradle.kts").readText()
     val appGradle = File(root, "app/build.gradle.kts").readText()
