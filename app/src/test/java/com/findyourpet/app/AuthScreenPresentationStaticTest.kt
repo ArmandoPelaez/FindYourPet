@@ -64,6 +64,54 @@ class AuthScreenPresentationStaticTest {
     assertTrue(functionalTitle > supportingText)
   }
 
+  @Test
+  fun authScreen_exposesIntegratedFieldStatesAndInputSemantics() {
+    val source = authScreenSource()
+
+    listOf(
+      "FormFieldPlaceholder(\"tu@email.com\")",
+      "FormFieldPlaceholder(\"Tu contrase",
+      "Icons.Filled.Visibility",
+      "Icons.Filled.VisibilityOff",
+      "passwordVisible",
+      "contentDescription = if (passwordVisible)",
+      "\"Ocultar contrase\\u00f1a\"",
+      "\"Mostrar contrase\\u00f1a\"",
+      "KeyboardType.Email",
+      "KeyboardType.Password",
+      "ImeAction.Next",
+      "ImeAction.Done",
+      "passwordFocusRequester.requestFocus()",
+      "onDone = { submitEmailForm() }",
+      ".imePadding()",
+      "isError = emailError != null",
+      "isError = passwordError != null",
+      "supportingText = emailError?.let",
+      "supportingText = passwordError?.let",
+      "enabled = !isAuthLoading",
+      ".semantics { password() }",
+      "validateEmail(email)",
+      "validatePassword(password)"
+    ).forEach { marker ->
+      assertTrue("AuthScreen must expose: $marker", source.contains(marker))
+    }
+
+    assertFalse(source.contains("ExperimentalComposeUiApi"))
+    assertFalse(source.contains("AutofillType"))
+    assertTrue(source.contains("keyboardType = KeyboardType.Email"))
+    assertTrue(source.contains("keyboardType = KeyboardType.Password"))
+    assertTrue(source.contains(".semantics { password() }"))
+    assertFalse(source.contains(".then(if (!passwordVisible) Modifier.semantics { password() } else Modifier)"))
+
+    val visibilityDescription = source
+      .substringAfter("contentDescription = if (passwordVisible)")
+      .substringBefore("modifier = Modifier.size(AppSpacing.iconMedium)")
+    assertTrue(
+      visibilityDescription.indexOf("\"Ocultar contrase\\u00f1a\"") <
+        visibilityDescription.indexOf("\"Mostrar contrase\\u00f1a\"")
+    )
+  }
+
   private fun authScreenSource(): String =
     File(root, "app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt").readText()
 
