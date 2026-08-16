@@ -53,6 +53,7 @@ import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.FormFieldLabel
+import com.findyourpet.app.ui.components.LoginProximityBackground
 import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
@@ -92,6 +93,8 @@ fun AuthScreen(viewModel: PetViewModel) {
                 )
             )
     ) {
+        LoginProximityBackground()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
