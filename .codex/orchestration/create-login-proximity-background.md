@@ -1,7 +1,7 @@
 # Orchestration State: create-login-proximity-background
 
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-32
 change: create-login-proximity-background
 base_branch: main
@@ -12,11 +12,11 @@ branch_head_after_creation: f4250493442710bcc84129dfa7fafc878062b797
 delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 agent_id: 01a00baf-01d1-71e1-9ed7-a37a2a9bb3f4
-agent_role:
+agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: bb2a9a4a70baa878affe6e8e760a82996142ffa5
+integration_evidence: Merge pull request #50 from ArmandoPelaez:ops/create-login-proximity-background; `main` y `origin/main` sincronizadas en `bb2a9a4a70baa878affe6e8e760a82996142ffa5` después de `git fetch origin --prune`, `git switch main` y `git pull --ff-only origin main`.
 
 ## Reporte del implementador
 
@@ -95,14 +95,13 @@ integration_evidence:
 - `./gradlew.bat assembleDebug`: PASS.
 - diff dentro de alcance: PASS; cambios limitados a la capa visual de Login, su componente Canvas y prueba estática.
 
-## Bloqueos pendientes
+## Riesgos o validaciones pendientes
 
 - Las tareas 4.1, 4.2 y 4.3 requieren emulador o dispositivo para revisar Light/Dark Theme, distintas dimensiones, teclado visible e interacción real con email/password, Google Sign-In y mensajes.
-- No se puede declarar `PASSED_PENDING_INTEGRATION` hasta completar o documentar esa validación manual externa.
 
 ## Delegación
 
-- delegation_status: SPAWNED
+- delegation_status: COMPLETED
 - handoff_mode: SUBAGENT
 - agent_id: `01a00baf-01d1-71e1-9ed7-a37a2a9bb3f4`
 - agent_role: `findyourpet-implementer`
