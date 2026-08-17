@@ -1,7 +1,7 @@
 # Orchestration State: replace-login-proximity-background-with-approved-image
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-38
 requested_reference: SCRUM 38
 change: replace-login-proximity-background-with-approved-image
@@ -16,9 +16,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a00d85-3b95-7602-a4f7-cc4d813a76fd
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: f49a61ffbc7fea6f9d7ca163308214410c9990d1
+integration_evidence: PR #55 merged from ops/replace-login-proximity-background-with-approved-image into main; implementation commit 2c57be6; main local fast-forwarded and synchronized with origin/main.
 
 ## Preflight and synchronization
 
@@ -83,4 +83,15 @@ integration_evidence:
 - Scope review: changes limited to Login background replacement, focused Login tests, removal of obsolete Canvas component/test, OpenSpec artifacts, and orchestration state.
 - Manual runtime evidence: APK installed/launched on `Medium_Phone`; screenshot `app/build/scrum38-medium-phone-after-start.png` shows the approved background behind the Login form with readable controls.
 - Manual limitation: `Small_Phone` produced a black capture; initial layout inspection returned a null UI root, and `adb` is unavailable. Keyboard, both themes, TalkBack, and full small-screen validation remain unverified.
-- Final decision: passed on the branch, pending authorized integration into `main`.
+- Final decision: passed on the branch; manual runtime limitation documented.
+
+## Integration
+
+- User confirmed that the change was merged.
+- `git fetch origin --prune`: passed.
+- `git switch main`: passed.
+- `git pull --ff-only origin main`: fast-forwarded from `7f6264b` to `f49a61f`.
+- `git rev-parse main`: `f49a61ffbc7fea6f9d7ca163308214410c9990d1`.
+- `git rev-parse origin/main`: `f49a61ffbc7fea6f9d7ca163308214410c9990d1`.
+- `git status --short --branch`: `## main...origin/main`.
+- Integration status: `MERGED`.
