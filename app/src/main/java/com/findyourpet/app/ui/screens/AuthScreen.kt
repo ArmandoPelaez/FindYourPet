@@ -63,6 +63,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -86,7 +87,6 @@ import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.FormFieldLabel
 import com.findyourpet.app.ui.components.FormFieldPlaceholder
-import com.findyourpet.app.ui.components.LoginProximityBackground
 import com.findyourpet.app.ui.theme.AppFormTypography
 import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
@@ -242,7 +242,26 @@ fun AuthScreen(viewModel: PetViewModel) {
                 )
             )
     ) {
-        LoginProximityBackground()
+        Image(
+            painter = painterResource(R.drawable.imagen_fondo_pantalla_login),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.TopCenter,
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.inputSurface),
+                            MaterialTheme.colorScheme.surface.copy(alpha = AppOpacity.subtleSurface),
+                        )
+                    )
+                )
+        )
 
         Column(
             modifier = Modifier
