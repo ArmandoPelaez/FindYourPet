@@ -23,6 +23,51 @@ class AuthScreenPresentationStaticTest {
   }
 
   @Test
+  fun authScreen_usesApprovedDecorativeImageBehindFunctionalContent() {
+    val source = authScreenSource()
+
+    assertTrue(source.contains("painterResource(R.drawable.imagen_fondo_pantalla_login)"))
+    assertTrue(source.contains("contentDescription = null"))
+    assertTrue(source.contains("modifier = Modifier.fillMaxSize()"))
+    assertTrue(source.contains("contentScale = ContentScale.Crop"))
+    assertTrue(source.contains("alignment = Alignment.TopCenter"))
+    assertTrue(source.contains("AppOpacity.inputSurface"))
+    assertFalse(source.contains("LoginProximityBackground"))
+    assertFalse(source.contains("Canvas("))
+
+    listOf(
+      "FormFieldLabel(\"Email\")",
+      "FormFieldLabel(\"Contraseña\")",
+      "contentDescription = if (isSignUp) \"Crear cuenta\" else \"Entrar\"",
+      "contentDescription = \"Continuar con Google\"",
+      "authMessageVisible",
+    ).forEach { marker ->
+      assertTrue("Login content must remain available above the decorative layer: $marker", source.contains(marker))
+    }
+
+    val imageLayer = source
+      .substringAfter("painterResource(R.drawable.imagen_fondo_pantalla_login)")
+      .substringBefore("Column(")
+    assertFalse(imageLayer.contains("clickable"))
+    assertFalse(imageLayer.contains("pointer"))
+    assertFalse(imageLayer.contains("focusable"))
+
+    val image = source.indexOf("painterResource(R.drawable.imagen_fondo_pantalla_login)")
+    val content = source.indexOf("verticalScroll(rememberScrollState())")
+    assertTrue("The decorative image must be declared before the functional content", image < content)
+  }
+
+  @Test
+  fun authScreen_usesOnlyTheTrackedApprovedBackgroundAsset() {
+    val resource = File(root, "app/src/main/res/drawable-nodpi/imagen_fondo_pantalla_login.png")
+    val resourceDirectory = File(root, "app/src/main/res/drawable-nodpi")
+
+    assertTrue(resource.isFile)
+    assertTrue(resourceDirectory.listFiles().orEmpty().map { it.name }.contains(resource.name))
+    assertFalse(File(resourceDirectory, "imagen_fondo_pantalla_login.webp").exists())
+  }
+
+  @Test
   fun authScreen_preservesAuthenticationCallbacksAndThemeAwarePresentation() {
     val source = authScreenSource()
 
