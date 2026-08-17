@@ -317,27 +317,30 @@ fun AuthScreen(viewModel: PetViewModel) {
                                 modifier = Modifier.fillMaxWidth()
                             )
 
-                            Text(
-                                text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
-                                style = MaterialTheme.typography.titleMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                    }
 
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
+                    ) {
+                        Text(
+                            text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (isSignUp) {
                             Text(
-                                text = if (isSignUp) {
-                                    "Únete a FindYourPet para publicar avisos y ayudar a reencontrar mascotas."
-                                } else {
-                                    "Accede para seguir avisos y ayudar a reencontrar mascotas."
-                                },
+                                text = "Únete a FindYourPet para publicar avisos y ayudar a reencontrar mascotas.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
-                    }
+                        }
 
-                    if (isSignUp) {
+                        if (isSignUp) {
                         OutlinedTextField(
                             value = displayName,
                             onValueChange = { displayName = it },
@@ -601,6 +604,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
+                    }
                     }
             }
         }
