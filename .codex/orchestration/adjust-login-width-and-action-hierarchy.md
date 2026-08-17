@@ -1,7 +1,7 @@
 # Orchestration State: adjust-login-width-and-action-hierarchy
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-42
 change: adjust-login-width-and-action-hierarchy
 base_branch: main
@@ -14,9 +14,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a01102-bf35-7b23-acb1-699320369d96
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: COMPLETED
+integrated_commit: 30018afa8b0d360342564fe692046688f976571e
+integration_evidence: Integración confirmada explícitamente por el usuario el 2026-08-17.
 
 ## Preflight y sincronización
 
@@ -134,3 +134,10 @@ integration_evidence:
 - La cobertura manual en `Small_Phone` no pudo completarse porque el AVD quedó offline; teclado abierto y Light Theme tampoco produjeron una captura concluyente. El código conserva `verticalScroll()` e `imePadding()` y las pruebas estáticas cubren su presencia.
 - `.idea/deploymentTargetSelector.xml` es un cambio generado por el entorno y queda excluido del change.
 - No se creó commit, merge, push ni PR; queda pendiente la integración autorizada en `main`.
+
+## Integración confirmada
+
+- El usuario confirmó que la integración fue realizada.
+- Estado actualizado a `INTEGRATED`.
+- Commit asociado al cambio en este checkout: `30018afa8b0d360342564fe692046688f976571e` (`Ajustar margenes de la panytalla de login`).
+- La referencia local `main` todavía apunta a `874f3653ca5cf20ddda16c6bb67a6d14bda896db`; por eso la integración se registra con base en la confirmación del usuario y no se ejecuta ningún merge adicional.
