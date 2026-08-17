@@ -21,7 +21,40 @@ class AuthScreenPresentationStaticTest {
     assertFalse(source.contains("Surface("))
     assertFalse(source.contains("AppShapes.authHeader"))
     assertFalse(source.contains("AppElevation.subtle"))
-    assertTrue(source.contains("AppSpacing.formGap"))
+    assertTrue(source.contains("AppSpacing.fieldGap"))
+  }
+
+  @Test
+  fun authScreen_usesOneContainedColumnAndExplicitActionHierarchy() {
+    val source = authScreenSource()
+
+    assertTrue(source.contains(".widthIn(max = AppSpacing.authMaxWidth)\n                    .padding(horizontal = AppSpacing.md),"))
+    assertTrue(source.contains(".padding(vertical = AppSpacing.sm)"))
+
+    val primaryAction = source
+      .substringAfter("AppButton(\n                        onClick = { submitEmailForm() }")
+      .substringBefore("Row(")
+    assertTrue(primaryAction.contains("variant = AppButtonVariant.Primary"))
+
+    assertTrue(source.contains("variant = AppButtonVariant.Outlined"))
+    assertTrue(source.contains("TextButton("))
+    assertFalse(source.contains("max = 480.dp"))
+    assertFalse(Regex("(width|widthIn|padding|size|height|spacedBy)\\([^)]*\\b\\d+(\\.\\d+)?\\.dp").containsMatchIn(source))
+  }
+
+  @Test
+  fun authScreen_usesResponsiveCenteredVerticalRhythmWithoutReferenceOnlyControls() {
+    val source = authScreenSource()
+
+    assertTrue(source.contains(".padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)"))
+    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
+    assertFalse(source.contains("Arrangement.spacedBy(\n                AppSpacing.fieldGap,\n                Alignment.CenterVertically,\n            )"))
+    assertTrue(source.contains(".padding(vertical = AppSpacing.sm)"))
+    assertTrue(source.contains(".verticalScroll(rememberScrollState())"))
+    assertTrue(source.contains(".imePadding()"))
+    assertFalse(source.contains("Recordarme"))
+    assertFalse(source.contains("Olvidaste"))
+    assertFalse(source.contains("recuperaci\u00f3n de contrase\u00f1a"))
   }
 
   @Test
@@ -119,7 +152,7 @@ class AuthScreenPresentationStaticTest {
     assertTrue(supportingText > headline)
     assertTrue(functionalTitle > supportingText)
     assertTrue(emailField > functionalTitle)
-    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)"))
+    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
     assertFalse(source.contains("Accede para seguir avisos y ayudar a reencontrar mascotas."))
   }
 

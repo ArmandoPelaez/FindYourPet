@@ -263,24 +263,22 @@ fun AuthScreen(viewModel: PetViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.xl)
+                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = AppSpacing.authMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
+                    .widthIn(max = AppSpacing.authMaxWidth)
+                    .padding(horizontal = AppSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
             ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(
-                                vertical = AppSpacing.cardContentVertical,
-                                horizontal = AppSpacing.md,
-                            ),
+                            .padding(vertical = AppSpacing.sm),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
                     ) {
@@ -321,7 +319,7 @@ fun AuthScreen(viewModel: PetViewModel) {
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
                     ) {
                         Text(
                             text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
@@ -459,6 +457,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                         onClick = { submitEmailForm() },
                         enabled = !isAuthOperationInProgress,
                         modifier = Modifier.fillMaxWidth(),
+                        variant = AppButtonVariant.Primary,
                         contentDescription = if (isSignUp) "Crear cuenta" else "Entrar"
                     ) {
                         if (loginVisualState == LoginVisualState.EmailLoading) {
