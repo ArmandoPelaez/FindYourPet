@@ -1,4 +1,4 @@
-state: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
 issue: SCRUM-36
 requested_reference: SCRUM-36 Work Item 5
 change: redesign-login-auth-actions
@@ -6,9 +6,9 @@ branch: ops/redesign-login-auth-actions
 base_branch: main
 base_commit: c46687de278c3e457b179ea542dd9462f2f2222a
 remote_base_commit: c46687de278c3e457b179ea542dd9462f2f2222a
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 3cf7216afad7a9c8974d5b8e0be830ab0f7abf5d
+integration_evidence: PR #53 merged from ops/redesign-login-auth-actions into main; user confirmed commit, merge and PR; main and origin/main synchronized.
 delegation_status: COMPLETED
 handoff_mode: SUBAGENT
 agent_id: 01a00c7a-024c-73f3-9aaa-4324ec3165e9
@@ -137,6 +137,6 @@ delegation_error:
 
 ## Current outcome
 
-- Estado: `PASSED_PENDING_INTEGRATION`.
-- Integration status: pending authorized PR/merge and synchronization of `main`.
-- Integración: pendiente de implementación, verificación y merge autorizado.
+- Estado: `INTEGRATED`.
+- Integration status: merged in PR #53 and synchronized in local `main`.
+- Integración: completada mediante PR #53; `main` local y `origin/main` coinciden.
