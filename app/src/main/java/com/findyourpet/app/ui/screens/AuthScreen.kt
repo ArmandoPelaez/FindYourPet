@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -285,27 +284,23 @@ fun AuthScreen(viewModel: PetViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
                     ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(AppSpacing.avatarLarge)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = AppOpacity.iconSurface), CircleShape),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AccountCircle,
+                                Image(
+                                    painter = painterResource(R.drawable.ic_launcher_foreground),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(AppSpacing.authIcon)
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.size(AppSpacing.headerLogo),
+                                )
+                                Spacer(modifier = Modifier.width(AppSpacing.compactGap))
+                                Text(
+                                    text = "FindYourPet",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-
-                            Text(
-                                text = "FindYourPet",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
 
                             Text(
                                 text = "Conect\u00e1 con avisos cerca tuyo.",
