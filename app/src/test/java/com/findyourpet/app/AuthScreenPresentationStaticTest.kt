@@ -74,7 +74,7 @@ class AuthScreenPresentationStaticTest {
       "Icons.Filled.Visibility",
       "Icons.Filled.VisibilityOff",
       "passwordVisible",
-      "contentDescription = if (passwordVisible)",
+      "contentDescription = if (isVisible)",
       "\"Ocultar contrase\\u00f1a\"",
       "\"Mostrar contrase\\u00f1a\"",
       "KeyboardType.Email",
@@ -104,7 +104,7 @@ class AuthScreenPresentationStaticTest {
     assertFalse(source.contains(".then(if (!passwordVisible) Modifier.semantics { password() } else Modifier)"))
 
     val visibilityDescription = source
-      .substringAfter("contentDescription = if (passwordVisible)")
+      .substringAfter("contentDescription = if (isVisible)")
       .substringBefore("modifier = Modifier.size(AppSpacing.iconMedium)")
     assertTrue(
       visibilityDescription.indexOf("\"Ocultar contrase\\u00f1a\"") <
@@ -118,7 +118,7 @@ class AuthScreenPresentationStaticTest {
 
     listOf(
       "var isGoogleLoading by remember { mutableStateOf(false) }",
-      "val isAuthOperationInProgress = isAuthLoading || isGoogleLoading",
+      "val isAuthOperationInProgress = isEmailLoading || isAuthLoading || isGoogleLoading",
       "if (isAuthOperationInProgress) return",
       "enabled = !isAuthOperationInProgress",
       "variant = AppButtonVariant.Outlined",
@@ -154,6 +154,71 @@ class AuthScreenPresentationStaticTest {
     assertFalse(googleAction.contains("Icons.Outlined.AccountCircle"))
     assertFalse(googleAction.contains("Color("))
     assertFalse(googleAction.contains("alpha ="))
+  }
+
+  @Test
+  fun authScreen_exposesFiniteFocusVisibilityAndReducedMotionTransitions() {
+    val source = authScreenSource()
+
+    listOf(
+      "animateColorAsState",
+      "onFocusChanged",
+      "OutlinedTextFieldDefaults.colors",
+      "AnimatedContent(",
+      "label = \"password visibility affordance\"",
+      "AnimatedVisibility(",
+      "EnterTransition.None",
+      "ExitTransition.None",
+      "Settings.Global.ANIMATOR_DURATION_SCALE",
+      "reducedMotionEnabled(context)",
+      "private enum class LoginVisualState",
+      "LoginVisualState.Idle",
+      "LoginVisualState.EmailLoading",
+      "LoginVisualState.GoogleLoading",
+      "LoginVisualState.Error",
+      "LoginVisualState.SignedIn",
+      "fadeIn()",
+      "fadeOut()",
+    ).forEach { marker ->
+      assertTrue("AuthScreen must expose visual-state feedback: $marker", source.contains(marker))
+    }
+
+    assertFalse(source.contains("infiniteRepeatable"))
+    assertFalse(source.contains("while (true)"))
+  }
+
+  @Test
+  fun authScreen_sharesOperationGuardAndResetsRecoverably() {
+    val source = authScreenSource()
+
+    listOf(
+      "var isEmailLoading by remember { mutableStateOf(false) }",
+      "var isGoogleLoading by remember { mutableStateOf(false) }",
+      "val isAuthOperationInProgress = isEmailLoading || isAuthLoading || isGoogleLoading",
+      "if (isAuthOperationInProgress) return",
+      "isEmailLoading = true",
+      "isGoogleLoading = true",
+      "authAttempt++",
+      "snapshotFlow { authState to authMessage }",
+      "isEmailLoading = false",
+      "isGoogleLoading = false",
+      "authMessageVisible = false",
+      "enabled = !isAuthOperationInProgress",
+    ).forEach { marker ->
+      assertTrue("AuthScreen must expose operation recovery: $marker", source.contains(marker))
+    }
+  }
+
+  @Test
+  fun authScreen_observesSuccessWithoutBlockingAuthenticatedNavigation() {
+    val source = authScreenSource()
+
+    assertTrue(source.contains("visible = loginVisualState == LoginVisualState.SignedIn"))
+    assertTrue(source.contains("Autenticaci\u00f3n exitosa."))
+    assertFalse(source.contains("delay("))
+    assertFalse(source.contains("Thread.sleep"))
+    assertTrue(source.contains("viewModel.signInWithEmail(email, password)"))
+    assertTrue(source.contains("viewModel.signInWithGoogleIdToken(idToken)"))
   }
 
   private fun authScreenSource(): String =
