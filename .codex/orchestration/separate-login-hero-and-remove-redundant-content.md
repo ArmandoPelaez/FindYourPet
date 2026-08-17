@@ -1,7 +1,7 @@
 # Orchestration State: separate-login-hero-and-remove-redundant-content
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-41
 change: separate-login-hero-and-remove-redundant-content
 base_branch: main
@@ -14,9 +14,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a010b5-46c7-7722-a8c8-fed96da422de
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: f400aa89128f8c82130a049c30d72ec03aca5a57
+integration_evidence: Merge commit en origin/main: PR #56, "Separar el hero del login y eliminar info repetida"; implement commit 966e0e7733b8731b16f61acc246715e9a8e5df26.
 
 ## Preflight y sincronización
 
@@ -65,14 +65,14 @@ integration_evidence:
 
 ## Resultado actual
 
-- Estado operativo: `READY_FOR_IMPLEMENTATION`.
+- Estado operativo: `INTEGRATED`.
 - Delegación: subagente `Parfit` (`01a010b5-46c7-7722-a8c8-fed96da422de`) ejecutando `findyourpet-implementer`.
 - Reporte del implementador: `READY_FOR_VERIFICATION`, progreso `13/14`.
 - Archivos modificados reportados: `app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt`, `app/src/test/java/com/findyourpet/app/AuthScreenPresentationStaticTest.kt` y `tasks.md`.
 - Implementado: separación del hero con `AppSpacing.formGap`, eliminación del subtítulo redundante del Login, preservación del texto de registro, callbacks, campos, foco, scroll, `imePadding`, temas y validaciones.
 - Evidencia reportada: `openspec validate --strict`, `testDebugUnitTest`, `assembleDebug` y `git diff --check` exitosos.
 - Tarea pendiente reportada: revisión manual en dispositivo/emulador con pantalla pequeña, Light/Dark Theme y teclado abierto; no hay dispositivo disponible.
-- Estado operativo: `VERIFYING`.
+- Estado operativo: `INTEGRATED`.
 
 ## Verificación final del orquestador
 
@@ -85,8 +85,16 @@ integration_evidence:
 - `adb`: no disponible (`ADB_NOT_AVAILABLE`); no fue posible validar manualmente pantalla pequeña, Light/Dark Theme y teclado abierto.
 - La tarea 4.3 queda justificada como limitación externa del entorno; no se afirma evidencia manual inexistente.
 
+## Integración
+
+- `git fetch origin --prune`: OK.
+- `git switch main`: OK.
+- `git pull --ff-only origin main`: OK; fast-forward hasta `f400aa89128f8c82130a049c30d72ec03aca5a57`.
+- `git rev-parse main`: `f400aa89128f8c82130a049c30d72ec03aca5a57`.
+- `git rev-parse origin/main`: `f400aa89128f8c82130a049c30d72ec03aca5a57`.
+- El merge está confirmado en `main` y `origin/main` mediante PR #56.
+
 ## Resultado
 
-- Estado: `PASSED_PENDING_INTEGRATION`.
-- La rama está validada y pendiente de integración autorizada en `main`.
-- No se creó commit, merge, push ni PR automáticamente.
+- Estado: `INTEGRATED`.
+- `main` local y `origin/main` están sincronizadas.
