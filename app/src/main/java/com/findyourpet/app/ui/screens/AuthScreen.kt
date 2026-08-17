@@ -47,7 +47,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -88,7 +87,6 @@ import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.FormFieldLabel
 import com.findyourpet.app.ui.components.FormFieldPlaceholder
 import com.findyourpet.app.ui.theme.AppFormTypography
-import com.findyourpet.app.ui.theme.AppElevation
 import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
@@ -277,17 +275,16 @@ fun AuthScreen(viewModel: PetViewModel) {
                     .widthIn(max = AppSpacing.authMaxWidth),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)
             ) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = AppShapes.authHeader,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppOpacity.subtleSurface),
-                        tonalElevation = AppElevation.subtle
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                vertical = AppSpacing.cardContentVertical,
+                                horizontal = AppSpacing.md,
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = AppSpacing.cardContentVertical, horizontal = AppSpacing.md),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
-                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(AppSpacing.avatarLarge)
@@ -343,7 +340,6 @@ fun AuthScreen(viewModel: PetViewModel) {
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
-                        }
                     }
 
                     if (isSignUp) {

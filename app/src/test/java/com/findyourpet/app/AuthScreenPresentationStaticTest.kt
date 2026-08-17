@@ -18,7 +18,9 @@ class AuthScreenPresentationStaticTest {
     assertTrue(source.contains(".imePadding()"))
     assertTrue(source.contains(".verticalScroll(rememberScrollState())"))
     assertTrue(source.contains(".widthIn(max = AppSpacing.authMaxWidth)"))
-    assertTrue(source.contains("Surface("))
+    assertFalse(source.contains("Surface("))
+    assertFalse(source.contains("AppShapes.authHeader"))
+    assertFalse(source.contains("AppElevation.subtle"))
     assertTrue(source.contains("AppSpacing.formGap"))
   }
 
