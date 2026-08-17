@@ -1,6 +1,6 @@
 ---
-state: PASSED_PENDING_INTEGRATION
-phase: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-40
 requested_reference: SCRUM-40
 change: move-login-identity-to-top-left-header
@@ -15,9 +15,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a01086-0fee-75a3-a92a-99050548f5d6
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: d881d1c97e709a5ca010b2d7219bf552682b1e19
+integration_evidence: Usuario confirmó merge realizado; main y origin/main apuntan a d881d1c97e709a5ca010b2d7219bf552682b1e19.
 ---
 
 # Orquestación SCRUM-40
@@ -110,4 +110,9 @@ integration_evidence:
 
 ## INTEGRATED
 
-Pendiente de evidencia de merge autorizado.
+- Merge/integración confirmada por el usuario.
+- Commit integrado en `main`: `d881d1c97e709a5ca010b2d7219bf552682b1e19` (`Mover identidad de FindYourPet a encabezado superior izquierdo`).
+- `git fetch origin --prune`: correcto.
+- `git rev-parse main`: `d881d1c97e709a5ca010b2d7219bf552682b1e19`.
+- `git rev-parse origin/main`: `d881d1c97e709a5ca010b2d7219bf552682b1e19`.
+- `main` quedó limpia y sincronizada con `origin/main` antes de actualizar esta bitácora.
