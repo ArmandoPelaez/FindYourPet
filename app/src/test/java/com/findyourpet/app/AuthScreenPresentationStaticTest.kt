@@ -100,6 +100,7 @@ class AuthScreenPresentationStaticTest {
     val headline = source.indexOf("text = \"Conect\\u00e1 con avisos cerca tuyo.\"")
     val supportingText = source.indexOf("text = \"Report\\u00e1, busc\\u00e1 y ayud\\u00e1 a reencontrar mascotas.\"")
     val functionalTitle = source.indexOf("text = if (isSignUp) \"Crear cuenta\" else \"Iniciar sesión\"")
+    val emailField = source.indexOf("FormFieldLabel(\"Email\")")
 
     assertTrue(source.contains("style = MaterialTheme.typography.labelLarge"))
     assertTrue(source.contains("style = MaterialTheme.typography.headlineSmall"))
@@ -117,6 +118,9 @@ class AuthScreenPresentationStaticTest {
     assertTrue(headline > identity)
     assertTrue(supportingText > headline)
     assertTrue(functionalTitle > supportingText)
+    assertTrue(emailField > functionalTitle)
+    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.formGap)"))
+    assertFalse(source.contains("Accede para seguir avisos y ayudar a reencontrar mascotas."))
   }
 
   @Test
