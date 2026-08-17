@@ -1,7 +1,7 @@
 # Orchestration State: add-login-visual-states-and-microinteractions
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-37
 requested_reference: SCRUM 37 Work Item 6
 change: add-login-visual-states-and-microinteractions
@@ -16,9 +16,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a00d4d-3529-7c21-b088-7242e8d853c0
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: e97b3611326f353e464de1b95898f95ad28fedf1
+integration_evidence: PR #54 merged from ops/add-login-visual-states-and-microinteractions into main; implementation commit 7ae1c0c; main local fast-forwarded and synchronized with origin/main.
 
 ## Preflight and synchronization
 
@@ -75,7 +75,7 @@ integration_evidence:
 
 ## Final verification
 
-- Current branch: `ops/add-login-visual-states-and-microinteractions`.
+- Verification branch: `ops/add-login-visual-states-and-microinteractions`.
 - `openspec validate "add-login-visual-states-and-microinteractions" --strict`: passed.
 - `openspec instructions apply --change "add-login-visual-states-and-microinteractions" --json`: 17/18 tasks complete; task `5.4` remains justified as an external runtime limitation.
 - `\.gradlew.bat testDebugUnitTest --no-daemon --console=plain`: passed; build successful.
@@ -83,4 +83,15 @@ integration_evidence:
 - `git diff --check`: passed.
 - Diff scope reviewed: only `AuthScreen.kt`, `AuthScreenPresentationStaticTest.kt`, OpenSpec artifacts, and orchestration state.
 - Manual runtime check: not executable; `adb` was not found and `android emulator list` returned no available device output.
-- Final decision: passed on the branch, pending authorized integration into `main`.
+- Final decision: passed on the branch; manual runtime limitation documented.
+
+## Integration
+
+- User confirmed that commit and merge were already completed.
+- `git fetch origin --prune`: passed.
+- `git switch main`: passed.
+- `git pull --ff-only origin main`: fast-forwarded from `c022a04` to `e97b361`.
+- `git rev-parse main`: `e97b3611326f353e464de1b95898f95ad28fedf1`.
+- `git rev-parse origin/main`: `e97b3611326f353e464de1b95898f95ad28fedf1`.
+- `git status --short --branch`: `## main...origin/main`.
+- Integration status: `MERGED`.
