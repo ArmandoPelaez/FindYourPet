@@ -1,6 +1,6 @@
 ---
-state: PASSED_PENDING_INTEGRATION
-phase: PASSED_PENDING_INTEGRATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-39
 requested_reference: SCRUM-39
 change: remove-login-header-card-unify-background
@@ -15,9 +15,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a0101d-0ba7-7243-9148-4e5194fa727d
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 66e3bbecf24ffea73041bc530915f23838eaff73
+integration_evidence: Usuario confirmó commit realizado y push a main; main y origin/main apuntan a 66e3bbecf24ffea73041bc530915f23838eaff73.
 implementation_report:
   status: READY_FOR_VERIFICATION
   progress: 6/7
@@ -105,4 +105,9 @@ implementation_report:
 
 ## INTEGRATED
 
-Pendiente de evidencia de merge autorizado.
+- Merge/integración confirmada por el usuario.
+- Commit integrado en `main`: `66e3bbecf24ffea73041bc530915f23838eaff73` (`Remover car gris de la pantalla de login`).
+- `git fetch origin --prune`: correcto.
+- `git rev-parse main`: `66e3bbecf24ffea73041bc530915f23838eaff73`.
+- `git rev-parse origin/main`: `66e3bbecf24ffea73041bc530915f23838eaff73`.
+- Estado previo a esta actualización: `main` limpia y sincronizada con `origin/main`.
