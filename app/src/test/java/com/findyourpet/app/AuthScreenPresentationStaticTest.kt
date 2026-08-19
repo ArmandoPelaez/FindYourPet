@@ -28,13 +28,15 @@ class AuthScreenPresentationStaticTest {
   fun authScreen_usesOneContainedColumnAndExplicitActionHierarchy() {
     val source = authScreenSource()
 
-    assertTrue(source.contains(".widthIn(max = AppSpacing.authMaxWidth)\n                    .padding(horizontal = AppSpacing.md),"))
+    assertTrue(source.contains(".widthIn(max = AppSpacing.authMaxWidth)"))
+    assertTrue(source.contains(".padding(horizontal = AppSpacing.md),"))
     assertTrue(source.contains(".padding(vertical = AppSpacing.sm)"))
 
-    val primaryAction = source
-      .substringAfter("AppButton(\n                        onClick = { submitEmailForm() }")
-      .substringBefore("Row(")
-    assertTrue(primaryAction.contains("variant = AppButtonVariant.Primary"))
+    val primaryActionPattern = Regex(
+      """AppButton\(\s*onClick = \{\s*submitEmailForm\(\)\s*\}.*?variant = AppButtonVariant\.Primary.*?contentDescription = if \(isSignUp\) \"Crear cuenta\" else \"Entrar\"""",
+      setOf(RegexOption.DOT_MATCHES_ALL),
+    )
+    assertTrue(primaryActionPattern.containsMatchIn(source))
 
     assertTrue(source.contains("variant = AppButtonVariant.Outlined"))
     assertTrue(source.contains("TextButton("))
@@ -46,6 +48,10 @@ class AuthScreenPresentationStaticTest {
   fun authScreen_usesResponsiveCenteredVerticalRhythmWithoutReferenceOnlyControls() {
     val source = authScreenSource()
 
+    assertTrue(source.contains("BoxWithConstraints("))
+    assertTrue(source.contains("viewportHeight = contentViewportHeight"))
+    assertTrue(source.contains("private fun LoginVerticalRegions"))
+    assertTrue(source.contains("val flexibleGap = flexibleSpace / 2"))
     assertTrue(source.contains(".padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)"))
     assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
     assertFalse(source.contains("Arrangement.spacedBy(\n                AppSpacing.fieldGap,\n                Alignment.CenterVertically,\n            )"))

@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -62,6 +63,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -73,6 +75,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
@@ -107,6 +110,43 @@ private fun enterTransition(reducedMotion: Boolean): EnterTransition =
 
 private fun exitTransition(reducedMotion: Boolean): ExitTransition =
     if (reducedMotion) ExitTransition.None else fadeOut()
+
+@Composable
+private fun LoginVerticalRegions(
+    viewportHeight: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(
+        modifier = modifier,
+        content = content,
+    ) { measurables, constraints ->
+        val placeables = measurables.map { measurable ->
+            measurable.measure(constraints.copy(minHeight = 0))
+        }
+        val gap = AppSpacing.fieldGap.roundToPx()
+        val naturalHeight = placeables.sumOf { it.height } + gap * placeables.size
+        val availableHeight = viewportHeight.roundToPx()
+        val layoutHeight = maxOf(naturalHeight, availableHeight, constraints.minHeight)
+        val flexibleSpace = (layoutHeight - naturalHeight).coerceAtLeast(0)
+        val flexibleGap = flexibleSpace / 2
+        val width = maxOf(
+            constraints.minWidth,
+            placeables.maxOfOrNull { it.width } ?: 0,
+        )
+
+        layout(width, layoutHeight) {
+            var y = 0
+            placeables.forEachIndexed { index, placeable ->
+                placeable.placeRelative(0, y)
+                y += placeable.height
+                if (index < placeables.lastIndex) {
+                    y += gap + flexibleGap
+                }
+            }
+        }
+    }
+}
 
 private enum class LoginVisualState {
     Idle,
@@ -260,20 +300,26 @@ fun AuthScreen(viewModel: PetViewModel) {
                 )
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
         ) {
+            val contentViewportHeight =
+                (maxHeight - (AppSpacing.lg * 2)).coerceAtLeast(AppSpacing.none)
+
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+            ) {
+            LoginVerticalRegions(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = AppSpacing.authMaxWidth)
                     .padding(horizontal = AppSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+                viewportHeight = contentViewportHeight,
             ) {
                     Column(
                         modifier = Modifier
@@ -603,8 +649,10 @@ fun AuthScreen(viewModel: PetViewModel) {
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
+                     }
                     }
-                    }
+
+             }
             }
         }
     }
