@@ -52,7 +52,7 @@ class PetRepository(context: Context) {
 
     val usesRemoteBackend: Boolean = firestore != null
 
-    val postFeedState: Flow<BackendSyncState<List<PetPostEntity>>> =
+    fun observePostFeedState(): Flow<BackendSyncState<List<PetPostEntity>>> =
         firestore?.let { db ->
             observeQuery(
                 query = db.collection(BackendCollections.PET_POSTS)
@@ -68,7 +68,7 @@ class PetRepository(context: Context) {
             }
         } ?: petDao.getAllPosts().toLocalState(emptyList())
 
-    val allPosts: Flow<List<PetPostEntity>> = postFeedState.map { it.data }
+    val allPosts: Flow<List<PetPostEntity>> = observePostFeedState().map { it.data }
 
     val allNotifications: Flow<List<AppNotificationEntity>> =
         petDao.getAllNotifications()

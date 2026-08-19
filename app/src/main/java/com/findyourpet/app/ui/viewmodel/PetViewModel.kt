@@ -22,6 +22,7 @@ import com.findyourpet.app.data.profile.UserProfileRepository
 import com.findyourpet.app.data.repository.PetRepository
 import com.findyourpet.app.data.remote.BackendSyncState
 import com.findyourpet.app.domain.AuthSessionMapper
+import com.findyourpet.app.domain.flatMapLatestForAuthenticatedUser
 import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.util.CrashReporter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -101,7 +102,20 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     val selectedSpecies = MutableStateFlow("Todos") // Todos, Perro, Gato, Ave, Otro
     val selectedStatusFilter = MutableStateFlow("Todos") // Todos, PERDIDO, AVISTADO, REUNIDO
 
-    val postFeedState: StateFlow<BackendSyncState<List<PetPostEntity>>> = repository.postFeedState
+    val postFeedState: StateFlow<BackendSyncState<List<PetPostEntity>>> = authState
+        .flatMapLatestForAuthenticatedUser(
+            signedOut = {
+                flowOf(
+                    BackendSyncState.data(
+                        emptyList(),
+                        isFromCache = false,
+                        hasPendingWrites = false,
+                        isRemoteBackend = repository.usesRemoteBackend
+                    )
+                )
+            },
+            signedIn = { repository.observePostFeedState() }
+        )
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
