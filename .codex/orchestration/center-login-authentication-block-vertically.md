@@ -1,7 +1,7 @@
 # Orchestration State: center-login-authentication-block-vertically
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-43
 change: center-login-authentication-block-vertically
 base_branch: main
@@ -14,9 +14,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a0154d-f89e-7ab3-8bfc-b3038cbb7328
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 668ab3b
+integration_evidence: PR #58 merge commit 668ab3b en origin/main; confirmado por git fetch y git branch -r --contains f54222b.
 
 ## Preflight y sincronización
 
@@ -193,5 +193,12 @@ integration_evidence:
 - `assembleDebug --no-daemon --console=plain`: OK.
 - APK fresca instalada en `emulator-5554`.
 - Evidencia: [findyourpet-scrum43-text-repair-final.png](C:/Users/Dell/AppData/Local/Temp/findyourpet-scrum43-text-repair-final.png) y [layout dump](C:/Users/Dell/AppData/Local/Temp/findyourpet-scrum43-text-repair-final-layout.json).
+
+## Integracion confirmada
+
+- Commit del change: `f54222b` — `Centrar pantalla de login y re acomodar el hero`.
+- Merge confirmado en `origin/main`: `668ab3b` — PR #58 `ArmandoPelaez:ops/center-login-authentication-block-vertically`.
+- `git fetch origin --prune` confirmo que `origin/main` contiene `f54222b`.
+- Estado de bitacora: `INTEGRATED`.
 - Limitación: Small Phone, teclado abierto y Light Theme independiente siguen sin evidencia por disponibilidad del entorno.
 - Estado: `PASSED_PENDING_INTEGRATION`; no se realizó commit, merge ni push.
