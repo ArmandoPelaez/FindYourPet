@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -62,6 +63,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -73,6 +75,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
@@ -107,6 +110,55 @@ private fun enterTransition(reducedMotion: Boolean): EnterTransition =
 
 private fun exitTransition(reducedMotion: Boolean): ExitTransition =
     if (reducedMotion) ExitTransition.None else fadeOut()
+
+@Composable
+private fun LoginVerticalRegions(
+    viewportHeight: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(
+        modifier = modifier,
+        content = content,
+    ) { measurables, constraints ->
+        val placeables = measurables.map { measurable ->
+            measurable.measure(constraints.copy(minHeight = 0))
+        }
+        // The former combined Header/Hero column had two compact gaps: one
+        // remains inside Hero and this one bridges the independent regions.
+        val identityHeroGap = AppSpacing.compactGap.roundToPx()
+        val authenticationGap = AppSpacing.fieldGap.roundToPx()
+        val naturalHeight = placeables[0].height +
+            identityHeroGap +
+            placeables[1].height +
+            placeables[2].height +
+            authenticationGap * 2
+        val availableHeight = viewportHeight.roundToPx()
+        val layoutHeight = maxOf(naturalHeight, availableHeight, constraints.minHeight)
+        val flexibleSpace = (layoutHeight - naturalHeight).coerceAtLeast(0)
+        val flexibleGap = flexibleSpace / 2
+        val heroShift = minOf((AppSpacing.xl + AppSpacing.md).roundToPx(), flexibleGap)
+        val width = maxOf(
+            constraints.minWidth,
+            placeables.maxOfOrNull { it.width } ?: 0,
+        )
+
+        layout(width, layoutHeight) {
+            var nextY = 0
+            // IdentityHeader boundary: fixed at its existing coordinate; it receives no shift.
+            placeables[0].placeRelative(0, 0)
+            nextY += placeables[0].height + identityHeroGap
+
+            // Hero boundary: only this region receives its own responsive downward shift.
+            placeables[1].placeRelative(0, nextY + heroShift)
+            nextY += placeables[1].height
+
+            // AuthenticationBlock boundary: preserve the prior nextY placement and subtree.
+            nextY += authenticationGap + flexibleGap
+            placeables[2].placeRelative(0, nextY)
+        }
+    }
+}
 
 private enum class LoginVisualState {
     Idle,
@@ -260,63 +312,78 @@ fun AuthScreen(viewModel: PetViewModel) {
                 )
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
         ) {
+            val contentViewportHeight =
+                (maxHeight - (AppSpacing.lg * 2)).coerceAtLeast(AppSpacing.none)
+
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+            ) {
+            LoginVerticalRegions(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = AppSpacing.authMaxWidth)
                     .padding(horizontal = AppSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+                viewportHeight = contentViewportHeight,
             ) {
+                    // IdentityHeader boundary: this region is measured and placed independently.
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = AppSpacing.sm),
+                            .padding(top = AppSpacing.sm),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
                     ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Image(
-                                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.size(AppSpacing.headerLogo),
-                                )
-                                Spacer(modifier = Modifier.width(AppSpacing.compactGap))
-                                Text(
-                                    text = "FindYourPet",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-
-                            Text(
-                                text = "Conect\u00e1 con avisos cerca tuyo.",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_launcher_foreground),
+                                contentDescription = null,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(AppSpacing.headerLogo),
                             )
-
+                            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
                             Text(
-                                text = "Report\u00e1, busc\u00e1 y ayud\u00e1 a reencontrar mascotas.",
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = "FindYourPet",
+                                style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
                             )
-
+                        }
                     }
 
+                    // Hero boundary: headline and supporting text form their own region.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = AppSpacing.sm),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap),
+                    ) {
+                        Text(
+                            text = "Conect\u00e1 con avisos cerca tuyo.",
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = "Report\u00e1, busc\u00e1 y ayud\u00e1 a reencontrar mascotas.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // AuthenticationBlock boundary: its measured position and subtree stay unchanged.
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
@@ -324,7 +391,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                         Text(
                             text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
                             style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
+                            textAlign = TextAlign.Start,
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -603,8 +670,10 @@ fun AuthScreen(viewModel: PetViewModel) {
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
+                     }
                     }
-                    }
+
+             }
             }
         }
     }
