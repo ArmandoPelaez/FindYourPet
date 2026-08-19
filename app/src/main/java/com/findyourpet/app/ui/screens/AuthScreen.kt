@@ -124,26 +124,38 @@ private fun LoginVerticalRegions(
         val placeables = measurables.map { measurable ->
             measurable.measure(constraints.copy(minHeight = 0))
         }
-        val gap = AppSpacing.fieldGap.roundToPx()
-        val naturalHeight = placeables.sumOf { it.height } + gap * placeables.size
+        // The former combined Header/Hero column had two compact gaps: one
+        // remains inside Hero and this one bridges the independent regions.
+        val identityHeroGap = AppSpacing.compactGap.roundToPx()
+        val authenticationGap = AppSpacing.fieldGap.roundToPx()
+        val naturalHeight = placeables[0].height +
+            identityHeroGap +
+            placeables[1].height +
+            placeables[2].height +
+            authenticationGap * 2
         val availableHeight = viewportHeight.roundToPx()
         val layoutHeight = maxOf(naturalHeight, availableHeight, constraints.minHeight)
         val flexibleSpace = (layoutHeight - naturalHeight).coerceAtLeast(0)
         val flexibleGap = flexibleSpace / 2
+        val heroShift = minOf((AppSpacing.xl + AppSpacing.md).roundToPx(), flexibleGap)
         val width = maxOf(
             constraints.minWidth,
             placeables.maxOfOrNull { it.width } ?: 0,
         )
 
         layout(width, layoutHeight) {
-            var y = 0
-            placeables.forEachIndexed { index, placeable ->
-                placeable.placeRelative(0, y)
-                y += placeable.height
-                if (index < placeables.lastIndex) {
-                    y += gap + flexibleGap
-                }
-            }
+            var nextY = 0
+            // IdentityHeader boundary: fixed at its existing coordinate; it receives no shift.
+            placeables[0].placeRelative(0, 0)
+            nextY += placeables[0].height + identityHeroGap
+
+            // Hero boundary: only this region receives its own responsive downward shift.
+            placeables[1].placeRelative(0, nextY + heroShift)
+            nextY += placeables[1].height
+
+            // AuthenticationBlock boundary: preserve the prior nextY placement and subtree.
+            nextY += authenticationGap + flexibleGap
+            placeables[2].placeRelative(0, nextY)
         }
     }
 }
@@ -321,48 +333,57 @@ fun AuthScreen(viewModel: PetViewModel) {
                     .padding(horizontal = AppSpacing.md),
                 viewportHeight = contentViewportHeight,
             ) {
+                    // IdentityHeader boundary: this region is measured and placed independently.
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = AppSpacing.sm),
+                            .padding(top = AppSpacing.sm),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)
                     ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Image(
-                                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.size(AppSpacing.headerLogo),
-                                )
-                                Spacer(modifier = Modifier.width(AppSpacing.compactGap))
-                                Text(
-                                    text = "FindYourPet",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-
-                            Text(
-                                text = "Conect\u00e1 con avisos cerca tuyo.",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_launcher_foreground),
+                                contentDescription = null,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(AppSpacing.headerLogo),
                             )
-
+                            Spacer(modifier = Modifier.width(AppSpacing.compactGap))
                             Text(
-                                text = "Report\u00e1, busc\u00e1 y ayud\u00e1 a reencontrar mascotas.",
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = "FindYourPet",
+                                style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
                             )
-
+                        }
                     }
 
+                    // Hero boundary: headline and supporting text form their own region.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = AppSpacing.sm),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap),
+                    ) {
+                        Text(
+                            text = "Conect\u00e1 con avisos cerca tuyo.",
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = "Report\u00e1, busc\u00e1 y ayud\u00e1 a reencontrar mascotas.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // AuthenticationBlock boundary: its measured position and subtree stay unchanged.
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
@@ -370,7 +391,7 @@ fun AuthScreen(viewModel: PetViewModel) {
                         Text(
                             text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
                             style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
+                            textAlign = TextAlign.Start,
                             modifier = Modifier.fillMaxWidth()
                         )
 

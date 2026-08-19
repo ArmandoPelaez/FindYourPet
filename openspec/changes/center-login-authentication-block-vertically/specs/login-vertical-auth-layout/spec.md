@@ -1,44 +1,70 @@
 ## ADDED Requirements
 
-### Requirement: Vertically balanced login authentication block
+### Requirement: Identity header remains fixed while hero moves independently
 
-The Login screen SHALL render the authentication block consisting of the form heading, Email, Contraseña, Entrar, the authentication divider, Continuar con Google, and Crear una cuenta as one visual unit separated from the hero by flexible, responsive vertical distribution.
+The Login screen SHALL keep the IdentityHeader (`FindYourPet` mark/name) at its current vertical coordinate and position the Hero region (headline plus supporting text) independently downward until it reaches the marked composition in the reference.
 
-#### Scenario: Standard-height screen has balanced separation
+#### Scenario: Header remains fixed while Hero follows its target
 
-- **WHEN** the Login screen is displayed on a device with sufficient vertical space
-- **THEN** the authentication block is visibly separated from the supporting text and is approximately centered within the remaining space below the hero
-- **AND** the internal order and spacing of the authentication controls are preserved
+- **WHEN** the Login screen is rendered with the SCRUM-43 composition
+- **THEN** the IdentityHeader keeps its current vertical coordinate
+- **AND** the Hero headline and supporting text reach their marked lower composition
+- **AND** changing the Hero position does not move the IdentityHeader implicitly
 
-#### Scenario: Short screen remains accessible
+#### Scenario: Hero content remains unchanged
 
-- **WHEN** the available viewport height is insufficient for the hero and authentication block
-- **THEN** the screen preserves the existing vertical scroll behavior
-- **AND** Email, Contraseña, Entrar, Continuar con Google, and Crear una cuenta remain reachable without clipping
+- **WHEN** the Hero is repositioned
+- **THEN** the headline and supporting text retain their existing order, typography, text, alignment, and internal spacing
+- **AND** no new Hero controls or text are introduced
 
-#### Scenario: Keyboard is open
+### Requirement: Hero and authentication label follow reference text alignment
 
-- **WHEN** the user focuses Email or Contraseña and the IME opens
-- **THEN** the screen preserves IME padding and allows the focused field and required actions to be reached by scrolling
-- **AND** the flexible vertical distribution does not make authentication controls inaccessible
+The Login screen SHALL use the reference only to align and format the Hero headline/supporting text and to align the visible authentication label with the form fields, without copying reference-only assets or changing region coordinates.
 
-#### Scenario: Existing visual identity is preserved
+#### Scenario: Hero text is aligned and formatted
 
-- **WHEN** the revised Login screen is rendered in Light Theme or Dark Theme
-- **THEN** it retains the existing hero, background, text, colors, typography, shapes, widths, controls, and action hierarchy
-- **AND** no new authentication method, control, or reference-only text is introduced
+- **WHEN** the Login screen is rendered
+- **THEN** the Hero headline and supporting text use existing typography tokens corresponding to the reference hierarchy
+- **AND** both texts are start-aligned within the Hero content width
+- **AND** their order, wording, and internal spacing remain unchanged
 
-#### Scenario: Authentication behavior is preserved
+#### Scenario: Authentication label is aligned
 
-- **WHEN** the user interacts with Email, Contraseña, Entrar, Continuar con Google, or Crear una cuenta
-- **THEN** the existing callbacks, validation, loading, error, focus, semantics, and navigation behavior remain unchanged
+- **WHEN** the login form is rendered
+- **THEN** the `Iniciar sesiÃ³n` label is start-aligned with the authentication fields
+- **AND** its vertical coordinate, typography token, and the coordinates/spacing of the controls remain unchanged
+- **AND** the button content and authentication behavior are not changed by this alignment
 
-### Requirement: No device-specific vertical offsets
+### Requirement: Authentication block remains fixed
 
-The Login screen SHALL achieve the vertical balance through responsive Compose layout distribution and existing design tokens, without fixed `offset(y = ...)` values, arbitrary device-specific margins, or hardcoded spacing introduced only for this change.
+The Login screen SHALL preserve the current vertical coordinate, distribution, spacing, controls, and behavior of the AuthenticationBlock: `Iniciar sesión`, Email, Contraseña, Entrar, the divider, Continuar con Google, and Crear una cuenta.
 
-#### Scenario: Layout adapts across heights
+#### Scenario: Authentication position is unchanged
 
-- **WHEN** the same Login screen is rendered on devices with different viewport heights
-- **THEN** the separation and authentication block position adapt to the available space
-- **AND** no device-specific vertical correction is required
+- **WHEN** IdentityHeader or Hero is repositioned
+- **THEN** the AuthenticationBlock remains at its current normal-height vertical coordinate
+- **AND** its internal order, spacing, widths, styles, callbacks, validation, loading, errors, focus, semantics, and navigation remain unchanged
+
+#### Scenario: Short viewport or IME
+
+- **WHEN** the available viewport is reduced or the keyboard opens
+- **THEN** the existing `verticalScroll()` and `imePadding()` behavior remains available
+- **AND** the AuthenticationBlock remains reachable without changing its normal-height position
+
+### Requirement: No shared-parent displacement
+
+The IdentityHeader and Hero adjustment SHALL NOT use padding, spacer, or offset on a shared parent when that value changes the AuthenticationBlock position or couples the three regions.
+
+#### Scenario: Layout boundaries are independent
+
+- **WHEN** the implementation is inspected or rendered
+- **THEN** IdentityHeader, Hero, and AuthenticationBlock have independent positioning boundaries
+- **AND** only the Hero boundary receives the requested downward displacement
+- **AND** no shared-parent displacement moves AuthenticationBlock as a side effect
+- **AND** no device-specific hardcoded vertical value is introduced
+
+#### Scenario: Existing identity and behavior are preserved
+
+- **WHEN** the revised Login screen is rendered in Light Theme or Dark Theme and the user interacts with its controls
+- **THEN** the existing background, identity, colors, typography, shapes, widths, authentication methods, and behavior remain unchanged
+- **AND** no reference-only controls or texts are introduced

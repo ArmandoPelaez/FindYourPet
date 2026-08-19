@@ -1,54 +1,64 @@
 ## Context
 
-`AuthScreen` ya contiene el hero y el bloque de autenticación dentro de una columna con scroll vertical, `imePadding()` y tokens compartidos. SCRUM-43 cambia únicamente la distribución vertical: el formulario debe dejar de quedar pegado al supporting text y ocupar una posición aproximadamente centrada en el espacio disponible debajo del hero.
+SCRUM-43 contiene tres regiones visuales con responsabilidades separadas: IdentityHeader (marca/icono + FindYourPet), Hero (headline + supporting text) y AuthenticationBlock. La referencia marca una composicion inferior para Hero. IdentityHeader y AuthenticationBlock deben conservar sus posiciones actuales.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Mantener el bloque de autenticación como una unidad visual.
-- Crear separación flexible entre hero y formulario, adaptable a la altura disponible.
-- Mantener accesibilidad, scroll, comportamiento del IME y todos los callbacks existentes.
-- Reutilizar `AppSpacing`, componentes y estructura de Compose existentes.
+- Dar a IdentityHeader, Hero y AuthenticationBlock boundaries de layout independientes.
+- Mantener IdentityHeader en su coordenada vertical actual.
+- Mover unicamente Hero headline/supporting text a la composicion indicada.
+- Preservar la coordenada, subtree, spacing, scroll, IME, identidad y comportamiento actuales de AuthenticationBlock.
 
 **Non-Goals:**
 
-- No cambiar textos, colores, tipografías, tamaños, anchos, shapes, fondo, hero o identidad.
-- No modificar ViewModel, Firebase Auth, navegación, repositorios, backend, dependencias ni contratos.
-- No agregar offsets fijos, márgenes específicos por dispositivo, nuevos métodos de autenticación ni nuevos controles.
+- No mover IdentityHeader ni AuthenticationBlock.
+- No acoplar las regiones con padding, spacer u offset en un padre compartido.
+- No cambiar textos, tipografia, colores, fondo, anchos, controles, logica de autenticacion, navegacion, dependencias ni backend.
 
 ## Decisions
 
-### Separar el hero del bloque de autenticación mediante distribución flexible
+### Three direct layout boundaries
 
-La composición conservará dos regiones: hero y bloque de autenticación. La separación se resolverá con el mecanismo de distribución/adaptación de Compose que mejor soporte espacio sobrante y overflow, evitando `offset(y = ...)` y valores visuales hardcodeados. Se debe preservar el orden interno y el spacing actual del bloque.
+IdentityHeader, Hero y AuthenticationBlock seran tres regiones directas distintas. IdentityHeader conserva su coordenada medida, Hero recibe el desplazamiento solicitado y AuthenticationBlock conserva su coordenada medida.
 
-Alternativas consideradas:
+Alternativas rechazadas:
 
-- `offset(y = ...)`: descartada porque no responde a distintas alturas y contradice el Scrum.
-- Margen vertical fijo: descartado porque produce el mismo problema en pantallas pequeñas y con IME.
-- Reescritura de la pantalla: descartada porque amplía el riesgo y puede alterar identidad o comportamiento.
+- Padding en padre compartido: desplaza AuthenticationBlock.
+- Spacer en padre compartido: acopla las tres regiones y cambia coordenadas.
+- Offset en padre compartido: es device-specific y queda fuera del alcance.
+- Mover la columna completa header/hero: viola el header fijo y la separacion entre IdentityHeader y Hero.
 
-### Conservar el scroll y el comportamiento del teclado
+### Responsive behavior remains at the screen boundary
 
-La raíz seguirá permitiendo `verticalScroll()` e `imePadding()`. La distribución flexible no debe depender de que todo el contenido quepa: cuando no exista espacio sobrante, el contenido debe conservar su orden natural y poder desplazarse hasta Email, Contraseña y las acciones.
+El `verticalScroll()` y `imePadding()` existentes permanecen responsables de pantallas cortas y teclado abierto. El posicionamiento local no debe eliminar el scroll ni ocultar controles.
 
-### Validar sin modificar la lógica de autenticación
+### Coordinate-based verification
 
-Las pruebas se enfocarán en la estructura de presentación: agrupación, ausencia de offsets hardcodeados, uso de tokens, scroll/IME y preservación de labels/callbacks. La validación manual comprobará alturas estándar, pantalla pequeña, teclado abierto y las tres acciones existentes.
+Los tests estaticos verificaran los tres boundaries, el desplazamiento exclusivo de Hero y la ausencia de desplazamiento compartido. La validacion manual registrara las coordenadas de IdentityHeader, Hero y AuthenticationBlock desde un APK fresco.
 
 ## Risks / Trade-offs
 
-- [Riesgo] Un centrado rígido puede ocultar el formulario cuando el viewport se reduce. → [Mitigación] conservar scroll/IME y validar con teclado y pantalla pequeña.
-- [Riesgo] Añadir spacing nuevo puede romper Design System. → [Mitigación] reutilizar tokens existentes y no introducir valores `dp` locales.
-- [Riesgo] La distribución vertical puede alterar estados de registro o error. → [Mitigación] mantener el bloque y sus estados dentro de la misma composición y ejecutar tests/build.
+- [Risk] Mover Hero independientemente puede provocar solapamiento con IdentityHeader. -> [Mitigation] validar coordenadas de las tres regiones y preservar header y autenticacion.
+- [Risk] Un valor arbitrario puede violar Design System. -> [Mitigation] usar tokens existentes y no valores verticales device-specific.
+- [Risk] Separar boundaries puede alterar autenticacion. -> [Mitigation] mantener intacto el subtree y ejecutar tests/build.
+
+### Reference-only text alignment
+
+Hero usara `Alignment.Start` y `TextAlign.Start` con tokens existentes (`headlineMedium` y `bodyLarge`) para reflejar la jerarquia tipografica de la referencia sin hardcodear valores. La etiqueta `Iniciar sesión` usara `TextAlign.Start` dentro de su boundary; el contenido de los campos y botones no se modifica.
 
 ## Migration Plan
 
-1. Implementar la distribución vertical en `AuthScreen` y ajustar únicamente pruebas de presentación.
-2. Validar OpenSpec, tests unitarios, build debug y revisión manual responsive.
-3. Si el resultado visual o el comportamiento con IME falla, revertir el commit del change; no requiere migración de datos ni rollback de backend.
+1. Mantener IdentityHeader fijo y separar Hero sin cambiar contenidos.
+2. Aplicar posicionamiento responsive local unicamente a Hero.
+3. Reconstruir/instalar APK y comparar coordenadas de las tres regiones.
+4. Revertir el change si cambian coordenadas o comportamiento de AuthenticationBlock.
 
 ## Open Questions
 
-- Ninguna para iniciar. La implementación debe elegir la variante de layout que cumpla simultáneamente centrado aproximado, scroll y `imePadding()`.
+- La composicion marcada de Hero en la referencia es la fuente de verdad; IdentityHeader no debe desplazarse como efecto colateral.
+
+## Verified repair constraint
+
+Hero conserva los tokens tipograficos originales `headlineSmall` y `bodyMedium`. Esta restriccion mantiene la altura natural previa del Hero mientras `Alignment.Start` y `TextAlign.Start` aplican unicamente la alineacion solicitada.

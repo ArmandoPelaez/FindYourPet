@@ -30,7 +30,7 @@ class AuthScreenPresentationStaticTest {
 
     assertTrue(source.contains(".widthIn(max = AppSpacing.authMaxWidth)"))
     assertTrue(source.contains(".padding(horizontal = AppSpacing.md),"))
-    assertTrue(source.contains(".padding(vertical = AppSpacing.sm)"))
+    assertTrue(source.contains(".padding(top = AppSpacing.sm)"))
 
     val primaryActionPattern = Regex(
       """AppButton\(\s*onClick = \{\s*submitEmailForm\(\)\s*\}.*?variant = AppButtonVariant\.Primary.*?contentDescription = if \(isSignUp\) \"Crear cuenta\" else \"Entrar\"""",
@@ -52,10 +52,35 @@ class AuthScreenPresentationStaticTest {
     assertTrue(source.contains("viewportHeight = contentViewportHeight"))
     assertTrue(source.contains("private fun LoginVerticalRegions"))
     assertTrue(source.contains("val flexibleGap = flexibleSpace / 2"))
+    assertTrue(source.contains("val heroShift = minOf((AppSpacing.xl + AppSpacing.md).roundToPx(), flexibleGap)"))
+    assertTrue(source.contains("val identityHeroGap = AppSpacing.compactGap.roundToPx()"))
+    assertTrue(source.contains("val authenticationGap = AppSpacing.fieldGap.roundToPx()"))
+    assertTrue(source.contains("// The former combined Header/Hero column had two compact gaps"))
+    assertTrue(source.contains("identityHeroGap +\n            placeables[1].height"))
+    assertTrue(source.contains("authenticationGap * 2"))
+    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap)"))
+    assertTrue(source.contains("placeables[0].placeRelative(0, 0)"))
+    assertTrue(source.contains("placeables[1].placeRelative(0, nextY + heroShift)"))
+    assertTrue(source.contains("placeables[2].placeRelative(0, nextY)"))
+    assertTrue(source.contains("// IdentityHeader boundary: fixed at its existing coordinate; it receives no shift."))
+    assertTrue(source.contains("// Hero boundary: only this region receives its own responsive downward shift."))
+    assertTrue(source.contains("// AuthenticationBlock boundary: its measured position and subtree stay unchanged."))
+    assertTrue(
+      source.indexOf("// IdentityHeader boundary:") <
+        source.indexOf("// Hero boundary:") &&
+        source.indexOf("// Hero boundary:") <
+        source.indexOf("// AuthenticationBlock boundary:")
+    )
+    assertFalse(source.contains("placeables.forEachIndexed"))
+    assertFalse(source.contains("identityShift"))
+    assertFalse(source.contains("placeables[0].placeRelative(0, heroShift)"))
+    assertFalse(source.contains("Spacer(modifier = Modifier.weight(1f))"))
+    assertFalse(source.contains(".heightIn(min = maxHeight)"))
     assertTrue(source.contains(".padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)"))
     assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
     assertFalse(source.contains("Arrangement.spacedBy(\n                AppSpacing.fieldGap,\n                Alignment.CenterVertically,\n            )"))
-    assertTrue(source.contains(".padding(vertical = AppSpacing.sm)"))
+    assertTrue(source.contains(".padding(top = AppSpacing.sm)"))
+    assertTrue(source.contains(".padding(bottom = AppSpacing.sm)"))
     assertTrue(source.contains(".verticalScroll(rememberScrollState())"))
     assertTrue(source.contains(".imePadding()"))
     assertFalse(source.contains("Recordarme"))
@@ -146,6 +171,11 @@ class AuthScreenPresentationStaticTest {
     assertTrue(source.contains("style = MaterialTheme.typography.bodyMedium"))
     assertTrue(source.contains("color = MaterialTheme.colorScheme.onSurfaceVariant"))
     assertTrue(source.contains("Row("))
+    assertTrue(source.contains("// IdentityHeader boundary: this region is measured and placed independently."))
+    assertTrue(source.contains("// Hero boundary: headline and supporting text form their own region."))
+    assertTrue(source.contains("// AuthenticationBlock boundary: its measured position and subtree stay unchanged."))
+    assertTrue(source.contains(".padding(top = AppSpacing.sm)"))
+    assertTrue(source.contains(".padding(bottom = AppSpacing.sm)"))
     assertTrue(source.contains("painterResource(R.drawable.ic_launcher_foreground)"))
     assertTrue(source.contains("contentScale = ContentScale.Fit"))
     assertTrue(source.contains("modifier = Modifier.size(AppSpacing.headerLogo)"))
@@ -160,6 +190,58 @@ class AuthScreenPresentationStaticTest {
     assertTrue(emailField > functionalTitle)
     assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
     assertFalse(source.contains("Accede para seguir avisos y ayudar a reencontrar mascotas."))
+  }
+
+  @Test
+  fun authScreen_alignsHeroAndAuthenticationLabelWithoutChangingControls() {
+    val source = authScreenSource()
+    val hero = source.substringAfter("// Hero boundary: headline and supporting text form their own region.")
+      .substringBefore("// AuthenticationBlock boundary: its measured position and subtree stay unchanged.")
+    val authentication = source.substringAfter("// AuthenticationBlock boundary: its measured position and subtree stay unchanged.")
+
+    assertTrue(hero.contains("horizontalAlignment = Alignment.Start"))
+    assertTrue(hero.contains("style = MaterialTheme.typography.headlineSmall"))
+    assertTrue(hero.contains("style = MaterialTheme.typography.bodyMedium"))
+    assertTrue(hero.contains("textAlign = TextAlign.Start"))
+    assertFalse(hero.contains("textAlign = TextAlign.Center"))
+    assertTrue(authentication.contains("text = if (isSignUp)"))
+    assertTrue(authentication.contains("textAlign = TextAlign.Start"))
+
+    listOf(
+      "FormFieldLabel(\"Email\")",
+      "FormFieldLabel(\"Contrase\u00f1a\")",
+      "AppButton(",
+      "Continuar con Google",
+      "Crear una cuenta",
+    ).forEach { marker ->
+      assertTrue("Authentication control must remain present: $marker", source.contains(marker))
+    }
+    assertTrue(source.contains("placeables[2].placeRelative(0, nextY)"))
+    assertFalse(source.contains("placeables[2].placeRelative(0, nextY + heroShift)"))
+  }
+
+  @Test
+  fun authScreen_doesNotDisplaceAuthenticationThroughASharedParent() {
+    val source = authScreenSource()
+    val layout = source.substringAfter("private fun LoginVerticalRegions")
+
+    assertTrue(layout.contains("placeables[0].placeRelative(0, 0)"))
+    assertTrue(layout.contains("placeables[1].placeRelative(0, nextY + heroShift)"))
+    assertTrue(layout.contains("nextY += placeables[0].height + identityHeroGap"))
+    assertTrue(layout.contains("nextY += placeables[1].height"))
+    assertTrue(layout.contains("nextY += authenticationGap + flexibleGap"))
+    assertTrue(layout.contains("placeables[2].placeRelative(0, nextY)"))
+    assertTrue(layout.contains("identityHeroGap = AppSpacing.compactGap.roundToPx()"))
+    assertTrue(layout.contains("authenticationGap = AppSpacing.fieldGap.roundToPx()"))
+    assertFalse(layout.contains("nextY += identityShift"))
+    assertFalse(layout.contains("nextY += heroShift"))
+    assertFalse(layout.contains("identityShift"))
+    assertFalse(layout.contains("placeables[2].placeRelative(0, nextY +"))
+    assertFalse(layout.contains("padding = heroShift"))
+    assertFalse(layout.contains("offset(y ="))
+    assertFalse(layout.contains("Spacer(modifier = Modifier.weight(1f))"))
+    assertFalse(layout.contains("heightIn(min = maxHeight)"))
+    assertFalse(Regex("(padding|offset|height|size)\\([^)]*\\b\\d+(\\.\\d+)?\\.dp").containsMatchIn(source))
   }
 
   @Test
