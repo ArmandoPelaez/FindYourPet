@@ -85,8 +85,17 @@ interface PetDao {
     @Query("DELETE FROM app_notifications")
     suspend fun clearNotifications()
 
+    @Query("DELETE FROM app_notifications WHERE postId = :postId")
+    suspend fun clearNotificationsForPost(postId: String)
+
+    @Query("DELETE FROM app_notifications WHERE sightingId IN (:sightingIds)")
+    suspend fun clearNotificationsForSightings(sightingIds: List<String>)
+
     @Query("UPDATE app_notifications SET isRead = 1 WHERE id = :id")
     suspend fun markNotificationAsRead(id: String)
+
+    @Query("DELETE FROM app_notifications WHERE id = :id")
+    suspend fun deleteNotification(id: String)
 
     @Query("DELETE FROM sighting_alerts")
     suspend fun clearSightings()

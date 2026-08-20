@@ -232,9 +232,10 @@ class StaticProjectGuardrailsTest {
     assertTrue(policyText.contains("fun canAppearInDiscoveryFeed"))
     assertTrue(policyText.contains("currentUid != ownerId"))
     assertTrue(viewModelText.contains("currentUser,"))
-    assertTrue(viewModelText.contains("OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId)"))
-    assertTrue(profileText.contains("val myPosts = allPosts.filter { it.ownerId == currentUser.id }"))
-    assertTrue(profileText.contains("Estado: ${'$'}{pet.status}"))
+    assertTrue(viewModelText.contains("OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId, post.status)"))
+    assertTrue(profileText.contains("val myPosts = ownedPosts.filter { it.ownerId == currentUser.id }"))
+    assertTrue(profileText.contains("PetStatusChip("))
+    assertTrue(profileText.contains("AppButtonVariant.CompactOutlined"))
   }
 
   @Test

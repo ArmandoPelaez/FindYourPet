@@ -42,6 +42,21 @@ class ModerationContractTest {
   }
 
   @Test
+  fun reunificationCleansOnlySightingsAndRelatedOwnerNotifications() {
+    val dao = source("app/src/main/java/com/findyourpet/app/data/local/dao/PetDao.kt")
+    val repository = source("app/src/main/java/com/findyourpet/app/data/repository/PetRepository.kt")
+
+    assertTrue(dao.contains("clearSightingsForPost(postId: String)"))
+    assertTrue(dao.contains("clearNotificationsForPost(postId: String)"))
+    assertTrue(dao.contains("clearNotificationsForSightings(sightingIds: List<String>)"))
+    assertTrue(repository.contains("whereEqualTo(\"postId\", postId)"))
+    assertTrue(repository.contains("snapshot.getString(\"postId\") == postId"))
+    assertTrue(repository.contains("snapshot.getString(\"sightingId\")?.let(sightingIds::contains) == true"))
+    assertTrue(repository.contains("database.withTransaction"))
+    assertTrue(repository.contains("FIRESTORE_BATCH_DELETE_LIMIT"))
+  }
+
+  @Test
   fun detailModerationIsOwnerOnlyAndDoesNotUseChatIdentifiers() {
     val detail = source("app/src/main/java/com/findyourpet/app/ui/screens/SightingDetailScreen.kt")
     val viewModel = source("app/src/main/java/com/findyourpet/app/ui/viewmodel/PetViewModel.kt")

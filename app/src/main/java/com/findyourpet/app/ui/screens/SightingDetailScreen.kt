@@ -96,9 +96,24 @@ fun SightingDetailScreen(
     var selectedReason by remember(sightingId) { mutableStateOf<ContentReportReason?>(null) }
     val canModerate = sighting?.ownerId == currentUser.id
     val canBlock = canModerate && sighting?.reporterId?.isNotBlank() == true && !reporterBlocked
+    val navigateBack = {
+        viewModel.clearSightingDetail()
+        onBackClick()
+    }
 
     LaunchedEffect(sightingId) {
         viewModel.selectSightingDetail(sightingId)
+    }
+
+    LaunchedEffect(
+        sightingId,
+        sightingState.isLoading,
+        sightingState.data,
+        sightingState.errorMessage
+    ) {
+        if (!sightingState.isLoading && sightingState.data == null && sightingState.hasError) {
+            navigateBack()
+        }
     }
 
     LaunchedEffect(sighting?.id, currentUser.id, sighting?.reporterId) {
@@ -142,7 +157,7 @@ fun SightingDetailScreen(
                         .height(AppSpacing.homeHeaderHeight),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = navigateBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
                     }
                     Text(

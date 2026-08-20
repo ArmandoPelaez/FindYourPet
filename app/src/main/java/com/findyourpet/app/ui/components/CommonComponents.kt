@@ -12,8 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -26,6 +24,7 @@ import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
 import com.findyourpet.app.ui.theme.PetStatusColors
+import com.findyourpet.app.ui.theme.bottomNavigationSurfaceColor
 
 @Composable
 fun PetStatusChip(
@@ -461,12 +460,6 @@ private fun BottomNavigationItemContent(
         )
     }
 }
-
-@Composable
-private fun bottomNavigationSurfaceColor(): Color =
-    MaterialTheme.colorScheme.surfaceVariant
-        .copy(alpha = AppOpacity.bottomNavigationSurface)
-        .compositeOver(MaterialTheme.colorScheme.background)
 
 @Composable
 fun <T> SyncStatusBanner(

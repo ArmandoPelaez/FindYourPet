@@ -68,7 +68,7 @@ class BottomPrimaryActionBannerPresentationStaticTest {
 
     val itemStart = components.indexOf("private fun RowScope.BottomNavigationItem(")
     val contentStart = components.indexOf("private fun BottomNavigationItemContent(", itemStart)
-    val contentEnd = components.indexOf("private fun bottomNavigationSurfaceColor()", contentStart)
+    val contentEnd = components.indexOf("@Composable\nfun <T> SyncStatusBanner", contentStart)
     assertTrue(itemStart >= 0)
     assertTrue(contentStart > itemStart)
     assertTrue(contentEnd > contentStart)

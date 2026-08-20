@@ -59,7 +59,9 @@ class PetRepository(context: Context) {
                     .orderBy("dateLost", Query.Direction.DESCENDING),
                 initialData = emptyList()
             ) { snapshot ->
-                snapshot.documents.mapNotNull { it.data?.toPetPostEntity(it.id) }
+                snapshot.documents
+                    .mapNotNull { it.data?.toPetPostEntity(it.id) }
+                    .filterNot { it.status.equals(REUNITED_STATUS, ignoreCase = true) }
             }.onEach { state ->
                 if (!state.hasError) {
                     petDao.clearPosts()
@@ -225,21 +227,89 @@ class PetRepository(context: Context) {
             .await()
     }
 
-    suspend fun updatePostStatus(postId: String, status: String) {
+    suspend fun updatePostStatus(postId: String, status: String, expectedOwnerId: String) {
+        require(status == REUNITED_STATUS) { "Solo se permite marcar una publicacion como reunida." }
+        require(expectedOwnerId.isNotBlank()) { "El propietario de la publicacion es obligatorio." }
         val db = firestore
         if (db == null) {
-            petDao.updatePostStatus(postId, status)
+            database.withTransaction {
+                val post = petDao.getPostById(postId).first()
+                    ?: error("La publicacion no esta disponible.")
+                require(post.ownerId == expectedOwnerId) { "Solo el propietario puede actualizar esta publicacion." }
+                require(post.status == LOST_STATUS) { "Una publicacion reunida no puede reactivarse." }
+                val sightingIds = petDao.getSightingsForPost(postId).first().map { it.id }
+                petDao.updatePostStatus(postId, status)
+                petDao.clearSightingsForPost(postId)
+                petDao.clearNotificationsForPost(postId)
+                if (sightingIds.isNotEmpty()) {
+                    petDao.clearNotificationsForSightings(sightingIds)
+                }
+            }
             return
         }
-        db.collection(BackendCollections.PET_POSTS)
-            .document(postId)
-            .update(
-                mapOf(
-                    "status" to status,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-            )
+        val cachedSightingIds = petDao.getSightingsForPost(postId).first().map { it.id }
+        val document = db.collection(BackendCollections.PET_POSTS).document(postId).get().await()
+        val post = document.data?.toPetPostEntity(document.id)
+            ?: error("La publicacion no esta disponible.")
+        require(post.ownerId == expectedOwnerId) { "Solo el propietario puede actualizar esta publicacion." }
+        require(post.status == LOST_STATUS) { "Una publicacion reunida no puede reactivarse." }
+
+        val sightingSnapshot = db.collection(BackendCollections.SIGHTINGS)
+            .whereEqualTo("postId", postId)
+            .whereEqualTo("ownerId", expectedOwnerId)
+            .get()
             .await()
+        val remoteSightingIds = sightingSnapshot.documents.map { it.id }
+        val sightingIds = (remoteSightingIds + cachedSightingIds).distinct()
+        val notificationSnapshot = db.collection(BackendCollections.USERS)
+            .document(expectedOwnerId)
+            .collection(BackendCollections.NOTIFICATIONS)
+            .get()
+            .await()
+        val notificationReferences = notificationSnapshot.documents
+            .mapNotNull { snapshot ->
+                val related = snapshot.getString("postId") == postId ||
+                    snapshot.getString("sightingId")?.let(sightingIds::contains) == true
+                if (related) snapshot.reference else null
+            }
+        val deletionReferences = sightingSnapshot.documents.map { it.reference } + notificationReferences
+        val postReference = db.collection(BackendCollections.PET_POSTS).document(postId)
+
+        deletionReferences.chunked(FIRESTORE_BATCH_DELETE_LIMIT).forEachIndexed { index, references ->
+            val batch = db.batch()
+            if (index == 0) {
+                batch.update(
+                    postReference,
+                    mapOf(
+                        "status" to status,
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                )
+            }
+            references.forEach { batch.delete(it) }
+            batch.commit().await()
+        }
+        if (deletionReferences.isEmpty()) {
+            db.batch()
+                .update(
+                    postReference,
+                    mapOf(
+                        "status" to status,
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                )
+                .commit()
+                .await()
+        }
+
+        database.withTransaction {
+            petDao.updatePostStatus(postId, status)
+            petDao.clearSightingsForPost(postId)
+            petDao.clearNotificationsForPost(postId)
+            if (sightingIds.isNotEmpty()) {
+                petDao.clearNotificationsForSightings(sightingIds)
+            }
+        }
     }
 
     suspend fun deletePost(postId: String) {
@@ -446,6 +516,20 @@ class PetRepository(context: Context) {
                 .await()
         }
         petDao.markNotificationAsRead(id)
+    }
+
+    suspend fun deleteNotification(userId: String, id: String) {
+        require(userId.isNotBlank()) { "El usuario de la notificacion es obligatorio." }
+        require(id.isNotBlank()) { "El identificador de la notificacion es obligatorio." }
+
+        firestore?.collection(BackendCollections.USERS)
+            ?.document(userId)
+            ?.collection(BackendCollections.NOTIFICATIONS)
+            ?.document(id)
+            ?.delete()
+            ?.await()
+
+        petDao.deleteNotification(id)
     }
 
     suspend fun clearPrivateCache() {
@@ -706,6 +790,9 @@ class PetRepository(context: Context) {
     )
 
     private companion object {
+        const val LOST_STATUS = "PERDIDO"
+        const val REUNITED_STATUS = "REUNIDO"
+        const val FIRESTORE_BATCH_DELETE_LIMIT = 499
         const val RETIRED_CONTACT_NOTIFICATION_TYPE = "CONTACT_SHARED"
         const val BLOCKED_SIGHTING_MESSAGE =
             "No puedes enviar un avistamiento para esta publicacion."

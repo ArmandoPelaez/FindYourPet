@@ -9,11 +9,11 @@ import org.junit.Test
 
 class NotificationRoutingContractTest {
   @Test
-  fun notificationClickPassesFullNotificationAndMarksRead() {
+  fun notificationClickPassesFullNotificationAndDeletesNotification() {
     val notifications = source("app/src/main/java/com/findyourpet/app/ui/screens/NotificationsScreen.kt")
     val mapper = source("app/src/main/java/com/findyourpet/app/data/remote/RemoteMappers.kt")
 
-    assertTrue(notifications.contains("viewModel.markNotificationAsRead(notif.id)"))
+    assertTrue(notifications.contains("viewModel.deleteNotification(notif.id)"))
     assertTrue(notifications.contains("onNotificationClick(notif)"))
     assertTrue(!notifications.contains("notif.chatId ?: notif.targetId"))
     assertTrue(mapper.contains("chatId = string(\"chatId\").ifBlank { null }"))
