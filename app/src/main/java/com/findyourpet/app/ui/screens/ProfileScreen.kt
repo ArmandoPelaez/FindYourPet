@@ -1,13 +1,13 @@
-﻿package com.findyourpet.app.ui.screens
+package com.findyourpet.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,46 +15,27 @@ import androidx.compose.ui.Modifier
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
 import com.findyourpet.app.ui.components.EmptyState
+import com.findyourpet.app.ui.components.PetStatusChip
 import com.findyourpet.app.ui.components.SyncStatusBanner
-import com.findyourpet.app.ui.theme.AppOpacity
 import com.findyourpet.app.ui.theme.AppShapes
 import com.findyourpet.app.ui.theme.AppSpacing
+import com.findyourpet.app.ui.theme.bottomNavigationSurfaceColor
 import com.findyourpet.app.ui.viewmodel.PetViewModel
+import com.findyourpet.app.ui.viewmodel.PostStatusUpdateStatus
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: PetViewModel,
-    onBackClick: (() -> Unit)? = null
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
-    val allPosts by viewModel.allPosts.collectAsState()
-    val postFeedState by viewModel.postFeedState.collectAsState()
+    val ownedPosts by viewModel.ownedPosts.collectAsState()
+    val ownedPostsState by viewModel.ownedPostsState.collectAsState()
+    val postStatusUpdateState by viewModel.postStatusUpdateState.collectAsState()
+    var pendingReunitedPostId by remember { mutableStateOf<String?>(null) }
 
-    val myPosts = allPosts.filter { it.ownerId == currentUser.id }
+    val myPosts = ownedPosts.filter { it.ownerId == currentUser.id }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets.safeDrawing,
-                title = { Text("Mi Perfil y Colaboración") },
-                navigationIcon = {
-                    val navigateBack = onBackClick
-                    if (navigateBack != null) {
-                        IconButton(onClick = navigateBack) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.signOut() }) {
-                        Icon(Icons.Filled.Logout, contentDescription = "Salir")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,20 +49,15 @@ fun ProfileScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            // User Card
-            item {
-                SyncStatusBanner(state = postFeedState)
-            }
-
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.emptyState,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    colors = CardDefaults.cardColors(containerColor = bottomNavigationSurfaceColor())
                 ) {
-                    Column(
+                    Row(
                         modifier = Modifier.padding(AppSpacing.cardPadding),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
                             color = MaterialTheme.colorScheme.primary,
@@ -98,44 +74,21 @@ fun ProfileScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(AppSpacing.fieldGap))
-
-                        Text(
-                            text = currentUser.name,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-
-                        Text(
-                            text = "Miembro Colaborador",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                        )
-
-                        Spacer(modifier = Modifier.height(AppSpacing.md))
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        Spacer(modifier = Modifier.height(AppSpacing.md))
-
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Email,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(AppSpacing.iconProfile)
-                                )
-                                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                        Spacer(modifier = Modifier.width(AppSpacing.fieldGap))
+                        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                            Text(text = currentUser.name, style = MaterialTheme.typography.titleLarge)
+                            Surface(
+                                shape = AppShapes.chip,
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.secondary,
+                            ) {
                                 Text(
-                                    text = "Email de cuenta: ",
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                                Text(
-                                    text = currentUser.email,
-                                    style = MaterialTheme.typography.bodySmall
+                                    text = "Colaborador",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(
+                                        horizontal = AppSpacing.md,
+                                        vertical = AppSpacing.xs,
+                                    ),
                                 )
                             }
                         }
@@ -143,45 +96,13 @@ fun ProfileScreen(
                 }
             }
 
-            // Contact notice.
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = AppShapes.content,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = AppOpacity.syncSurface))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(AppSpacing.md),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Shield,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(AppSpacing.xl)
-                        )
-                        Spacer(modifier = Modifier.width(AppSpacing.fieldGap))
-                        Column {
-                            Text(
-                                text = "Comunidad colaborativa",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Spacer(modifier = Modifier.height(AppSpacing.microGap))
-                            Text(
-                                text = "FindYourPet no ofrece mensajeria ni comparte datos de contacto entre usuarios. Las notificaciones solo informan sobre avistamientos.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
+                SyncStatusBanner(state = ownedPostsState)
             }
 
-            // My Posts Header
             item {
                 Text(
-                    text = "🐾 Mis Mascotas Publicadas (${myPosts.size})",
+                    text = "\uD83D\uDC3E Mis publicaciones (${myPosts.size})",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = AppSpacing.sm)
                 )
@@ -205,35 +126,103 @@ fun ProfileScreen(
                             modifier = Modifier.padding(AppSpacing.compactCardPadding),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.secondary,
+                                shape = CircleShape,
+                                modifier = Modifier.size(AppSpacing.avatarMedium),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Pets,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(AppSpacing.iconMedium),
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(AppSpacing.fieldGap))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = pet.petName,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = "Estado: ${pet.status}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                Text(text = pet.petName, style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                                PetStatusChip(
+                                    status = pet.status,
+                                    showIcon = false,
                                 )
                             }
 
-                            AppButton(
-                                onClick = {
-                                    val newStatus = if (pet.status == "REUNIDO") "PERDIDO" else "REUNIDO"
-                                    viewModel.updatePetStatus(pet.id, newStatus)
-                                },
-                                variant = if (pet.status == "REUNIDO") AppButtonVariant.Tonal else AppButtonVariant.Success,
-                                contentDescription = if (pet.status == "REUNIDO") "Reabrir publicación de ${pet.petName}" else "Marcar reunido ${pet.petName}"
-                            ) {
-                                Text(
-                                    text = if (pet.status == "REUNIDO") "Reabrir" else "¡Marcar Reunido!",
-                                    style = MaterialTheme.typography.labelLarge
-                                )
+                            if (pet.status.equals("PERDIDO", ignoreCase = true)) {
+                                val isUpdating = postStatusUpdateState.status == PostStatusUpdateStatus.SUBMITTING &&
+                                    postStatusUpdateState.postId == pet.id
+                                AppButton(
+                                    onClick = { pendingReunitedPostId = pet.id },
+                                    enabled = !isUpdating,
+                                    variant = AppButtonVariant.CompactOutlined,
+                                    contentDescription = "Marcar reunida ${pet.petName}"
+                                ) {
+                                    Text("Marcar reunida", style = MaterialTheme.typography.labelLarge)
+                                }
                             }
                         }
                     }
                 }
             }
+
+            if (postStatusUpdateState.status == PostStatusUpdateStatus.ERROR &&
+                postStatusUpdateState.message != null
+            ) {
+                item {
+                    Text(
+                        text = postStatusUpdateState.message.orEmpty(),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            item {
+                TextButton(
+                    onClick = { viewModel.signOut() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Logout,
+                        contentDescription = null,
+                        modifier = Modifier.size(AppSpacing.iconMedium),
+                    )
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                    Text("Cerrar sesi\u00F3n")
+                }
+            }
         }
+    }
+
+    val pendingPost = myPosts.firstOrNull { it.id == pendingReunitedPostId }
+    if (pendingPost != null) {
+        AlertDialog(
+            onDismissRequest = { pendingReunitedPostId = null },
+            title = { Text("Marcar como reunida") },
+            text = {
+                Text(
+                    "Esta publicaci\u00F3n dejar\u00E1 de ser visible p\u00FAblicamente y seguir\u00E1 disponible en tus publicaciones."
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingReunitedPostId = null }) {
+                    Text("Cancelar")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.markPetAsReunited(pendingPost.id)
+                        pendingReunitedPostId = null
+                    }
+                ) {
+                    Text("Confirmar")
+                }
+            }
+        )
     }
 }

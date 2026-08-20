@@ -105,8 +105,8 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("ProfileScreen(viewModel = viewModel)"))
     assertTrue(mainActivity.contains("ActivityScreen("))
     assertTrue(!mainActivity.contains("ProfileScreen(\n                viewModel = viewModel,\n                onBackClick"))
-    assertTrue(profileScreen.contains("onBackClick: (() -> Unit)? = null"))
-    assertTrue(profileScreen.contains("if (navigateBack != null)"))
+    assertTrue(!profileScreen.contains("onBackClick"))
+    assertTrue(!profileScreen.contains("TopAppBar"))
   }
 
   @Test

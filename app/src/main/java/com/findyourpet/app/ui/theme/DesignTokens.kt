@@ -4,6 +4,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -124,6 +125,13 @@ object AppOpacity {
     const val timestamp = 0.70f
     const val iconSurface = 0.14f
 }
+
+/** Shared semantic surface used by the bottom navigation and compact profile card. */
+@Composable
+fun bottomNavigationSurfaceColor(): Color =
+    MaterialTheme.colorScheme.surfaceVariant
+        .copy(alpha = AppOpacity.bottomNavigationSurface)
+        .compositeOver(MaterialTheme.colorScheme.background)
 
 data class StatusColorTokens(
     val container: Color,

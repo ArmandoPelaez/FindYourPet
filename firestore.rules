@@ -242,6 +242,14 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/sightings/$(sightingId)).data;
     }
 
+    function isReunitedPostOwnerAfter(postId) {
+      let postPath = /databases/$(database)/documents/petPosts/$(postId);
+      return signedIn()
+        && existsAfter(postPath)
+        && getAfter(postPath).data.ownerId == uid()
+        && getAfter(postPath).data.status == 'REUNIDO';
+    }
+
     function validSightingNotificationCreate(data) {
       return data.type == 'ALERT'
         && !data.keys().hasAny(['chatId'])
@@ -299,6 +307,8 @@ service cloud.firestore {
         && validCloudinaryMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
         && validOptionalPetPostLocation(request.resource.data)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+          || (request.resource.data.status == 'REUNIDO' && resource.data.status == 'PERDIDO'))
         && !publicContactFieldsChanged();
       allow delete: if isPostOwner();
     }
@@ -316,7 +326,9 @@ service cloud.firestore {
         && validOptionalMediaReference(request.resource.data)
         && validLocationSource(request.resource.data)
         && preciseSightingLocationIsConsented(request.resource.data);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if resource.data.postId is string
+        && isReunitedPostOwnerAfter(resource.data.postId);
     }
 
     match /contentReports/{reportId} {

@@ -27,6 +27,7 @@ import com.findyourpet.app.domain.flatMapLatestForAuthenticatedUser
 import com.findyourpet.app.domain.OwnershipPolicy
 import com.findyourpet.app.util.CrashReporter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +60,14 @@ data class ModerationOperationState(
     val message: String? = null
 )
 
+enum class PostStatusUpdateStatus { IDLE, SUBMITTING, SUCCESS, ERROR }
+
+data class PostStatusUpdateState(
+    val status: PostStatusUpdateStatus = PostStatusUpdateStatus.IDLE,
+    val postId: String? = null,
+    val message: String? = null
+)
+
 enum class ContentReportReason(val storageValue: String, val label: String) {
     INAPPROPRIATE("INAPPROPRIATE", "Contenido inapropiado"),
     FALSE_INFORMATION("FALSE_INFORMATION", "Informacion falsa"),
@@ -77,6 +86,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     private val _sightingSubmissionState = MutableStateFlow(SightingSubmissionState())
     private val _reportOperationState = MutableStateFlow(ModerationOperationState())
     private val _blockOperationState = MutableStateFlow(ModerationOperationState())
+    private val _postStatusUpdateState = MutableStateFlow(PostStatusUpdateState())
     private val _sightingReporterBlocked = MutableStateFlow(false)
 
     val authState: StateFlow<AuthUiState> = authRepository.authState
@@ -84,6 +94,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
     val sightingSubmissionState: StateFlow<SightingSubmissionState> = _sightingSubmissionState
     val reportOperationState: StateFlow<ModerationOperationState> = _reportOperationState
     val blockOperationState: StateFlow<ModerationOperationState> = _blockOperationState
+    val postStatusUpdateState: StateFlow<PostStatusUpdateState> = _postStatusUpdateState
     val sightingReporterBlocked: StateFlow<Boolean> = _sightingReporterBlocked
     val isAuthenticated: StateFlow<Boolean> = authState
         .map(AuthSessionMapper::isAuthenticated)
@@ -127,6 +138,30 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         .map { it.data }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val ownedPostsState: StateFlow<BackendSyncState<List<PetPostEntity>>> = authState
+        .flatMapLatestForAuthenticatedUser(
+            signedOut = {
+                flowOf(
+                    BackendSyncState.data(
+                        emptyList(),
+                        isFromCache = false,
+                        hasPendingWrites = false,
+                        isRemoteBackend = repository.usesRemoteBackend
+                    )
+                )
+            },
+            signedIn = { ownerId -> repository.getPostsByOwnerState(ownerId) }
+        )
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            BackendSyncState.loading(emptyList(), repository.usesRemoteBackend)
+        )
+
+    val ownedPosts: StateFlow<List<PetPostEntity>> = ownedPostsState
+        .map { it.data }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val filteredPosts: StateFlow<List<PetPostEntity>> = combine(
         allPosts,
         currentUser,
@@ -143,7 +178,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
             val matchesSpecies = species == "Todos" || post.species.equals(species, ignoreCase = true)
             val matchesStatus = status == "Todos" || post.status.equals(status, ignoreCase = true)
-            val visibleToCurrentUser = OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId)
+            val visibleToCurrentUser = OwnershipPolicy.canAppearInDiscoveryFeed(user.id, post.ownerId, post.status)
 
             visibleToCurrentUser && matchesQuery && matchesSpecies && matchesStatus
         }
@@ -341,6 +376,10 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectSightingDetail(sightingId: String) {
         selectedSightingId.value = sightingId
+    }
+
+    fun clearSightingDetail() {
+        selectedSightingId.value = null
     }
 
     fun refreshSightingModeration(sighting: SightingAlertEntity) {
@@ -562,18 +601,46 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updatePetStatus(postId: String, newStatus: String) {
         val user = currentAuthenticatedUser() ?: return
-        val post = selectedPost.value
-        if (post?.id == postId && !OwnershipPolicy.canManagePost(user.id, post.ownerId)) {
-            _authMessage.value = "Only the owner can update this post."
+        if (newStatus != REUNITED_STATUS) {
+            _authMessage.value = "Las publicaciones reunidas no se pueden reactivar."
             return
         }
+        val post = ownedPosts.value.firstOrNull { it.id == postId }
+        if (post != null && !OwnershipPolicy.canMarkAsReunited(user.id, post.ownerId, post.status)) {
+            _authMessage.value = "Solo el propietario puede marcar una publicacion perdida como reunida."
+            return
+        }
+        if (_postStatusUpdateState.value.status == PostStatusUpdateStatus.SUBMITTING) return
+        _authMessage.value = null
+        _postStatusUpdateState.value = PostStatusUpdateState(
+            status = PostStatusUpdateStatus.SUBMITTING,
+            postId = postId
+        )
         viewModelScope.launch {
             runCatching {
-                repository.updatePostStatus(postId, newStatus)
+                repository.updatePostStatus(postId, newStatus, user.id)
+            }.onSuccess {
+                _postStatusUpdateState.value = PostStatusUpdateState(
+                    status = PostStatusUpdateStatus.SUCCESS,
+                    postId = postId
+                )
             }.onFailure {
-                _authMessage.value = it.message ?: "No se pudo actualizar la ficha."
+                val message = backendWriteErrorMessage(
+                    it,
+                    "No se pudo marcar como reunida ni limpiar la actividad y las alertas relacionadas."
+                )
+                _authMessage.value = message
+                _postStatusUpdateState.value = PostStatusUpdateState(
+                    status = PostStatusUpdateStatus.ERROR,
+                    postId = postId,
+                    message = message
+                )
             }
         }
+    }
+
+    fun markPetAsReunited(postId: String) {
+        updatePetStatus(postId, REUNITED_STATUS)
     }
 
     fun markNotificationAsRead(id: String) {
@@ -587,6 +654,19 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteNotification(id: String) {
+        val user = currentAuthenticatedUser() ?: return
+        viewModelScope.launch {
+            try {
+                repository.deleteNotification(user.id, id)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _authMessage.value = error.message ?: "No se pudo eliminar la notificacion."
+            }
+        }
+    }
+
     private fun currentAuthenticatedUser(): UserProfile? {
         val user = currentUser.value
         if (user.id.isBlank()) {
@@ -594,6 +674,10 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
             return null
         }
         return user
+    }
+
+    private companion object {
+        const val REUNITED_STATUS = "REUNIDO"
     }
 
     private fun backendWriteErrorMessage(error: Throwable, fallback: String): String {

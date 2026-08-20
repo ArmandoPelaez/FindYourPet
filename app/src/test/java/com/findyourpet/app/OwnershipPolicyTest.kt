@@ -30,6 +30,22 @@ class OwnershipPolicyTest {
   }
 
   @Test
+  fun discoveryFeedHidesReunitedPostsButKeepsOtherPublicStatuses() {
+    assertFalse(OwnershipPolicy.canAppearInDiscoveryFeed("viewer_uid", "owner_uid", "REUNIDO"))
+    assertFalse(OwnershipPolicy.canAppearInDiscoveryFeed("viewer_uid", "owner_uid", "reunido"))
+    assertTrue(OwnershipPolicy.canAppearInDiscoveryFeed("viewer_uid", "owner_uid", "PERDIDO"))
+    assertTrue(OwnershipPolicy.canAppearInDiscoveryFeed("viewer_uid", "owner_uid", "AVISTADO"))
+  }
+
+  @Test
+  fun reunitedTransitionIsOwnerOnlyAndLostOnly() {
+    assertTrue(OwnershipPolicy.canMarkAsReunited("owner_uid", "owner_uid", "PERDIDO"))
+    assertFalse(OwnershipPolicy.canMarkAsReunited("viewer_uid", "owner_uid", "PERDIDO"))
+    assertFalse(OwnershipPolicy.canMarkAsReunited("owner_uid", "owner_uid", "REUNIDO"))
+    assertFalse(OwnershipPolicy.canMarkAsReunited("owner_uid", "owner_uid", "AVISTADO"))
+  }
+
+  @Test
   fun cachedDemoIdsCannotGrantProductionAccessToFirebaseUid() {
     assertFalse(OwnershipPolicy.canManagePost("firebase_uid", "owner_1"))
     assertTrue(OwnershipPolicy.canReportSighting("firebase_uid", "owner_1"))

@@ -46,6 +46,17 @@ class FirestoreRulesStaticTest {
     assertTrue(rulesText.contains("allow update, delete: if false"))
   }
 
+  @Test
+  fun reunitedCascadeAllowsOnlyOwnerToDeleteSightingsAfterReunification() {
+    assertTrue(rulesText.contains("function isReunitedPostOwnerAfter(postId)"))
+    assertTrue(rulesText.contains("existsAfter(postPath)"))
+    assertTrue(rulesText.contains("getAfter(postPath).data.ownerId == uid()"))
+    assertTrue(rulesText.contains("getAfter(postPath).data.status == 'REUNIDO'"))
+    assertTrue(rulesText.contains("allow delete: if resource.data.postId is string"))
+    assertTrue(rulesText.contains("allow delete: if isUser(userId);"))
+    assertTrue(rulesText.contains("request.resource.data.status == 'REUNIDO' && resource.data.status == 'PERDIDO'"))
+  }
+
   private fun repoRoot(): File {
     val userDir = requireNotNull(System.getProperty("user.dir"))
     return generateSequence(File(userDir).absoluteFile) { it.parentFile }

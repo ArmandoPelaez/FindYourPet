@@ -78,7 +78,7 @@ fun NotificationsScreen(
                         NotificationCard(
                             notification = notif,
                             onClick = {
-                                viewModel.markNotificationAsRead(notif.id)
+                                viewModel.deleteNotification(notif.id)
                                 onNotificationClick(notif)
                             }
                         )
