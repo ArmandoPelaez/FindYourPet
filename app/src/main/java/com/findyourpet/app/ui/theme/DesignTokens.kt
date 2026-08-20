@@ -69,9 +69,9 @@ object AppSpacing {
     val bottomNavigationCreateActionSize: Dp = 52.dp
     val bottomNavigationCreateIconSize: Dp = 22.dp
     val bottomNavigationLabelGap: Dp = none
-    val bottomNavigationWellSize: Dp = 64.dp
+    val bottomNavigationWellSize: Dp = 60.dp
     val bottomNavigationDividerArcHeight: Dp = 8.dp
-    val bottomNavigationActionLift: Dp = 18.dp
+    val bottomNavigationActionLift: Dp = 8.dp
     val bottomNavigationMaxWidth: Dp = 720.dp
     val bottomNavigationSmallBreakpoint: Dp = 360.dp
     val bottomNavigationLargeBreakpoint: Dp = 400.dp

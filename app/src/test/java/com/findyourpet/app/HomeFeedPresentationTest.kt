@@ -130,7 +130,7 @@ class HomeFeedPresentationTest {
     assertTrue(cardSource.contains("modifier = Modifier.fillMaxSize()"))
     assertTrue(cardSource.contains("verticalScroll(rememberScrollState())"))
     assertTrue(cardSource.contains("aspectRatio(AppSpacing.cardImageAspectRatio)"))
-    assertTrue(cardSource.contains("padding(horizontal = AppSpacing.md)"))
+    assertTrue(cardSource.contains("padding(horizontal = AppSpacing.contentInset)"))
     assertFalse(cardSource.contains("top = AppSpacing.sm"))
     assertTrue(cardSource.contains("bottom = AppSpacing.cardContentVertical"))
     assertTrue(cardSource.contains("clip(AppShapes.card)"))
