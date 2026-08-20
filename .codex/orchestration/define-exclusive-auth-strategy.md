@@ -1,7 +1,7 @@
 # Orchestration State: define-exclusive-auth-strategy
 
-state: VERIFYING
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-45
 change: define-exclusive-auth-strategy
 base_branch: main
@@ -14,9 +14,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a01bf0-14dc-7d02-a61f-ae63ce47a1a7
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 0dfbac6abfc6d4936e97e737d084a5e42d74e2c6
+integration_evidence: PR #61 merged into main; main and origin/main synchronized at 0dfbac6abfc6d4936e97e737d084a5e42d74e2c6.
 
 ## Preflight y sincronización
 
@@ -151,3 +151,10 @@ integration_evidence:
 - Captura: `.codex/orchestration/scrum-45-cleared-fields.png`.
 - No se utilizaron credenciales reales.
 - Las validaciones reales `3.1–3.4` continúan pendientes; el change permanece `BLOCKED`.
+
+## Integración
+
+- Commit, merge y OR realizados.
+- PR #61 mergeado en `main`.
+- Commit integrado: `0dfbac6abfc6d4936e97e737d084a5e42d74e2c6`.
+- Estado de bitácora: `INTEGRATED`.
