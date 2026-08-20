@@ -64,14 +64,11 @@ object AppSpacing {
     val submitButtonHeight: Dp = 56.dp
     val bannerHeight: Dp = 60.dp
     val bannerHorizontalPadding: Dp = 18.dp
-    val bottomNavigationIconSlotHeight: Dp = 28.dp
+    val bottomNavigationIconSlotHeight: Dp = 40.dp
     val bottomNavigationIcon: Dp = 22.dp
-    val bottomNavigationCreateActionSize: Dp = 52.dp
-    val bottomNavigationCreateIconSize: Dp = 22.dp
+    val bottomNavigationReportActionSize: Dp = 40.dp
+    val bottomNavigationTouchTarget: Dp = 48.dp
     val bottomNavigationLabelGap: Dp = none
-    val bottomNavigationWellSize: Dp = 60.dp
-    val bottomNavigationDividerArcHeight: Dp = 8.dp
-    val bottomNavigationActionLift: Dp = 8.dp
     val bottomNavigationMaxWidth: Dp = 720.dp
     val bottomNavigationSmallBreakpoint: Dp = 360.dp
     val bottomNavigationLargeBreakpoint: Dp = 400.dp

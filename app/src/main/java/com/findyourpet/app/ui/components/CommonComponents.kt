@@ -2,7 +2,6 @@
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.EventNote
@@ -13,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.testTag
@@ -284,55 +282,50 @@ fun BottomPrimaryActionBanner(
                     tonalElevation = AppSpacing.none,
                     shadowElevation = AppElevation.bottomNavigation,
                 ) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        BottomNavigationTopDivider()
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(AppSpacing.bannerHeight),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                            BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Home,
-                                label = "Inicio",
-                                contentDescription = "Inicio",
-                                icon = Icons.Filled.Home,
-                                onClick = onHomeClick,
-                            )
-                            BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Profile,
-                                label = "Perfil",
-                                contentDescription = "Perfil",
-                                icon = Icons.Outlined.Person,
-                                onClick = onProfileClick,
-                            )
-                            BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Create,
-                                label = "Reportar",
-                                contentDescription = "Reportar",
-                                icon = Icons.Filled.Pets,
-                                isCreateAction = true,
-                                onClick = onCreatePostClick,
-                            )
-                            BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Activity,
-                                label = "Actividad",
-                                contentDescription = "Actividad",
-                                icon = Icons.AutoMirrored.Outlined.EventNote,
-                                onClick = onActivityClick,
-                            )
-                            BottomNavigationItem(
-                                selected = selectedDestination == BottomNavigationDestination.Notifications,
-                                label = "Alertas",
-                                contentDescription = "Alertas",
-                                icon = Icons.Outlined.NotificationsNone,
-                                unreadCount = unreadNotificationsCount,
-                                onClick = onNotificationsClick,
-                            )
-                            }
-                        }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AppSpacing.bannerHeight),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        BottomNavigationItem(
+                            selected = selectedDestination == BottomNavigationDestination.Home,
+                            label = "Inicio",
+                            contentDescription = "Inicio",
+                            icon = Icons.Filled.Home,
+                            onClick = onHomeClick,
+                        )
+                        BottomNavigationItem(
+                            selected = selectedDestination == BottomNavigationDestination.Profile,
+                            label = "Perfil",
+                            contentDescription = "Perfil",
+                            icon = Icons.Outlined.Person,
+                            onClick = onProfileClick,
+                        )
+                        BottomNavigationItem(
+                            selected = selectedDestination == BottomNavigationDestination.Create,
+                            label = "Reportar",
+                            contentDescription = "Reportar",
+                            icon = Icons.Filled.Pets,
+                            isCreateAction = true,
+                            onClick = onCreatePostClick,
+                        )
+                        BottomNavigationItem(
+                            selected = selectedDestination == BottomNavigationDestination.Activity,
+                            label = "Actividad",
+                            contentDescription = "Actividad",
+                            icon = Icons.AutoMirrored.Outlined.EventNote,
+                            onClick = onActivityClick,
+                        )
+                        BottomNavigationItem(
+                            selected = selectedDestination == BottomNavigationDestination.Notifications,
+                            label = "Alertas",
+                            contentDescription = "Alertas",
+                            icon = Icons.Outlined.NotificationsNone,
+                            unreadCount = unreadNotificationsCount,
+                            onClick = onNotificationsClick,
+                        )
                     }
                 }
             }
@@ -361,42 +354,24 @@ private fun RowScope.BottomNavigationItem(
     val itemModifier = Modifier
         .weight(1f)
         .height(AppSpacing.bannerHeight)
+        .sizeIn(
+            minWidth = AppSpacing.bottomNavigationTouchTarget,
+            minHeight = AppSpacing.bottomNavigationTouchTarget,
+        )
 
-    if (isCreateAction) {
-        Box(
-            modifier = itemModifier,
-            contentAlignment = Alignment.Center,
-        ) {
-            BottomNavigationItemContent(
-                selected = selected,
-                label = label,
-                contentDescription = contentDescription,
-                icon = icon,
-                onClick = onClick,
-                isCreateAction = true,
-                unreadCount = unreadCount,
-            )
-        }
-    } else {
-        IconButton(
-            onClick = onClick,
-            modifier = itemModifier,
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                BottomNavigationItemContent(
-                    selected = selected,
-                    label = label,
-                    contentDescription = contentDescription,
-                    icon = icon,
-                    onClick = onClick,
-                    isCreateAction = false,
-                    unreadCount = unreadCount,
-                )
-            }
-        }
+    IconButton(
+        onClick = onClick,
+        modifier = itemModifier.semantics {
+            this.contentDescription = contentDescription
+        },
+    ) {
+        BottomNavigationItemContent(
+            selected = selected,
+            label = label,
+            icon = icon,
+            isCreateAction = isCreateAction,
+            unreadCount = unreadCount,
+        )
     }
 }
 
@@ -404,9 +379,7 @@ private fun RowScope.BottomNavigationItem(
 private fun BottomNavigationItemContent(
     selected: Boolean,
     label: String,
-    contentDescription: String,
     icon: ImageVector,
-    onClick: () -> Unit,
     isCreateAction: Boolean,
     unreadCount: Int,
 ) {
@@ -415,81 +388,56 @@ private fun BottomNavigationItemContent(
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val navigationSurfaceColor = bottomNavigationSurfaceColor()
-
-    if (isCreateAction) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(AppSpacing.bannerHeight),
-        ) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(AppSpacing.bottomNavigationWellSize)
-                    .offset(y = -AppSpacing.bottomNavigationActionLift),
-                shape = CircleShape,
-                color = navigationSurfaceColor,
-                tonalElevation = AppSpacing.none,
-                shadowElevation = AppElevation.bottomNavigation,
-            ) {}
-
-            FilledIconButton(
-                onClick = onClick,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(AppSpacing.bottomNavigationCreateActionSize)
-                    .offset(y = -AppSpacing.bottomNavigationActionLift),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription,
-                    modifier = Modifier.size(
-                        AppSpacing.bottomNavigationCreateIconSize,
-                    ),
-                )
-            }
-
-            Text(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                text = label,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Clip,
-            )
-        }
+    val labelColor = if (isCreateAction) {
+        MaterialTheme.colorScheme.primary
     } else {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        contentColor
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier.height(AppSpacing.bottomNavigationIconSlotHeight),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier.height(
-                    AppSpacing.bottomNavigationIconSlotHeight,
-                ),
-                contentAlignment = Alignment.Center,
+            BadgedBox(
+                badge = {
+                    if (unreadCount > 0) {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ) { Text(text = "$unreadCount") }
+                    }
+                },
             ) {
-                BadgedBox(
-                    badge = {
-                        if (unreadCount > 0) {
-                            Badge(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError,
-                            ) { Text(text = "$unreadCount") }
+                if (isCreateAction) {
+                    Surface(
+                        modifier = Modifier.size(AppSpacing.bottomNavigationReportActionSize),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        tonalElevation = AppSpacing.none,
+                        shadowElevation = AppSpacing.none,
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(AppSpacing.bottomNavigationIcon),
+                            )
                         }
-                    },
-                ) {
+                    }
+                } else {
                     Icon(
                         imageVector = icon,
-                        contentDescription = contentDescription,
+                        contentDescription = null,
                         tint = contentColor,
                         modifier = Modifier.size(
                             AppSpacing.bottomNavigationIcon,
@@ -497,22 +445,20 @@ private fun BottomNavigationItemContent(
                     )
                 }
             }
-
-            Spacer(
-                modifier = Modifier.height(
-                    AppSpacing.bottomNavigationLabelGap,
-                ),
-            )
-
-            Text(
-                text = label,
-                color = contentColor,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Clip,
-            )
         }
+
+        Spacer(
+            modifier = Modifier.height(AppSpacing.bottomNavigationLabelGap),
+        )
+
+        Text(
+            text = label,
+            color = labelColor,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Clip,
+        )
     }
 }
 
@@ -521,51 +467,6 @@ private fun bottomNavigationSurfaceColor(): Color =
     MaterialTheme.colorScheme.surfaceVariant
         .copy(alpha = AppOpacity.bottomNavigationSurface)
         .compositeOver(MaterialTheme.colorScheme.background)
-
-@Composable
-private fun BoxScope.BottomNavigationTopDivider() {
-    val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = AppOpacity.border)
-
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(AppSpacing.bottomNavigationDividerArcHeight + AppSpacing.borderWidth)
-            .offset(y = -AppSpacing.bottomNavigationDividerArcHeight),
-    ) {
-        val dividerY = AppSpacing.bottomNavigationDividerArcHeight.toPx()
-        val radius = AppSpacing.bottomNavigationWellSize.toPx() / 2f
-        val centerX = size.width / 2f
-        val strokeWidth = AppSpacing.borderWidth.toPx()
-        val arcHeight = AppSpacing.bottomNavigationDividerArcHeight.toPx()
-        val path = Path().apply {
-            moveTo(0f, dividerY)
-            lineTo(centerX - radius, dividerY)
-            cubicTo(
-                centerX - radius * 0.58f,
-                dividerY,
-                centerX - radius * 0.52f,
-                dividerY - arcHeight,
-                centerX,
-                dividerY - arcHeight,
-            )
-            cubicTo(
-                centerX + radius * 0.52f,
-                dividerY - arcHeight,
-                centerX + radius * 0.58f,
-                dividerY,
-                centerX + radius,
-                dividerY,
-            )
-            lineTo(size.width, dividerY)
-        }
-
-        drawPath(
-            path = path,
-            color = dividerColor,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth),
-        )
-    }
-}
 
 @Composable
 fun <T> SyncStatusBanner(
