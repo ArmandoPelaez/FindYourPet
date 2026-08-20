@@ -402,6 +402,20 @@ class AuthScreenPresentationStaticTest {
     assertTrue(source.contains("viewModel.signInWithGoogleIdToken(idToken)"))
   }
 
+  @Test
+  fun authScreen_clearsLoginCredentials_onlyForGoogleFallback_andKeepsMessageVisible() {
+    val source = authScreenSource()
+
+    assertTrue(source.contains("shouldClearEmailPasswordAfterFallback("))
+    assertTrue(source.contains("isSignUp = isSignUp"))
+    assertTrue(source.contains("isEmailAttempt = isEmailLoading"))
+    assertTrue(source.contains("email = \"\""))
+    assertTrue(source.contains("password = \"\""))
+    assertTrue(source.contains("hasSubmitted = false"))
+    assertTrue(source.contains("authMessageVisible = true"))
+    assertTrue(source.indexOf("password = \"\"") < source.lastIndexOf("authMessageVisible = true"))
+  }
+
   private fun authScreenSource(): String =
     File(root, "app/src/main/java/com/findyourpet/app/ui/screens/AuthScreen.kt").readText()
 

@@ -83,6 +83,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.findyourpet.app.R
+import com.findyourpet.app.data.auth.AuthMessages
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.ui.components.AppButton
 import com.findyourpet.app.ui.components.AppButtonVariant
@@ -180,6 +181,19 @@ private fun validatePassword(value: String): String? = when {
     else -> null
 }
 
+internal fun shouldClearEmailPasswordAfterFallback(
+    isSignUp: Boolean,
+    isEmailAttempt: Boolean,
+    authState: AuthUiState,
+    authMessage: String?,
+): Boolean {
+    if (isSignUp || !isEmailAttempt) return false
+    return authMessage == AuthMessages.authenticationFailed ||
+        (authMessage == null &&
+            authState is AuthUiState.Error &&
+            authState.message == AuthMessages.authenticationFailed)
+}
+
 @Composable
 fun AuthScreen(viewModel: PetViewModel) {
     val authState by viewModel.authState.collectAsState()
@@ -254,6 +268,17 @@ fun AuthScreen(viewModel: PetViewModel) {
                 (message != null && (initialAuthMessage == null || messageWasCleared))
 
             if (authenticationFinished) {
+                if (shouldClearEmailPasswordAfterFallback(
+                        isSignUp = isSignUp,
+                        isEmailAttempt = isEmailLoading,
+                        authState = state,
+                        authMessage = message,
+                    )
+                ) {
+                    email = ""
+                    password = ""
+                    hasSubmitted = false
+                }
                 isEmailLoading = false
                 isGoogleLoading = false
                 authMessageVisible = true
@@ -585,9 +610,9 @@ fun AuthScreen(viewModel: PetViewModel) {
                                     viewModel.signInWithGoogleIdToken(idToken)
                                 } catch (error: Exception) {
                                     localMessage = when (error) {
-                                        is GetCredentialCancellationException -> "Google Sign-In was cancelled."
-                                        is GoogleIdTokenParsingException -> "Google credential could not be read."
-                                        else -> error.message ?: "Google Sign-In failed."
+                                        is GetCredentialCancellationException -> "Inicio de sesión con Google cancelado."
+                                        is GoogleIdTokenParsingException -> "No pudimos leer la credencial de Google."
+                                        else -> AuthMessages.authenticationFailed
                                     }
                                     isGoogleLoading = false
                                 } finally {

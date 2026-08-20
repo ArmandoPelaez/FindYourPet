@@ -1,34 +1,32 @@
 package com.findyourpet.app
 
-import com.findyourpet.app.domain.shouldLinkPendingGoogleCredential
+import com.findyourpet.app.data.auth.AuthFailure
+import com.findyourpet.app.domain.AuthProvider
+import com.findyourpet.app.domain.authProvider
+import com.findyourpet.app.domain.emailPasswordConflict
+import com.findyourpet.app.domain.googleConflict
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class AuthLinkingPolicyTest {
+class AuthProviderPolicyTest {
   @Test
-  fun sameEmail_isEligibleForPendingGoogleLink_caseAndWhitespaceInsensitive() {
-    assertTrue(
-      shouldLinkPendingGoogleCredential(
-        pendingEmail = " pelaezarmando@gmail.com ",
-        signedInEmail = "PELAEZARMANDO@GMAIL.COM"
-      )
-    )
+  fun passwordProvider_requiresPasswordWhenGoogleIsAttempted() {
+    assertTrue(listOf("password").authProvider() == AuthProvider.EMAIL_PASSWORD)
+    assertTrue(listOf("password").authProvider().googleConflict() == AuthFailure.EmailPasswordRequired)
   }
 
   @Test
-  fun differentEmail_doesNotConsumePendingGoogleLink() {
-    assertFalse(
-      shouldLinkPendingGoogleCredential(
-        pendingEmail = "google@example.com",
-        signedInEmail = "password@example.com"
-      )
-    )
+  fun googleProvider_requiresGoogleWhenEmailPasswordIsAttempted() {
+    assertTrue(listOf("google.com").authProvider() == AuthProvider.GOOGLE)
+    assertTrue(listOf("google.com").authProvider().emailPasswordConflict() == AuthFailure.GoogleRequired)
   }
 
   @Test
-  fun blankEmail_isNotEligibleForPendingGoogleLink() {
-    assertFalse(shouldLinkPendingGoogleCredential("", "user@example.com"))
-    assertFalse(shouldLinkPendingGoogleCredential("user@example.com", ""))
+  fun emptyOrMixedProviderInformation_isInconclusive() {
+    assertTrue(emptyList<String>().authProvider() == AuthProvider.UNKNOWN)
+    assertTrue(listOf("password", "google.com").authProvider() == AuthProvider.UNKNOWN)
+    assertFalse(emptyList<String>().authProvider().emailPasswordConflict() != null)
+    assertFalse(emptyList<String>().authProvider().googleConflict() != null)
   }
 }

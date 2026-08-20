@@ -3,6 +3,7 @@
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.findyourpet.app.data.auth.AuthMessages
 import com.findyourpet.app.data.auth.AuthUiState
 import com.findyourpet.app.data.auth.FirebaseAuthRepository
 import com.findyourpet.app.data.auth.UnavailableAuthRepository
@@ -305,7 +306,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _authMessage.value = null
             authRepository.signUpWithEmail(email, password, displayName)
-                .onFailure { _authMessage.value = it.message ?: "Sign-up failed." }
+                .onFailure { _authMessage.value = AuthMessages.forFailure(it) }
         }
     }
 
@@ -313,7 +314,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _authMessage.value = null
             authRepository.signInWithEmail(email, password)
-                .onFailure { _authMessage.value = it.message ?: "Sign-in failed." }
+                .onFailure { _authMessage.value = AuthMessages.forFailure(it) }
         }
     }
 
@@ -321,7 +322,7 @@ class PetViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _authMessage.value = null
             authRepository.signInWithGoogleIdToken(idToken)
-                .onFailure { _authMessage.value = it.message ?: "Google sign-in failed." }
+                .onFailure { _authMessage.value = AuthMessages.forFailure(it) }
         }
     }
 
