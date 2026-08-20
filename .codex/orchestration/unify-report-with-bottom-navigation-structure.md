@@ -1,7 +1,7 @@
 # Orchestration State: unify-report-with-bottom-navigation-structure
 
-state: BLOCKED
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-48
 previous_issue: SCRUM-47
 change: unify-report-with-bottom-navigation-structure
@@ -15,15 +15,16 @@ handoff_mode: SUBAGENT
 agent_id: 01a02039-413d-78e3-9137-a6635ed4fbd5
 agent_role: findyourpet-implementer
 delegation_error: El primer ciclo no entregó reporte y fue cerrado; el agente fue reabierto para solicitar el informe final y terminó reportando `BLOCKED`.
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: b305cc2b2a0f1ea9a8664c6c6e31f55c7c5b6d13
+integration_evidence: PR #63 merged from ops/unify-report-with-bottom-navigation-structure into main; main local synchronized with origin/main.
+verification_status: INCOMPLETE_AT_MERGE
 
 ## Jira Scrum normalizado
 
 - SCRUM-47 queda registrado como antecedente del mismo alcance; SCRUM-48 es la referencia activa autorizada para continuar este change en paralelo.
 
-- Clave: `SCRUM-47`.
+- Clave: `SCRUM-48`.
 - Título: `Unificar “Reportar” con la estructura visual de la barra de navegación inferior`.
 - Tipo: Task.
 - Estado: To Do.
@@ -74,7 +75,7 @@ integration_evidence:
 ## Estado de continuación
 
 - El bloqueo previo por falta de autorización de trabajo paralelo queda resuelto.
-- No se ejecutó implementación; el flujo continúa con la generación y validación de OpenSpec.
+- La implementación fue integrada mediante PR #63; SCRUM-47 queda registrado como antecedente del mismo alcance.
 
 ## Riesgos y pendientes
 
@@ -104,3 +105,13 @@ integration_evidence:
 - Implementado según reporte: tokens de `40.dp`, `22.dp`, `48.dp` y `60.dp`; estructura compartida para cinco destinos; eliminación de well/lift/offsets/arco; `Reportar` con `primary`/`onPrimary`; pruebas estáticas actualizadas.
 - Validaciones: OpenSpec quedó válido previamente; `testDebugUnitTest` fue iniciado pero interrumpido y su resultado no está confirmado. No hay evidencia final de build, `git diff --check`, apply completo ni revisión manual.
 - Alcance reportado: sin cambios de lógica de negocio, rutas ni callbacks.
+
+## Integración
+
+- `git fetch origin --prune`: OK.
+- `git switch main`: OK.
+- `git pull --ff-only origin main`: OK; ya estaba actualizado.
+- `git rev-parse main` = `git rev-parse origin/main` = `b305cc2b2a0f1ea9a8664c6c6e31f55c7c5b6d13`.
+- `git status --short --branch`: `## main...origin/main`; árbol limpio.
+- Merge confirmado: `b305cc2` — `Merge pull request #63 from ArmandoPelaez:ops/unify-report-with-bottom-navigation-structure`.
+- Nota: el change está integrado, pero la evidencia de tests/build y revisión manual quedó incompleta al momento del merge.
