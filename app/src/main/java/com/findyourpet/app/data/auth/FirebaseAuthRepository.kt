@@ -1,15 +1,20 @@
 package com.findyourpet.app.data.auth
 
 import android.content.Context
-import com.findyourpet.app.domain.AccountLinkRequiredException
-import com.findyourpet.app.domain.shouldLinkPendingGoogleCredential
+import com.findyourpet.app.data.auth.AuthFailure
+import com.findyourpet.app.data.auth.AuthDomainException
+import com.findyourpet.app.data.auth.AuthMessages
+import com.findyourpet.app.domain.AuthProvider
+import com.findyourpet.app.domain.authProvider
+import com.findyourpet.app.domain.emailPasswordConflict
+import com.findyourpet.app.domain.googleConflict
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.tasks.await
@@ -19,8 +24,6 @@ class FirebaseAuthRepository private constructor(
 ) : AuthRepository {
     private val _authState = MutableStateFlow(firebaseAuth.currentUser.toAuthState())
     override val authState: StateFlow<AuthUiState> = _authState
-
-    private var pendingGoogleLink: PendingGoogleLink? = null
 
     private val authListener = FirebaseAuth.AuthStateListener { auth ->
         _authState.value = auth.currentUser.toAuthState()
@@ -34,7 +37,8 @@ class FirebaseAuthRepository private constructor(
         email: String,
         password: String,
         displayName: String
-    ): Result<AuthUser> = runCatching {
+    ): Result<AuthUser> = authenticate {
+        providerConflictForEmail(email)?.let { throw AuthDomainException(it) }
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
         val user = requireNotNull(result.user) { "Firebase did not return a user." }
         if (displayName.isNotBlank()) {
@@ -46,56 +50,65 @@ class FirebaseAuthRepository private constructor(
         }
         user.reload().await()
         requireNotNull(firebaseAuth.currentUser ?: user).toAuthUser()
-    }.also { updateStateFromResult(it) }
+    }
 
     override suspend fun signInWithEmail(email: String, password: String): Result<AuthUser> =
-        runCatching {
+        authenticate {
+            providerConflictForEmail(email)?.let { throw AuthDomainException(it) }
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            val user = requireNotNull(result.user) { "Firebase did not return a user." }
-            val pendingLink = pendingGoogleLink
-            if (pendingLink != null && shouldLinkPendingGoogleCredential(pendingLink.email, user.email.orEmpty())) {
-                try {
-                    val linkedResult = user.linkWithCredential(pendingLink.credential).await()
-                    pendingGoogleLink = null
-                    requireNotNull(linkedResult.user ?: user).toAuthUser()
-                } catch (error: Throwable) {
-                    pendingGoogleLink = null
-                    throw error
-                }
-            } else {
-                user.toAuthUser()
-            }
-        }.also { updateStateFromResult(it) }
+            requireNotNull(result.user) { "Firebase did not return a user." }.toAuthUser()
+        }
 
     override suspend fun signInWithGoogleIdToken(idToken: String): Result<AuthUser> =
-        runCatching {
+        authenticate {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             try {
                 val result = firebaseAuth.signInWithCredential(credential).await()
                 requireNotNull(result.user) { "Firebase did not return a user." }.toAuthUser()
             } catch (error: FirebaseAuthUserCollisionException) {
-                val conflictingEmail = error.email.orEmpty()
-                if (conflictingEmail.isBlank()) throw error
-                pendingGoogleLink = PendingGoogleLink(conflictingEmail, credential)
-                throw AccountLinkRequiredException(conflictingEmail)
+                val conflictingEmail = error.email.orEmpty().trim()
+                if (conflictingEmail.isBlank()) {
+                    throw AuthDomainException(AuthFailure.AuthenticationFailed, error)
+                }
+                val provider = providerForEmail(conflictingEmail)
+                provider.googleConflict()?.let { throw AuthDomainException(it, error) }
+                throw AuthDomainException(AuthFailure.AuthenticationFailed, error)
             }
-        }.also { updateStateFromResult(it) }
+        }
 
     override fun signOut() {
         firebaseAuth.signOut()
-        pendingGoogleLink = null
         _authState.value = AuthUiState.SignedOut
     }
 
-    private data class PendingGoogleLink(
-        val email: String,
-        val credential: AuthCredential,
-    )
+    private suspend fun providerConflictForEmail(email: String): AuthFailure? =
+        providerForEmail(email).emailPasswordConflict()
+
+    private suspend fun providerForEmail(email: String): AuthProvider = runCatching {
+        firebaseAuth.fetchSignInMethodsForEmail(email.trim()).await().getSignInMethods().orEmpty().authProvider()
+    }.getOrDefault(AuthProvider.UNKNOWN)
+
+    private suspend fun authenticate(block: suspend () -> AuthUser): Result<AuthUser> {
+        val result = try {
+            Result.success(block())
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: AuthDomainException) {
+            Result.failure(error)
+        } catch (error: Throwable) {
+            Result.failure(AuthDomainException(AuthFailure.AuthenticationFailed, error))
+        }
+        updateStateFromResult(result)
+        return result
+    }
 
     private fun updateStateFromResult(result: Result<AuthUser>) {
         _authState.value = result.fold(
             onSuccess = { AuthUiState.SignedIn(it) },
-            onFailure = { AuthUiState.Error(it.message ?: "Authentication failed.") }
+            onFailure = { error ->
+                firebaseAuth.currentUser?.toAuthState()
+                    ?: AuthUiState.Error(AuthMessages.forFailure(error))
+            }
         )
     }
 
