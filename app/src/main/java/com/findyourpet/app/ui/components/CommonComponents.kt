@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -263,34 +264,36 @@ fun BottomPrimaryActionBanner(
             .semantics { contentDescription = "Acciones principales" },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val horizontalMargin = when {
-                maxWidth <= AppSpacing.bottomNavigationSmallBreakpoint -> AppSpacing.sm
-                maxWidth < AppSpacing.bottomNavigationLargeBreakpoint -> AppSpacing.md
-                else -> AppSpacing.lg
-            }
+            val horizontalMargin = AppSpacing.contentInset
             val availableWidth = maxWidth - (horizontalMargin * 2)
             val navigationWidth = minOf(availableWidth, AppSpacing.bottomNavigationMaxWidth)
 
-            Surface(
+            Box(
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .widthIn(max = navigationWidth)
                     .fillMaxWidth()
-                    .widthIn(max = navigationWidth),
-                shape = AppShapes.button,
-                color = navigationSurfaceColor,
-                tonalElevation = AppSpacing.none,
-                shadowElevation = AppElevation.bottomNavigation,
+                    .height(AppSpacing.bannerHeight),
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    BottomNavigationTopDivider()
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(AppSpacing.bannerHeight),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("bottom-navigation-surface"),
+                    shape = AppShapes.button,
+                    color = navigationSurfaceColor,
+                    tonalElevation = AppSpacing.none,
+                    shadowElevation = AppElevation.bottomNavigation,
+                ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        BottomNavigationTopDivider()
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(AppSpacing.bannerHeight),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                             BottomNavigationItem(
                                 selected = selectedDestination == BottomNavigationDestination.Home,
                                 label = "Inicio",
@@ -328,6 +331,7 @@ fun BottomPrimaryActionBanner(
                                 unreadCount = unreadNotificationsCount,
                                 onClick = onNotificationsClick,
                             )
+                            }
                         }
                     }
                 }

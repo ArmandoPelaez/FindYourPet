@@ -113,9 +113,9 @@ fun PetPostCard(
                 .verticalScroll(rememberScrollState())
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.md)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.contentInset, vertical = AppSpacing.md)
                     .aspectRatio(AppSpacing.cardImageAspectRatio)
                     .clip(AppShapes.card)
             ) {
@@ -141,7 +141,7 @@ fun PetPostCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.md)
+                    .padding(horizontal = AppSpacing.contentInset)
                     .padding(bottom = AppSpacing.cardContentVertical)
             ) {
                 PetIdentitySection(
