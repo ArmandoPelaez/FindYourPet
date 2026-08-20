@@ -1,7 +1,7 @@
 # Orchestration State: redesign-user-profile-and-reunited-pets
 
-state: BLOCKED
-phase: MANUAL_VALIDATION
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-49
 change: redesign-user-profile-and-reunited-pets
 base_branch: main
@@ -15,9 +15,9 @@ handoff_mode: SUBAGENT
 agent_id: 01a020dc-bdea-7d21-bd14-79e8c4ebb9a5
 agent_role: findyourpet-implementer
 delegation_error:
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: MERGED
+integrated_commit: 350c6d8242500791adce1bac5a28a8e38528a046
+integration_evidence: PR #64 merged into main; main and origin/main synchronized on 2026-08-20
 
 ## Reporte del implementador y verificacion
 
@@ -29,7 +29,7 @@ integration_evidence:
 - `.\gradlew.bat :app:compileDebugKotlin`: OK.
 - `git diff --check`: OK.
 - Validacion manual: BLOQUEADA; `adb` no esta disponible y no hay dispositivo/emulador acreditado.
-- No se hizo merge a `main`.
+- En esa verificacion previa todavia no se habia hecho merge a `main`.
 
 ## Verificacion de implementacion
 
@@ -56,7 +56,15 @@ integration_evidence:
 - Verificacion posterior: `openspec validate --strict`: OK; `testDebugUnitTest`: 187 tests, 0 fallos, 0 errores; `assembleDebug --console=plain`: OK; `git diff --check`: OK.
 - Pendiente: validacion manual con Light/Dark, Actividad, Alertas, confirmacion/cancelacion y Bottom Navigation; el entorno no dispone de `adb` ni dispositivo/emulador.
 - Validacion manual en dispositivo/emulador: pendiente por falta de sesion UI disponible.
-- No hay merge ni integracion en `main`.
+- En ese corte de verificacion la integracion en `main` seguia pendiente.
+
+## Integracion
+
+- Estado: `INTEGRATED`.
+- Pull request: `#64`, `ArmandoPelaez:ops/redesign-user-profile-and-reunited-pets`.
+- Commit integrado en `main`: `350c6d8242500791adce1bac5a28a8e38528a046`.
+- Evidencia: `git pull --ff-only origin main` actualizo `main` por fast-forward; `git rev-parse main` y `git rev-parse origin/main` coinciden.
+- Verificacion adicional: `7267544` es ancestro de `main` y el arbol estaba limpio antes de actualizar esta bitacora.
 
 ## Bloqueo
 
