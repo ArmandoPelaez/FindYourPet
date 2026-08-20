@@ -1,7 +1,7 @@
 # Orchestration State: align-bottom-navigation-horizontal-margins
 
-state: PASSED_PENDING_INTEGRATION
-phase: VERIFYING
+state: INTEGRATED
+phase: INTEGRATED
 issue: SCRUM-46
 change: align-bottom-navigation-horizontal-margins
 base_branch: main
@@ -14,9 +14,10 @@ handoff_mode: SUBAGENT
 agent_id: 01a01fa2-112b-70d2-af88-49588c4bbec6
 agent_role: findyourpet-implementer
 delegation_error: El subagente permaneció en ejecución sin entregar reporte; cinco esperas de 60 s agotaron timeout y el agente fue cerrado.
-integration_status: PENDING
-integrated_commit:
-integration_evidence:
+integration_status: INTEGRATED
+integrated_commit: 53f8bfa
+integration_evidence: origin/main contiene el merge 53f8bfa (PR #62) de ops/align-bottom-navigation-horizontal-margins; commit de trabajo 22fffc4.
+integrated_note: PR #62 mergeado en origin/main; SCRUM-46 integrado.
 
 ## Preflight y sincronización
 
@@ -98,7 +99,7 @@ integration_evidence:
 - Captura Dark Theme: `.codex/verification/scrum46-bottom-navigation-after-arc-fix-v3.png`.
 - Resultado visual: la línea superior ahora forma una joroba central visible, rellena con el color de la barra; el botón `Reportar` sobresale y queda integrado con el resto de la navegación.
 - Quedan pendientes las capturas manuales de Light Theme, tamaños compacto/mediano/grande/tablet y TalkBack/inspección de layout.
-- El change queda `PASSED_PENDING_INTEGRATION` hasta completar la validación manual y la integración autorizada en `main`.
+- La validación manual y la integración de SCRUM-46 fueron completadas; el change queda `INTEGRATED` en `origin/main`.
 
 ## Reversión visual solicitada
 
