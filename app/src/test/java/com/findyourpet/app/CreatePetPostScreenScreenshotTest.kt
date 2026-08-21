@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
@@ -62,8 +63,9 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
-    composeTestRule.onAllNodesWithText("Publicar ficha").assertCountEquals(1)
+    composeTestRule.onNodeWithText("Publicar aviso").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Publicar aviso").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Publicar aviso").assertCountEquals(1)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-compact-scrolled.png"
@@ -96,8 +98,9 @@ class CreatePetPostScreenScreenshotTest {
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithText("¿Dónde fue vista por última vez?").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Publicar ficha").assertIsDisplayed()
-    composeTestRule.onAllNodesWithText("Publicar ficha").assertCountEquals(1)
+    composeTestRule.onNodeWithText("Publicar aviso").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Publicar aviso").assertIsDisplayed()
+    composeTestRule.onAllNodesWithText("Publicar aviso").assertCountEquals(1)
     assertNoCurrentLocationAction()
     composeTestRule.onNodeWithTag(VisualRootTag).captureRoboImage(
       filePath = "src/test/screenshots/create-post-tall-scrolled.png"
@@ -130,10 +133,10 @@ class CreatePetPostScreenScreenshotTest {
   }
 
   private fun assertTitlePrecedesPhotoUpload() {
-    composeTestRule.onNodeWithText("Publicar mascota perdida").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Crea un aviso para ayudar a encontrarla").assertIsDisplayed()
     composeTestRule.onNodeWithTag("create-post-photo-upload-surface").assertIsDisplayed()
     val titleTop = composeTestRule
-      .onNodeWithText("Publicar mascota perdida")
+      .onNodeWithText("Crea un aviso para ayudar a encontrarla")
       .fetchSemanticsNode()
       .boundsInRoot
       .top

@@ -13,10 +13,10 @@ class CreatePetPostFormStaticTest {
   @Test
   fun createPostHeader_isIntegratedAndUsesExistingTokens() {
     assertTrue(source.contains("contentWindowInsets = WindowInsets.safeDrawing"))
-    assertTrue(source.contains("text = \"Publicar mascota perdida\""))
-    assertTrue(source.contains("style = MaterialTheme.typography.titleLarge"))
+    assertTrue(source.contains("text = \"Crea un aviso para ayudar a encontrarla\""))
+    assertTrue(source.contains("style = MaterialTheme.typography.titleMedium"))
     assertTrue(source.contains("FormPhotoUploadSurface("))
-    assertTrue(source.indexOf("text = \"Publicar mascota perdida\"") < source.indexOf("FormPhotoUploadSurface("))
+    assertTrue(source.indexOf("text = \"Crea un aviso para ayudar a encontrarla\"") < source.indexOf("FormPhotoUploadSurface("))
     assertTrue(!source.contains("TopAppBar("))
     assertTrue(!source.contains("Icons.Filled.ArrowBack"))
     assertTrue(!source.contains("onBackClick"))
@@ -29,7 +29,7 @@ class CreatePetPostFormStaticTest {
       "FormFieldLabel(text = \"Nombre\", required = true)", "FormFieldPlaceholder(\"Ej. Toby, Mia\")",
       "Descripcion adicional", "Contanos cómo reconocerla...", "¿Dónde fue vista por última vez?",
       "Seleccionar ubicación", "Usar mi ubicación actual", "Elegir en el mapa", "Escribir una referencia",
-      "Publicar ficha"
+      "Publicar aviso"
     ).forEach { marker -> assertTrue("Missing simplified create-post marker: $marker", source.contains(marker)) }
     assertTrue(source.contains("FormSectionTitle(text = \"Datos de la mascota\")"))
     assertTrue(source.contains("modifier = Modifier.size(AppSpacing.iconMedium)"))
@@ -94,8 +94,11 @@ class CreatePetPostFormStaticTest {
     val normalized = source.replace(Regex("\\s+"), " ")
     assertTrue(normalized.contains("val canSubmit = locationSelection?.isValid == true && photoUri.isNotBlank() && petName.isNotBlank() && !isSubmitting"))
     assertTrue(normalized.contains("enabled = canSubmit"))
-    assertTrue(source.contains("contentDescription = \"Publicar ficha\""))
-    assertTrue(source.contains("Text(\"Publicar ficha\")"))
+    assertTrue(source.contains("contentDescription = \"Publicar aviso\""))
+    assertTrue(source.contains("Icons.Filled.Send"))
+    assertTrue(source.contains("Text(\"Publicar aviso\")"))
+    assertTrue(!source.contains("Publicar ficha"))
+    assertTrue(!source.contains("Icons.Filled.Publish"))
     assertTrue(!source.contains("onContextualActionChanged"))
     assertTrue(!source.contains("BottomNavigationContextualAction"))
     assertTrue(source.contains("if (selectedMediaSource == null)"))

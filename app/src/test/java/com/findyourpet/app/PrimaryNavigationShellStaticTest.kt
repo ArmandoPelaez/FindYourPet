@@ -77,8 +77,8 @@ class PrimaryNavigationShellStaticTest {
     assertTrue(mainActivity.contains("onCreatePostClick = { navController.navigateToCreatePost() }"))
     assertTrue(!mainActivity.contains("contextualCreateAction"))
     assertTrue(!mainActivity.contains("onContextualActionChanged"))
-    assertTrue(createPost.contains("contentDescription = \"Publicar ficha\""))
-    assertTrue(createPost.contains("Text(\"Publicar ficha\")"))
+    assertTrue(createPost.contains("contentDescription = \"Publicar aviso\""))
+    assertTrue(createPost.contains("Text(\"Publicar aviso\")"))
     assertTrue(!createPost.contains("BottomNavigationContextualAction"))
   }
 

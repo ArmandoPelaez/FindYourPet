@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Pets
-import androidx.compose.material.icons.filled.Publish
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -345,8 +345,8 @@ fun CreatePetPostScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             Text(
-                text = "Publicar mascota perdida",
-                style = MaterialTheme.typography.titleLarge
+                text = "Crea un aviso para ayudar a encontrarla",
+                style = MaterialTheme.typography.titleMedium
             )
 
             FormPhotoUploadSurface(
@@ -472,7 +472,7 @@ fun CreatePetPostScreen(
                 onClick = { submitPost() },
                 enabled = canSubmit,
                 modifier = Modifier.fillMaxWidth(),
-                contentDescription = "Publicar ficha",
+                contentDescription = "Publicar aviso",
             ) {
                 if (isSubmitting) {
                     CircularProgressIndicator(
@@ -480,9 +480,9 @@ fun CreatePetPostScreen(
                         modifier = Modifier.size(AppSpacing.progressIndicator),
                     )
                 } else {
-                    Icon(Icons.Filled.Publish, contentDescription = null)
+                    Icon(Icons.Filled.Send, contentDescription = null)
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
-                    Text("Publicar ficha")
+                    Text("Publicar aviso")
                 }
             }
         }
