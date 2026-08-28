@@ -36,6 +36,7 @@ object AppSpacing {
     val mediaHeight: Dp = 220.dp
     val formFieldHeight: Dp = 120.dp
     val authMaxWidth: Dp = 480.dp
+    val authBlockVerticalShift: Dp = 192.dp
     val expandedContentMaxWidth: Dp = 720.dp
     val contentMaxWidth: Dp = 640.dp
     val submitMaxWidth: Dp = 400.dp
