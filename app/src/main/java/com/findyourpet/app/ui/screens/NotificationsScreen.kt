@@ -23,7 +23,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
     viewModel: PetViewModel,
@@ -36,17 +35,6 @@ fun NotificationsScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets.safeDrawing,
-                title = { Text("Notificaciones") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -54,6 +42,22 @@ fun NotificationsScreen(
                 .padding(padding)
                 .imePadding()
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                }
+                Text(
+                    text = "Notificaciones",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = AppSpacing.sm),
+                )
+            }
+
             SyncStatusBanner(state = notificationsState)
             if (visibleNotifications.isEmpty()) {
                 Box(
