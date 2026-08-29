@@ -44,39 +44,25 @@ class AuthScreenPresentationStaticTest {
   }
 
   @Test
-  fun authScreen_usesResponsiveCenteredVerticalRhythmWithoutReferenceOnlyControls() {
+  fun authScreen_usesOneAdaptiveFlowWithoutFixedAuthenticationPlacement() {
     val source = authScreenSource()
 
-    assertTrue(source.contains("BoxWithConstraints("))
-    assertTrue(source.contains("viewportHeight = contentViewportHeight"))
-    assertTrue(source.contains("private fun LoginVerticalRegions"))
-    assertTrue(source.contains("val flexibleGap = flexibleSpace / 2"))
-    assertTrue(source.contains("val authenticationGap = AppSpacing.fieldGap.roundToPx()"))
-    assertTrue(source.contains("val naturalHeight = authentication.height + authenticationGap * 2"))
-    assertTrue(source.contains("val authenticationShift = AppSpacing.authBlockVerticalShift.roundToPx()"))
-    assertTrue(source.contains("val authenticationTop = authenticationGap + flexibleGap + authenticationShift"))
-    assertTrue(source.contains("authentication.placeRelative(0, authenticationTop)"))
-    assertFalse(source.contains("heroShift"))
-    assertFalse(source.contains("placeables[0]"))
-    assertFalse(source.contains("placeables[1]"))
-    assertFalse(source.contains("placeables[2]"))
-    assertFalse(source.contains("Spacer(modifier = Modifier.weight(1f))"))
-    assertFalse(source.contains(".heightIn(min = maxHeight)"))
+    assertFalse(source.contains("BoxWithConstraints("))
+    assertFalse(source.contains("LoginVerticalRegions"))
+    assertFalse(source.contains("placeRelative"))
+    assertFalse(source.contains("roundToPx"))
+    assertFalse(source.contains("authBlockVerticalShift"))
     assertTrue(source.contains(".padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)"))
     assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
-    assertFalse(source.contains("Arrangement.spacedBy(\n                AppSpacing.fieldGap,\n                Alignment.CenterVertically,\n            )"))
     assertTrue(source.contains(".verticalScroll(rememberScrollState())"))
     assertTrue(source.contains(".imePadding()"))
-    assertFalse(source.contains("Recordarme"))
-    assertFalse(source.contains("Olvidaste"))
-    assertFalse(source.contains("recuperaci\u00f3n de contrase\u00f1a"))
   }
 
   @Test
-  fun authScreen_usesApprovedDecorativeImageBehindFunctionalContent() {
+  fun authScreen_usesApprovedDecorativeImageBehindSemanticContent() {
     val source = authScreenSource()
 
-    assertTrue(source.contains("painterResource(R.drawable.imagen_nuevo_fondo_pantalla)"))
+    assertTrue(source.contains("painterResource(R.drawable.imagen_fondo_pantalla_login)"))
     assertTrue(source.contains("contentDescription = null"))
     assertTrue(source.contains("modifier = Modifier.fillMaxSize()"))
     assertTrue(source.contains("contentScale = ContentScale.Crop"))
@@ -96,25 +82,28 @@ class AuthScreenPresentationStaticTest {
     }
 
     val imageLayer = source
-      .substringAfter("painterResource(R.drawable.imagen_nuevo_fondo_pantalla)")
-      .substringBefore("Column(")
+      .substringAfter("painterResource(R.drawable.imagen_fondo_pantalla_login)")
+      .substringBefore("AuthenticationHero")
     assertFalse(imageLayer.contains("clickable"))
     assertFalse(imageLayer.contains("pointer"))
     assertFalse(imageLayer.contains("focusable"))
+    assertFalse(imageLayer.contains("A CASA"))
+    assertFalse(imageLayer.contains("Encontrá"))
+    assertFalse(imageLayer.contains("Consultá"))
 
-    val image = source.indexOf("painterResource(R.drawable.imagen_nuevo_fondo_pantalla)")
+    val image = source.indexOf("painterResource(R.drawable.imagen_fondo_pantalla_login)")
     val content = source.indexOf("verticalScroll(rememberScrollState())")
     assertTrue("The decorative image must be declared before the functional content", image < content)
   }
 
   @Test
   fun authScreen_usesOnlyTheTrackedApprovedBackgroundAsset() {
-    val resource = File(root, "app/src/main/res/drawable-nodpi/imagen_nuevo_fondo_pantalla.png")
+    val resource = File(root, "app/src/main/res/drawable-nodpi/imagen_fondo_pantalla_login.png")
     val resourceDirectory = File(root, "app/src/main/res/drawable-nodpi")
 
     assertTrue(resource.isFile)
     assertTrue(resourceDirectory.listFiles().orEmpty().map { it.name }.contains(resource.name))
-    assertFalse(File(resourceDirectory, "imagen_nuevo_fondo_pantalla.webp").exists())
+    assertFalse(File(resourceDirectory, "imagen_fondo_pantalla_login.webp").exists())
   }
 
   @Test
@@ -141,29 +130,37 @@ class AuthScreenPresentationStaticTest {
   }
 
   @Test
-  fun authScreen_removesRedundantBackgroundCopyAndKeepsAuthenticationBlock() {
+  fun authScreen_rendersBrandingAndHeroBeforeTheAuthenticationBlock() {
     val source = authScreenSource()
 
     val functionalTitle = source.indexOf("text = if (isSignUp) \"Crear cuenta\" else \"Iniciar sesión\"")
     val emailField = source.indexOf("FormFieldLabel(\"Email\")")
+    val hero = source.indexOf("private fun AuthenticationHero")
+    val heroContent = source.indexOf("text = \"Encontrá\"")
 
     assertFalse(source.contains("Únete a FindYourPet para publicar avisos y ayudar a reencontrar mascotas."))
     assertFalse(source.contains("Ãšnete a FindYourPet para publicar avisos y ayudar a reencontrar mascotas."))
     assertFalse(source.contains("text = \"FindYourPet\""))
     assertFalse(source.contains("Conect\\u00e1 con avisos cerca tuyo."))
     assertFalse(source.contains("Report\\u00e1, busc\\u00e1 y ayud\\u00e1 a reencontrar mascotas."))
-    assertFalse(source.contains("painterResource(R.drawable.ic_launcher_foreground)"))
-    assertFalse(source.contains("AppSpacing.avatarLarge"))
-    assertFalse(source.contains("background(MaterialTheme.colorScheme.primary.copy(alpha = AppOpacity.iconSurface), CircleShape)"))
-    assertFalse(source.contains("imageVector = Icons.Outlined.AccountCircle"))
+    assertTrue(source.contains("text = \"A CASA\""))
+    assertTrue(source.contains("text = \"Más cerca de volver a casa.\""))
+    assertTrue(source.contains("text = \"mascotas perdidas\""))
+    assertTrue(source.contains("text = \"cerca tuyo.\""))
+    assertTrue(source.contains("text = \"Consultá avisos, reportá avistamientos y ayudá a que vuelvan a casa.\""))
+    assertTrue(source.contains("contentDescription = \"Logo A CASA\""))
+    assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.xl)"))
+    assertTrue(source.contains("Spacer(modifier = Modifier.height(AppSpacing.xl))"))
+    assertTrue(hero >= 0)
+    assertTrue(heroContent > hero)
     assertTrue(functionalTitle >= 0)
     assertTrue(emailField > functionalTitle)
+    assertTrue(functionalTitle > heroContent)
     assertTrue(source.contains("verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)"))
-    assertFalse(source.contains("Accede para seguir avisos y ayudar a reencontrar mascotas."))
   }
 
   @Test
-  fun authScreen_keepsAuthenticationControlsAfterRemovingRedundantCopy() {
+  fun authScreen_keepsAuthenticationControlsInsideTheSharedFlow() {
     val source = authScreenSource()
     listOf(
       "FormFieldLabel(\"Email\")",
@@ -174,24 +171,19 @@ class AuthScreenPresentationStaticTest {
     ).forEach { marker ->
       assertTrue("Authentication control must remain present: $marker", source.contains(marker))
     }
-    assertTrue(source.contains("authentication.placeRelative(0, authenticationTop)"))
-    assertFalse(source.contains("heroShift"))
+    assertTrue(source.contains("AuthenticationHero(modifier = Modifier.fillMaxWidth())"))
+    assertTrue(source.contains(".windowInsetsPadding(WindowInsets.safeDrawing)"))
+    assertTrue(source.contains(".imePadding()"))
   }
 
   @Test
-  fun authScreen_doesNotDisplaceAuthenticationThroughASharedParent() {
+  fun authScreen_doesNotUseIndependentSemanticLayersOrCompensatingOffsets() {
     val source = authScreenSource()
-    val layout = source.substringAfter("private fun LoginVerticalRegions")
 
-    assertTrue(layout.contains("val authentication = measurables.single().measure"))
-    assertTrue(layout.contains("val naturalHeight = authentication.height + authenticationGap * 2"))
-    assertTrue(layout.contains("authenticationGap = AppSpacing.fieldGap.roundToPx()"))
-    assertTrue(layout.contains("val authenticationShift = AppSpacing.authBlockVerticalShift.roundToPx()"))
-    assertTrue(layout.contains("authentication.placeRelative(0, authenticationTop)"))
-    assertFalse(layout.contains("placeables"))
-    assertFalse(layout.contains("heroShift"))
-    assertFalse(layout.contains("Spacer(modifier = Modifier.weight(1f))"))
-    assertFalse(layout.contains("heightIn(min = maxHeight)"))
+    assertFalse(source.contains("private fun LoginVerticalRegions"))
+    assertFalse(source.contains("heroShift"))
+    assertFalse(source.contains("placeables"))
+    assertFalse(source.contains("offset("))
     assertFalse(Regex("(padding|offset|height|size)\\([^)]*\\b\\d+(\\.\\d+)?\\.dp").containsMatchIn(source))
   }
 

@@ -16,13 +16,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -63,7 +63,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -75,7 +74,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
@@ -113,36 +111,63 @@ private fun exitTransition(reducedMotion: Boolean): ExitTransition =
     if (reducedMotion) ExitTransition.None else fadeOut()
 
 @Composable
-private fun LoginVerticalRegions(
-    viewportHeight: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Layout(
+private fun AuthenticationHero(modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier,
-        content = content,
-    ) { measurables, constraints ->
-        val authentication = measurables.single().measure(constraints.copy(minHeight = 0))
-        val authenticationGap = AppSpacing.fieldGap.roundToPx()
-        val naturalHeight = authentication.height + authenticationGap * 2
-        val availableHeight = viewportHeight.roundToPx()
-        val authenticationShift = AppSpacing.authBlockVerticalShift.roundToPx()
-        val flexibleSpace = (availableHeight - naturalHeight).coerceAtLeast(0)
-        val flexibleGap = flexibleSpace / 2
-        val authenticationTop = authenticationGap + flexibleGap + authenticationShift
-        val layoutHeight = maxOf(
-            availableHeight,
-            authenticationTop + authentication.height + authenticationGap,
-            constraints.minHeight,
-        )
-        val width = maxOf(
-            constraints.minWidth,
-            authentication.width,
-        )
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.compactGap),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = "Logo A CASA",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(AppSpacing.headerLogo),
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.compactGap))
+                Text(
+                    text = "A CASA",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
 
-        layout(width, layoutHeight) {
-            authentication.placeRelative(0, authenticationTop)
+            Text(
+                text = "Más cerca de volver a casa.",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.none),
+        ) {
+            Text(
+                text = "Encontrá",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+            Text(
+                text = "mascotas perdidas",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = "cerca tuyo.",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
+
+        Text(
+            text = "Consultá avisos, reportá avistamientos y ayudá a que vuelvan a casa.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+        )
     }
 }
 
@@ -290,8 +315,6 @@ fun AuthScreen(viewModel: PetViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .imePadding()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -302,7 +325,7 @@ fun AuthScreen(viewModel: PetViewModel) {
             )
     ) {
         Image(
-            painter = painterResource(R.drawable.imagen_nuevo_fondo_pantalla),
+            painter = painterResource(R.drawable.imagen_fondo_pantalla_login),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -322,31 +345,30 @@ fun AuthScreen(viewModel: PetViewModel) {
                 )
         )
 
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            val contentViewportHeight =
-                (maxHeight - (AppSpacing.lg * 2)).coerceAtLeast(AppSpacing.none)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
-                    .verticalScroll(rememberScrollState()),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
-            ) {
-            LoginVerticalRegions(
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = AppSpacing.authMaxWidth)
                     .padding(horizontal = AppSpacing.md),
-                viewportHeight = contentViewportHeight,
             ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
-                    ) {
+                AuthenticationHero(modifier = Modifier.fillMaxWidth())
+
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.fieldGap)
+                ) {
                         Text(
                             text = if (isSignUp) "Crear cuenta" else "Iniciar sesión",
                             style = MaterialTheme.typography.titleMedium,
@@ -626,4 +648,3 @@ fun AuthScreen(viewModel: PetViewModel) {
             }
         }
     }
-}
