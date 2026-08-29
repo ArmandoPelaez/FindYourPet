@@ -75,6 +75,20 @@ class ActivityContractStaticTest {
   }
 
   @Test
+  fun activityAndNotificationsAvoidExpandedScreenHeaders() {
+    val activity = source("app/src/main/java/com/findyourpet/app/ui/screens/ActivityScreen.kt")
+    val notifications = source("app/src/main/java/com/findyourpet/app/ui/screens/NotificationsScreen.kt")
+
+    assertTrue(!activity.contains("topBar ="))
+    assertTrue(!activity.contains("homeHeaderHeight"))
+    assertTrue(!activity.contains("text = \"Actividad\""))
+    assertTrue(!notifications.contains("TopAppBar("))
+    assertTrue(!notifications.contains("ExperimentalMaterial3Api"))
+    assertTrue(notifications.contains("text = \"Notificaciones\""))
+    assertTrue(notifications.contains("style = MaterialTheme.typography.titleMedium"))
+  }
+
+  @Test
   fun primaryNavigationKeepsActivityWithoutLegacyChatRoute() {
     val main = source("app/src/main/java/com/findyourpet/app/MainActivity.kt")
     val banner = source("app/src/main/java/com/findyourpet/app/ui/components/CommonComponents.kt")
